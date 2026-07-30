@@ -8,7 +8,7 @@
 
 새로 만들어 보낸 패킷은 받은 플레이어에게만 반영되며 서버 월드는 그대로입니다.
 
-지원 구동기는 **[Endstone](https://github.com/EndstoneMC/endstone) v0.11.6** 입니다.
+지원 구동기는 **[Endstone](https://github.com/EndstoneMC/endstone) 최신 버전** 입니다.
 
 ## 원본 프로젝트를 잇습니다
 
@@ -35,21 +35,28 @@ FetchContent_MakeAvailable(bedrock_protocol)
 target_link_libraries(my_plugin PRIVATE bedrock_protocol_bridge)
 ```
 
-그다음 관심 있는 패킷 종류를 등록해 두면, 그 패킷이 지나갈 때마다 코드가 불립니다. 오는 것은
-`onReceive`, 가는 것은 `onSend`입니다.
+다루고 싶은 패킷 종류를 등록해 두면, 그 패킷이 지나갈 때마다 등록한 함수가 불립니다. 서버로 들어오는
+패킷은 `onReceive`, 서버가 내보내는 패킷은 `onSend`입니다.
 
 ```cpp
 auto &interceptor = bedrock_protocol::bridge::PacketInterceptor::get();
-interceptor.enable(*this);                          // onEnable 안에서 1회만
+interceptor.enable(*this);   // onEnable 안에서 1회만
 
 interceptor.onSend<bedrock_protocol::TextPacket>([](auto &event) {
-    event.view();       // 읽기만 - 서버는 원래 바이트를 그대로 씁니다
-    event.mutate();     // 고치기 - 여기서 바꾼 값으로 다시 만들어 보냅니다
-    event.cancel();     // 없던 일로
+    // TextPacket 이 나갈 때마다 여기가 불립니다.
 });
 ```
 
-`view()`와 `mutate()`가 나뉘어 있는 이유는, 읽기만 할 때는 패킷을 다시 만드는 비용을 치르지 않기
-위해서입니다. 새 패킷을 직접 보낼 때는 `interceptor.sendPacket(player, packet)`을 씁니다.
+함수 안에서 쓸 수 있는 것은 넷입니다.
+
+| | |
+|---|---|
+| `event.view()` | 패킷을 읽습니다. 내용은 바뀌지 않습니다. |
+| `event.mutate()` | 패킷을 읽고 고칩니다. 고친 내용으로 다시 만들어 내보냅니다. |
+| `event.cancel()` | 이 패킷을 내보내지 않습니다. |
+| `interceptor.sendPacket(player, packet)` | 새로 만든 패킷을 특정 플레이어에게 보냅니다. |
+
+`view()`와 `mutate()`가 나뉘어 있는 것은, 읽기만 할 때 패킷을 다시 만드는 비용을 치르지 않기
+위해서입니다. 고칠 생각이 없다면 `view()`를 쓰세요.
 
 더 자세한 사용법은 [PORTING.md](PORTING.md), 검증 범위와 현황은 [PORTING_STATUS.md](PORTING_STATUS.md)에 있습니다.
