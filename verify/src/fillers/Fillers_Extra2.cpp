@@ -1,5 +1,5 @@
 /*
- * This file is part of BedrockProtocol for Endstone.
+ * This file is part of BedrockProtocol-Cpp.
  *
  * Fillers: small transport, telemetry and education packets. See Fillers_Core.cpp for the two
  * conventions that hold across every filler file (one create() call with every argument spelled out;

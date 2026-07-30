@@ -1,5 +1,5 @@
 /*
- * This file is part of BedrockProtocol for Endstone.
+ * This file is part of BedrockProtocol-Cpp.
  */
 
 #include "bedrock_protocol/verify/ValueWell.h"

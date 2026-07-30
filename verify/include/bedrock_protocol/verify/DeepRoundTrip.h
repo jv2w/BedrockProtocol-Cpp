@@ -1,5 +1,5 @@
 /*
- * This file is part of BedrockProtocol for Endstone.
+ * This file is part of BedrockProtocol-Cpp.
  *
  * The offline deep round-trip engine.
  *

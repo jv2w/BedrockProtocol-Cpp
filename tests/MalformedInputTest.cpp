@@ -1,5 +1,5 @@
 /*
- * This file is part of BedrockProtocol for Endstone.
+ * This file is part of BedrockProtocol-Cpp.
  *
  * MALFORMED INPUT ROBUSTNESS SUITE.
  *

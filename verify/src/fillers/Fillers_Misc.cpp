@@ -1,5 +1,5 @@
 /*
- * This file is part of BedrockProtocol for Endstone.
+ * This file is part of BedrockProtocol-Cpp.
  *
  * Fillers: resource packs, commands, structures, maps, diagnostics and skins.
  *

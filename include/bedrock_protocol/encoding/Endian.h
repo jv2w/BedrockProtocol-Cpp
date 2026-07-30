@@ -1,5 +1,5 @@
 /*
- * This file is part of BedrockProtocol for Endstone.
+ * This file is part of BedrockProtocol-Cpp.
  * Internal helper with no PHP counterpart: PHP's pack()/unpack() handle endianness natively,
  * whereas the C++ port has to convert explicitly.
  *

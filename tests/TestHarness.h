@@ -1,5 +1,5 @@
 /*
- * This file is part of BedrockProtocol for Endstone.
+ * This file is part of BedrockProtocol-Cpp.
  *
  * A dependency-free assertion harness. The library is deliberately free of third-party
  * dependencies, and these tests are simple enough that pulling in a framework would cost more in

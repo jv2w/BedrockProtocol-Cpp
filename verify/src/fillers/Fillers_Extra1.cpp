@@ -1,5 +1,5 @@
 /*
- * This file is part of BedrockProtocol for Endstone.
+ * This file is part of BedrockProtocol-Cpp.
  *
  * Fillers: scalar and string-only packets. See Fillers_Core.cpp for the two conventions that hold
  * across every filler file (one create() call with every argument spelled out; values drawn into

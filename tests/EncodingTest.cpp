@@ -1,5 +1,5 @@
 /*
- * This file is part of BedrockProtocol for Endstone.
+ * This file is part of BedrockProtocol-Cpp.
  *
  * Verifies the encoding primitives against test vectors produced by the reference PHP
  * implementation (pocketmine/binaryutils). Regenerate the vectors with tools/gen_fixtures.php.

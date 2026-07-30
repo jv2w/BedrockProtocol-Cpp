@@ -1,5 +1,5 @@
 /*
- * This file is part of BedrockProtocol for Endstone.
+ * This file is part of BedrockProtocol-Cpp.
  * C++ port of the subset of ramsey/uuid that BedrockProtocol relies on.
  *
  * BedrockProtocol is free software: you can redistribute it and/or modify

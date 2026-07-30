@@ -1,8 +1,8 @@
-# BedrockProtocol for Endstone
+# BedrockProtocol-Cpp
 
-[PocketMine-MP의 BedrockProtocol](https://github.com/pmmp/BedrockProtocol)을 Endstone C++ API용으로 1:1 이식한
-라이브러리입니다. Endstone 플러그인에서 **모든 Minecraft Bedrock 패킷을 타입 객체로 디코드하고, 수정하고,
-취소하고, 새로 주입**할 수 있습니다.
+[PocketMine-MP의 BedrockProtocol](https://github.com/pmmp/BedrockProtocol)을 C++20으로 1:1 이식한
+라이브러리입니다. **모든 Minecraft Bedrock 패킷을 타입 객체로 디코드하고, 수정하고, 새로 인코드**할 수
+있습니다.
 
 원본 PHP와 클래스명·필드명·상수명·직렬화 순서·주석이 모두 일치하므로, PMMP 문서와 코드를 그대로
 참조할 수 있습니다.
@@ -10,6 +10,18 @@
 - 원본: PocketMine-MP `pocketmine/bedrock-protocol`
 - 프로토콜: `ProtocolInfo::CURRENT_PROTOCOL` = **1001** (Minecraft `1.26.30`)
 - 라이선스: LGPL-3.0 (원본의 파생 저작물)
+
+## 지원 구동기: Endstone
+
+**공식적으로 지원하는 서버 구동기는 [Endstone](https://github.com/EndstoneMC/endstone) (v0.11.6) 하나입니다.**
+`bedrock_protocol_bridge` 타깃이 Endstone의 `PacketReceiveEvent`/`PacketSendEvent`에 직접 연결되어, 플러그인이
+패킷을 가로채고 수정하고 취소하고 주입할 수 있게 합니다.
+
+다만 **코어 라이브러리는 어떤 구동기에도 의존하지 않습니다.** Endstone을 아는 파일은 `bridge/`의 3개뿐이고,
+229개 패킷·NBT 직렬화·인코딩 계층·검증 스위트는 전부 표준 C++20만 씁니다. CMake가 `endstone::endstone`
+타깃이 없으면 브릿지를 건너뛰고 코어만 빌드하므로, 프록시·패킷 분석기·자체 서버 구현에도 그대로 쓸 수
+있습니다. 다른 구동기 지원은 `bridge/`에 대응물을 하나 더 쓰는 일이지만, 이 저장소가 검증하고 책임지는
+범위는 Endstone입니다.
 
 ---
 
@@ -34,7 +46,7 @@ Endstone은 `PacketReceiveEvent`와 `PacketSendEvent` 두 이벤트만 제공하
 ```cmake
 include(FetchContent)
 FetchContent_Declare(bedrock_protocol
-        GIT_REPOSITORY https://github.com/<owner>/bedrock_protocol.git
+        GIT_REPOSITORY https://github.com/<owner>/BedrockProtocol-Cpp.git
         GIT_TAG main)
 
 # endstone 이후에 선언할 것. 브릿지 타깃이 endstone::endstone 을 필요로 하며,
@@ -47,7 +59,7 @@ target_link_libraries(my_plugin PRIVATE bedrock_protocol_bridge)
 체크아웃을 직접 관리한다면 `add_subdirectory`도 됩니다.
 
 ```cmake
-add_subdirectory(../bedrock_protocol ${CMAKE_BINARY_DIR}/bedrock_protocol)
+add_subdirectory(../BedrockProtocol-Cpp ${CMAKE_BINARY_DIR}/bedrock_protocol)
 ```
 
 ### 툴체인

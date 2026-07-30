@@ -1,5 +1,5 @@
 /*
- * This file is part of BedrockProtocol for Endstone.
+ * This file is part of BedrockProtocol-Cpp.
  *
  * THE selection list. Included by the offline deep round-trip suite, the live traffic audit and the
  * in-game showcase, so all three systems test the same set and cannot drift apart.

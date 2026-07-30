@@ -1,5 +1,5 @@
 /*
- * This file is part of BedrockProtocol for Endstone.
+ * This file is part of BedrockProtocol-Cpp.
  * This file has no PHP counterpart: it bridges the ported protocol onto Endstone's packet events.
  *
  * BedrockProtocol is free software: you can redistribute it and/or modify

@@ -150,7 +150,7 @@ function licenseHeader(string $phpOrigin): string
 {
     return <<<HEADER
 /*
- * This file is part of BedrockProtocol for Endstone.
+ * This file is part of BedrockProtocol-Cpp.
  * C++ port of the PHP original: {$phpOrigin}
  * Copyright (C) 2014-2022 PocketMine Team <https://github.com/pmmp/BedrockProtocol>
  *

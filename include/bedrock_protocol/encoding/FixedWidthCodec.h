@@ -1,5 +1,5 @@
 /*
- * This file is part of BedrockProtocol for Endstone.
+ * This file is part of BedrockProtocol-Cpp.
  * Internal helper with no PHP counterpart: LE and BE are two independent classes in pmmp/encoding,
  * but their members are identical apart from byte order, so the C++ port shares one template.
  *
