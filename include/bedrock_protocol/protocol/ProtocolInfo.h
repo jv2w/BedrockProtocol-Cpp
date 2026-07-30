@@ -24,7 +24,7 @@ namespace bedrock_protocol {
  *       name would be substituted away at every use site. Renaming is preferable to #undef, which
  *       would silently leak into every header included afterwards.
  *
- * This file is generated automatically by tools/gen_from_php.php, do not edit it manually.
+ * This list was generated from the PHP original when the port was made. That generator is gone and upstream is archived, so a new packet is added here by hand.
  */
 struct ProtocolInfo final {
     ProtocolInfo() = delete;

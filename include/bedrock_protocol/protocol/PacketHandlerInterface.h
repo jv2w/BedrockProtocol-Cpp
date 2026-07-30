@@ -249,7 +249,7 @@ class VoxelShapesPacket;
  * Every method defaults to returning false ("not handled"), mirroring PacketHandlerDefaultImplTrait
  * in the PHP original, so implementations only override the packets they care about.
  *
- * This file is generated automatically by tools/gen_from_php.php, do not edit it manually.
+ * This list was generated from the PHP original when the port was made. That generator is gone and upstream is archived, so a new packet is added here by hand.
  */
 class PacketHandlerInterface {
 public:

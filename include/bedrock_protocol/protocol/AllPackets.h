@@ -14,7 +14,7 @@
 /**
  * Convenience header pulling in every packet class.
  *
- * This file is generated automatically by tools/gen_from_php.php, do not edit it manually.
+ * This list was generated from the PHP original when the port was made. That generator is gone and upstream is archived, so a new packet is added here by hand.
  */
 
 #include "bedrock_protocol/protocol/ActorEventPacket.h"
