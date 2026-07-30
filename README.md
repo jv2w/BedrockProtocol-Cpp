@@ -31,7 +31,7 @@ Add this to your plugin's `CMakeLists.txt`, **after** Endstone is declared:
 ```cmake
 include(FetchContent)
 FetchContent_Declare(bedrock_protocol
-        GIT_REPOSITORY https://github.com/<owner>/BedrockProtocol-Cpp.git GIT_TAG main)
+        GIT_REPOSITORY https://github.com/jv2w/BedrockProtocol-Cpp.git GIT_TAG main)
 FetchContent_MakeAvailable(bedrock_protocol)
 
 target_link_libraries(my_plugin PRIVATE bedrock_protocol_bridge)
@@ -61,7 +61,7 @@ Inside the callback you have four options:
 `view()` and `mutate()` are separate so that reading does not pay for re-encoding. Use `view()` when
 you are not changing anything.
 
-## Two deliberate fixes
+## deliberate fixes
 
 The port follows the original everywhere except two places where the original cannot read back what
 it writes. Both are documented at the point of change, with a reproduction.
