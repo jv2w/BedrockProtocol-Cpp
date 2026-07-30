@@ -406,7 +406,7 @@ CommonTypes::EntityMetadata CommonTypes::getEntityMetadata(encoding::ByteBufferR
         const auto key = VarInt::readUnsignedInt(in);
         const auto type = VarInt::readUnsignedInt(in);
 
-        data.emplace_back(key, types::entity::MetadataProperty::read(in, static_cast<std::int32_t>(type)));
+        assignKeyed(data, key, types::entity::MetadataProperty::read(in, static_cast<std::int32_t>(type)));
     }
 
     return data;
@@ -430,7 +430,7 @@ CommonTypes::GameRules CommonTypes::getGameRules(encoding::ByteBufferReader &in,
         auto name = getString(in);
         const auto isPlayerModifiable = getBool(in);
         const auto type = VarInt::readUnsignedInt(in);
-        rules.emplace_back(std::move(name), readGameRule(in, type, isPlayerModifiable, isStartGame));
+        assignKeyed(rules, name, readGameRule(in, type, isPlayerModifiable, isStartGame));
     }
 
     return rules;

@@ -27,7 +27,7 @@ Experiments Experiments::read(encoding::ByteBufferReader &in)
     for (std::uint32_t i = 0, len = LE::readUnsignedInt(in); i < len; ++i) {
         auto experimentName = CommonTypes::getString(in);
         const auto enabled = CommonTypes::getBool(in);
-        experiments.emplace_back(std::move(experimentName), enabled);
+        CommonTypes::assignKeyed(experiments, experimentName, enabled);
     }
     const auto hasPreviouslyUsedExperiments = CommonTypes::getBool(in);
     return Experiments(std::move(experiments), hasPreviouslyUsedExperiments);

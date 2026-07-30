@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -59,6 +60,26 @@ public:
 
     /** Game rules as they appear on the wire: rule name, then the typed value, in order. */
     using GameRules = std::vector<std::pair<std::string, std::unique_ptr<types::GameRule>>>;
+
+    /**
+     * Assigns into a list that stands in for a PHP keyed array.
+     *
+     * PHP decodes these collections with `$data[$key] = $value`, so a key that arrives twice
+     * replaces the earlier entry where it already sits. A vector of pairs would keep both, which is
+     * a different packet for any peer that repeats a key - something a client controls. The lookup
+     * is linear, and these collections are small enough that it does not matter.
+     */
+    template <typename List, typename Key, typename Value>
+    static void assignKeyed(List &list, const Key &key, Value &&value)
+    {
+        const auto existing = std::find_if(list.begin(), list.end(),
+                                           [&key](const auto &entry) { return entry.first == key; });
+        if (existing != list.end()) {
+            existing->second = std::forward<Value>(value);
+            return;
+        }
+        list.emplace_back(key, std::forward<Value>(value));
+    }
 
     /** @throws DataDecodeException */
     static std::string getString(encoding::ByteBufferReader &in);

@@ -17,6 +17,8 @@
 #include "bedrock_protocol/encoding/ByteBufferWriter.h"
 #include "bedrock_protocol/encoding/LE.h"
 #include "bedrock_protocol/encoding/VarInt.h"
+#include "bedrock_protocol/protocol/serializer/CommonTypes.h"
+#include "bedrock_protocol/protocol/types/entity/IntMetadataProperty.h"
 #include "bedrock_protocol/uuid/Uuid.h"
 
 using namespace bedrock_protocol;
@@ -128,6 +130,41 @@ void testUuid()
     CHECK_EQ(random.getRawBytes()[8] & 0xc0, 0x80);  // RFC 4122 variant
 }
 
+/**
+ * A key that arrives twice must replace the first entry where it already sits.
+ *
+ * PHP decodes entity metadata and game rules into keyed arrays, so a repeated key overwrites rather
+ * than appending. Nothing else in the suite can see this: the fillers only ever produce unique keys,
+ * and a list that kept both copies would still round-trip to identical bytes. A client chooses what
+ * it sends, so the two behaviours are reachable from outside.
+ */
+void testRepeatedKeysCollapse()
+{
+    using serializer::CommonTypes;
+
+    encoding::ByteBufferWriter out;
+    VarInt::writeUnsignedInt(out, 3);  // three entries, two of them sharing a key
+    for (const auto &[key, value] : {std::pair{7U, 11}, std::pair{9U, 22}, std::pair{7U, 33}}) {
+        VarInt::writeUnsignedInt(out, key);
+        VarInt::writeUnsignedInt(out, types::entity::IntMetadataProperty::ID);
+        VarInt::writeSignedInt(out, value);
+    }
+
+    encoding::ByteBufferReader in(out.getData());
+    const auto metadata = CommonTypes::getEntityMetadata(in);
+
+    CHECK_EQ(metadata.size(), std::size_t{2});
+    CHECK_EQ(metadata[0].first, 7U);   // the repeated key keeps its original position
+    CHECK_EQ(metadata[1].first, 9U);
+
+    // ...and carries the last value that arrived for it.
+    encoding::ByteBufferWriter again;
+    CommonTypes::putEntityMetadata(again, metadata);
+    encoding::ByteBufferReader back(again.getData());
+    const auto reread = CommonTypes::getEntityMetadata(back);
+    CHECK_EQ(reread.size(), std::size_t{2});
+}
+
 }  // namespace
 
 int main()
@@ -137,5 +174,6 @@ int main()
     testFloatingPoint();
     testDecodeErrors();
     testUuid();
+    testRepeatedKeysCollapse();
     return bedrock_protocol::test::summarise("EncodingTest");
 }

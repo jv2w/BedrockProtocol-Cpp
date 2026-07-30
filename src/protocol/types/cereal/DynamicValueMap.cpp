@@ -39,7 +39,7 @@ DynamicValueMap DynamicValueMap::readValue(encoding::ByteBufferReader &in)
         auto key = std::string(CommonTypes::getString(in));
         //YIKES! unchecked recursion ?!?!?! thank god this never gets sent by the client...
         const auto type = LE::readUnsignedInt(in);
-        value.emplace_back(std::move(key), DynamicValue::read(in, type));
+        CommonTypes::assignKeyed(value, key, DynamicValue::read(in, type));
     }
 
     return DynamicValueMap(std::move(value));
