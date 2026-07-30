@@ -47,6 +47,11 @@ ACCEPTED_FIELDS: dict[str, str] = {
     "DisconnectPacket encode": "PHP assigns $skipMessage inside the call; this port hoists it",
     "FeatureRegistryPacket decode": "PHP clears the vector in the for-init, this port before the loop",
     "SubChunkPacket encode": "PHP's polymorphic entry list is a variant visited with std::visit here",
+    "ClientboundMapItemDataPacket decode": "PHP's decoration locals shadow same-named members; this "
+                                           "port renames them, which changes nothing on the wire",
+    "ClientboundAttributeLayerSyncPacket decode": "the payload type dispatches to a subclass's read",
+    "ServerboundPackSettingChangePacket decode": "the setting type dispatches to a subclass's read",
+    "SyncWorldClocksPacket decode": "the payload type dispatches to a subclass's read",
 }
 
 # The same, for value types. Keyed by type name; each is explained in that type's source as well.
@@ -58,6 +63,12 @@ ACCEPTED_TYPES: dict[str, str] = {
     "ItemStackExtraData": "PHP decodes NBT from a buffer copy and restores the offset in a finally; "
                           "this port reads straight through the reader",
     "PacketShapeData": "PHP's ?-> null-safe calls become an explicit null check",
+    "ItemStackRequest::read": "both dispatch through readAction(in, typeId); the names differ only "
+                              "because PHP passes the id where this port names the local",
+    "PrimitiveShapeTextPayload::write": "the optional's writer lambda names its parameter, so the "
+                                        "colour write is attributed to it rather than to the field",
+    "AttributeLayerSettings::read": "the attribute type dispatches to a subclass's read",
+    "SubChunkPacketEntryCommon::read": "PHP reads both heightmaps into one reused local",
 
     # serializer/ - the shared helpers. Every one of these was read side by side against the PHP.
     "CommonTypes::getUUID": "PHP reads the two reversed halves as two statements; this port loops",
@@ -117,9 +128,18 @@ CPP_NOISE = IGNORED_CALLS | {
     "double", "bool", "char", "unsigned", "signed", "long", "short", "int", "string",
     "encoding", "serializer", "types", "nbt",
     "true", "false", "nullptr", "nullopt",
-    # The reader/writer names this port gives its serialisation lambdas.
-    "writer", "reader",
+    # The reader/writer/value names this port gives its serialisation lambda parameters.
+    "writer", "reader", "v",
 }
+
+# Fields PHP names with a C++ keyword, renamed here rather than in the wire format.
+FIELD_ALIASES = {"defaultvalue": "default"}
+
+
+def normalise_field(name: str) -> str:
+    """Folds away the renames that C++ forces, so only genuine differences remain."""
+    name = name.rstrip("_")  # a trailing underscore escapes a keyword or a member/parameter clash
+    return FIELD_ALIASES.get(name, name)
 
 CALL_RE = re.compile(r"(?:(\w+)\s*(?:::|->|\.)\s*)?(\w+)\s*\(")
 PHP_FIELD_RE = re.compile(r"\$this->(\w+)")
@@ -190,7 +210,18 @@ def field_of(line: str, is_php: bool) -> str:
     """
     if is_php:
         found = PHP_FIELD_RE.findall(line)
-        return found[-1].lower() if found else "?"
+        if found:
+            return normalise_field(found[-1].lower())
+        # A value type's read() is static, so it fills locals and passes them to the constructor
+        # rather than assigning members. The local carries the field's name.
+        assign = line.find("=")
+        if assign > 0 and (line.find("(") < 0 or assign < line.find("(")):
+            # The last name on the left is the field: `$entry->uuid =` names uuid, not entry, and a
+            # plain `$name =` names itself.
+            target = re.findall(r"\w+", line[:assign])
+            if target:
+                return normalise_field(target[-1].lower())
+        return "?"
 
     # Decode assigns into the member: `field = CommonTypes::getX(in);`
     assign = line.find("=")
@@ -198,11 +229,11 @@ def field_of(line: str, is_php: bool) -> str:
     if 0 < assign < call:
         names = cpp_identifiers(line[:assign])
         if names:
-            return names[-1]
+            return normalise_field(names[-1])
 
     # Encode passes it as the last argument: `CommonTypes::putX(out, field);`
     names = cpp_identifiers(line[call + 1 :] if call >= 0 else line)
-    return names[-1] if names else "?"
+    return normalise_field(names[-1]) if names else "?"
 
 
 def cpp_identifiers(text: str) -> list[str]:
@@ -320,16 +351,28 @@ def compare_type(php_src: Path, cpp_src: Path) -> list[str]:
 
         php_ops = operations(php_body, True)
         cpp_ops = operations(cpp_body, False)
-        if [o for o, _ in php_ops] == [o for o, _ in cpp_ops]:
+        if [o for o, _ in php_ops] != [o for o, _ in cpp_ops]:
+            problems.append(f"{name}::{side}: operation sequence differs from PHP")
+            for i in range(max(len(php_ops), len(cpp_ops))):
+                p = php_ops[i] if i < len(php_ops) else ("<missing>", "")
+                c = cpp_ops[i] if i < len(cpp_ops) else ("<missing>", "")
+                if p[0] != c[0]:
+                    problems.append(f"    step {i}:  php {p[0]}   cpp {c[0]}")
+                    break
             continue
 
-        problems.append(f"{name}::{side}: operation sequence differs from PHP")
-        for i in range(max(len(php_ops), len(cpp_ops))):
-            p = php_ops[i] if i < len(php_ops) else ("<missing>", "")
-            c = cpp_ops[i] if i < len(cpp_ops) else ("<missing>", "")
-            if p[0] != c[0]:
-                problems.append(f"    step {i}:  php {p[0]}   cpp {c[0]}")
-                break
+        # Same operations in the same order: two fields of one type can still have been swapped on
+        # both sides at once, which no byte comparison anywhere can see. Only the names show it.
+        if f"{name}::{side}" in ACCEPTED_TYPES:
+            continue
+        swaps = [
+            f"    step {i}:  {php_ops[i][0]}  php field {php_ops[i][1]!r}  cpp field {cpp_ops[i][1]!r}"
+            for i in range(len(php_ops))
+            if php_ops[i][1] != cpp_ops[i][1] and "?" not in (php_ops[i][1], cpp_ops[i][1])
+        ]
+        if swaps:
+            problems.append(f"{name}::{side}: same operations, different field at that step")
+            problems.extend(swaps)
     return problems
 
 

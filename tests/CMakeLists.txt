@@ -1,7 +1,7 @@
 enable_testing()
 
 # Tests link the core library only; the bridge needs Endstone and is exercised in-game instead.
-foreach (test_name EncodingTest PacketRoundTripTest)
+foreach (test_name EncodingTest PacketRoundTripTest Base64ParityTest)
     add_executable(${test_name} ${test_name}.cpp)
     target_link_libraries(${test_name} PRIVATE bedrock_protocol)
     target_include_directories(${test_name} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -16,4 +16,5 @@ if (MSVC)
     # failure instead of killing the process; that needs asynchronous exception handling.
     target_compile_options(PacketRoundTripTest PRIVATE /EHa)
     target_compile_options(EncodingTest PRIVATE /EHsc)
+    target_compile_options(Base64ParityTest PRIVATE /EHsc)
 endif ()

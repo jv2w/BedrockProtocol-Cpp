@@ -44,10 +44,12 @@ constexpr std::array<std::int8_t, 256> makeBase64DecodeTable() {
 
 constexpr std::array<std::int8_t, 256> BASE64_DECODE_TABLE = makeBase64DecodeTable();
 
+}  // namespace
+
 /**
  * Equivalent of PHP base64_decode($base64, true) - returns nullopt instead of false on malformed input.
  */
-std::optional<std::string> strictBase64Decode(std::string_view base64) {
+std::optional<std::string> detail::strictBase64Decode(std::string_view base64) {
     //like PHP's strict mode: whitespace is skipped, unpadded input is accepted, anything else outside the
     //alphabet (or misplaced padding) fails
     std::vector<std::uint8_t> sextets;
@@ -106,10 +108,8 @@ std::optional<std::string> strictBase64Decode(std::string_view base64) {
     return result;
 }
 
-}  // namespace
-
 std::string ClientDataToSkinDataHelper::safeB64Decode(std::string_view base64, std::string_view context) {
-    const auto result = strictBase64Decode(base64);
+    const auto result = detail::strictBase64Decode(base64);
     if (!result.has_value()) {
         throw std::invalid_argument(std::string(context) + ": Malformed base64, cannot be decoded");
     }

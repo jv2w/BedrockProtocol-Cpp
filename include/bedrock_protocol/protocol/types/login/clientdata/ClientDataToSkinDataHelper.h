@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -18,6 +19,17 @@
 #include "bedrock_protocol/protocol/types/skin/SkinData.h"
 
 namespace bedrock_protocol::types::login::clientdata {
+
+namespace detail {
+/**
+ * Equivalent of PHP's base64_decode($base64, true): nullopt where PHP returns false.
+ *
+ * Declared here rather than kept internal to the .cpp so that the parity test can put it side by
+ * side with PHP's own decoder. This is the only hand-written parser in the port that the packet
+ * suites cannot reach, because it runs on the JWT payload rather than on the wire.
+ */
+std::optional<std::string> strictBase64Decode(std::string_view base64);
+}  // namespace detail
 
 class ClientDataToSkinDataHelper final {
 public:

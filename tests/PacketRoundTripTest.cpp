@@ -150,6 +150,52 @@ Outcome checkPacket(std::uint32_t pid, std::map<std::string, std::vector<std::st
         return outcome;
     }
 
+    // encode()/decode() add the packet ID and the split-screen sub-client IDs, which the bridge
+    // relies on whenever it injects a packet. The deep suite checks this for the packets it can
+    // fill; running it here as well is what covers the six packets that have no fields at all - for
+    // those the default state is the only state there is, so this and the body round-trip above are
+    // a complete account of them rather than a sample.
+    auto header = PacketPool::getInstance().getPacketById(pid);
+    try {
+        header->senderSubId = 2;
+        header->recipientSubId = 3;
+
+        encoding::ByteBufferWriter headerOut;
+        header->encode(headerOut);
+        const std::string withHeader = headerOut.getData();
+        const std::string &body = first.getData();
+
+        if (withHeader.size() < body.size() ||
+            withHeader.compare(withHeader.size() - body.size(), body.size(), body) != 0) {
+            failures["encode() body differs from encodeBody()"].push_back(name);
+            return outcome;
+        }
+
+        auto decodedHeader = PacketPool::getInstance().getPacketById(pid);
+        encoding::ByteBufferReader headerIn(withHeader);
+        decodedHeader->decode(headerIn);
+
+        if (headerIn.getUnreadLength() != 0) {
+            failures["decode() left trailing bytes"].push_back(name);
+            return outcome;
+        }
+        if (decodedHeader->senderSubId != 2 || decodedHeader->recipientSubId != 3) {
+            failures["sub-client IDs did not survive the header"].push_back(name);
+            return outcome;
+        }
+
+        encoding::ByteBufferWriter headerAgain;
+        decodedHeader->encode(headerAgain);
+        if (headerAgain.getData() != withHeader) {
+            failures["header path re-encoded differently"].push_back(name);
+            return outcome;
+        }
+    }
+    catch (const std::exception &e) {
+        failures["header path threw"].push_back(name + ": " + e.what());
+        return outcome;
+    }
+
     outcome.roundTripped = 1;
     return outcome;
 }
