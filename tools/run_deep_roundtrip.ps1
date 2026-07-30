@@ -28,15 +28,8 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-Location (Join-Path $PSScriptRoot '..')
 
-# The core library is taken from the parent project's CMake tree. Ninja (single-config) puts it
-# directly under the target directory; the old Visual Studio generator used a Release/ subdirectory.
-$coreLib = @('..\build\bedrock_protocol\bedrock_protocol.lib',
-             '..\build\bedrock_protocol\Release\bedrock_protocol.lib') |
-    Where-Object { Test-Path $_ } | Select-Object -First 1
-if (-not $coreLib) {
-    throw "bedrock_protocol.lib not found - build the parent project first (build.bat)."
-}
-$coreLib = (Resolve-Path $coreLib).Path
+. (Join-Path $PSScriptRoot 'CoreLib.ps1')
+$coreLib = Resolve-CoreLib -RepoRoot (Get-Location).Path
 
 # The verify sources are compiled here from source rather than linked from
 # bedrock_protocol_verify.lib, and that is the whole point of this script. CMake builds that library

@@ -23,15 +23,8 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-Location (Join-Path $PSScriptRoot '..')
 
-# The core library is taken from the parent project's CMake tree, exactly as the deep suite does.
-# This script never builds it (build.bat would race sibling audits).
-$coreLib = @('..\build\bedrock_protocol\bedrock_protocol.lib',
-             '..\build\bedrock_protocol\Release\bedrock_protocol.lib') |
-    Where-Object { Test-Path $_ } | Select-Object -First 1
-if (-not $coreLib) {
-    throw "bedrock_protocol.lib not found - build the parent project first (build.bat)."
-}
-$coreLib = (Resolve-Path $coreLib).Path
+. (Join-Path $PSScriptRoot 'CoreLib.ps1')
+$coreLib = Resolve-CoreLib -RepoRoot (Get-Location).Path
 
 $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null

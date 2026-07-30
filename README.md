@@ -32,8 +32,22 @@ Endstone은 `PacketReceiveEvent`와 `PacketSendEvent` 두 이벤트만 제공하
 `CMakeLists.txt`:
 
 ```cmake
-add_subdirectory(bedrock_protocol)          # endstone FetchContent 이후에 선언할 것
+include(FetchContent)
+FetchContent_Declare(bedrock_protocol
+        GIT_REPOSITORY https://github.com/<owner>/bedrock_protocol.git
+        GIT_TAG main)
+
+# endstone 이후에 선언할 것. 브릿지 타깃이 endstone::endstone 을 필요로 하며,
+# 그 타깃이 없으면 브릿지 없이 코어 라이브러리만 빌드됩니다.
+FetchContent_MakeAvailable(bedrock_protocol)
+
 target_link_libraries(my_plugin PRIVATE bedrock_protocol_bridge)
+```
+
+체크아웃을 직접 관리한다면 `add_subdirectory`도 됩니다.
+
+```cmake
+add_subdirectory(../bedrock_protocol ${CMAKE_BINARY_DIR}/bedrock_protocol)
 ```
 
 ### 툴체인
@@ -48,14 +62,15 @@ clang-cl과 Ninja 생성기를 강제**합니다. 현재 이 프로젝트는 End
 - Ninja — VS의 CMake 도구 컴포넌트에 포함
 - CMake 3.29 이상
 
-[build.bat](../build.bat)이 위 경로를 자동으로 찾아 환경을 구성하므로 그냥 실행하면 됩니다.
-수동으로 할 경우:
+플러그인 쪽 `build.bat`이 위 경로를 자동으로 찾아 환경을 구성하는 것이 보통입니다. 이 저장소만
+단독으로 빌드할 경우 (브릿지 없이 코어 라이브러리만 나옵니다):
 
 ```
-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release ^
-      -DCMAKE_CXX_COMPILER="<VS>/VC/Tools/Llvm/x64/bin/clang-cl.exe"
-cmake --build build
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release
 ```
+
+`tools/`의 검증 스크립트는 코어 라이브러리를 알아서 찾고, 없으면 위 명령으로 직접 빌드합니다.
 
 Visual Studio 생성기(`-G "Visual Studio ..."`)는 Endstone이 거부하므로 쓸 수 없습니다.
 
