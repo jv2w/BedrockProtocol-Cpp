@@ -58,5 +58,3 @@ interceptor.onSend<bedrock_protocol::TextPacket>([](auto &event) {
 
 `view()`와 `mutate()`가 나뉘어 있는 것은, 읽기만 할 때 패킷을 다시 만드는 비용을 치르지 않기
 위해서입니다. 고칠 생각이 없다면 `view()`를 쓰세요.
-
-더 자세한 사용법은 [PORTING.md](PORTING.md), 검증 범위와 현황은 [PORTING_STATUS.md](PORTING_STATUS.md)에 있습니다.
