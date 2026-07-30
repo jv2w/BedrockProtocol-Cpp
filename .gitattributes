@@ -1,0 +1,4 @@
+# The sources are LF and the PowerShell/batch scripts are checked with LF-aware tools, so keep the
+# checkout byte-identical everywhere rather than letting core.autocrlf rewrite line endings per
+# machine. text=auto still leaves genuinely binary files alone.
+* text=auto eol=lf

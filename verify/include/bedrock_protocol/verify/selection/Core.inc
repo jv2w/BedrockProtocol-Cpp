@@ -1,0 +1,31 @@
+/*
+ * Selection fragment: core session and movement packets.
+ * Owned by verify/src/fillers/Fillers_Core.cpp. See PacketSelection.inc for the column meanings.
+ */
+
+BP_SELECTED_PACKET(MovePlayerPacket, Core, "RF", 11, 4, "11 fields; teleportCause/teleportItem only written under MODE_TELEPORT")
+BP_SELECTED_PACKET(LevelSoundEventPacket, Core, "RFT", 8, 1, "8 fields; optional<Vector3> firePosition")
+BP_SELECTED_PACKET(SetTitlePacket, Common, "RF", 8, 1, "8 fields; four i32 timings and four strings")
+BP_SELECTED_PACKET(MobEffectPacket, Common, "RF", 8, 1, "8 fields; mixed u64/u8/i32/bool widths")
+BP_SELECTED_PACKET(MoveActorAbsolutePacket, Core, "RF", 6, 4, "6 fields; putRotationByte quantisation must be stable")
+BP_SELECTED_PACKET(AnimateEntityPacket, Rare, "FT", 7, 1, "7 fields; vector<u64> actorRuntimeIds")
+BP_SELECTED_PACKET(PlaySoundPacket, Common, "RFT", 7, 1, "7 fields; x/y/z quantised through BlockPosition*8 - found the integer-division defect")
+BP_SELECTED_PACKET(EmotePacket, Common, "RF", 6, 1, "6 fields; three strings plus u32 length")
+BP_SELECTED_PACKET(NpcDialoguePacket, Rare, "F", 6, 1, "6 fields; i64 unique id and four strings")
+BP_SELECTED_PACKET(ChangeMobPropertyPacket, Rare, "F", 6, 1, "6 fields; one of every scalar family")
+BP_SELECTED_PACKET(SetActorDataPacket, Core, "RT", 4, 4, "4 fields; EntityMetadata across all 8 property types plus PropertySyncData")
+BP_SELECTED_PACKET(StartGamePacket, Core, "RFT", 27, 1, "27 fields; LevelSettings, BlockPaletteEntry list, nested ServerJoinInformation optionals")
+BP_SELECTED_PACKET(PlayerAuthInputPacket, Core, "RF", 21, 4, "21 fields; BitSet(65) drives four conditional blocks - all engaged")
+BP_SELECTED_PACKET(ClientMovementPredictionSyncPacket, Core, "RF", 15, 4, "15 fields; BitSet must be exactly FLAG_LENGTH bits")
+BP_SELECTED_PACKET(CorrectPlayerMovePredictionPacket, Core, "RF", 7, 4, "7 fields; optional<float> vehicleAngularVelocity")
+BP_SELECTED_PACKET(NetworkSettingsPacket, Core, "RF", 5, 1, "5 fields; two LE16 widths a varint mix-up would hide")
+BP_SELECTED_PACKET(MovementEffectPacket, Core, "RF", 4, 4, "4 fields; effectType is a validated enum")
+BP_SELECTED_PACKET(ChangeDimensionPacket, Core, "RF", 4, 1, "4 fields; optional<u32> loadingScreenId")
+BP_SELECTED_PACKET(LoginPacket, Core, "RF", 3, 1, "3 fields; two strings nested inside a length-prefixed connection request")
+BP_SELECTED_PACKET(MotionPredictionHintsPacket, Common, "F", 3, 4, "3 fields; runtime id plus motion vector")
+BP_SELECTED_PACKET(SetActorMotionPacket, Core, "RF", 3, 4, "3 fields; runtime id, motion vector and tick")
+BP_SELECTED_PACKET(RespawnPacket, Core, "RF", 3, 1, "3 fields; respawnState is a byte discriminator")
+BP_SELECTED_PACKET(DisconnectPacket, Core, "RF", 3, 1, "3 fields; both messages engaged or neither reaches the wire")
+BP_SELECTED_PACKET(TransferPacket, Common, "F", 3, 1, "3 fields; LE16 port")
+BP_SELECTED_PACKET(PlayStatusPacket, Core, "RF", 1, 1, "1 field; BE32 status")
+BP_SELECTED_PACKET(ServerPlayerPostMovePositionPacket, Common, "F", 1, 4, "1 field; bare Vector3")

@@ -1,0 +1,36 @@
+/*
+ * This file is part of BedrockProtocol for Endstone.
+ * C++ port of the PHP original: src/types/OverrideUpdateType.php
+ * Copyright (C) 2014-2022 PocketMine Team <https://github.com/pmmp/BedrockProtocol>
+ *
+ * BedrockProtocol is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ */
+
+#include "bedrock_protocol/protocol/types/OverrideUpdateType.h"
+
+#include <string>
+
+#include "bedrock_protocol/protocol/PacketDecodeException.h"
+
+namespace bedrock_protocol::types {
+
+OverrideUpdateType OverrideUpdateTypeFromPacket(const std::int32_t value)
+{
+    switch (value) {
+    case 0:
+        return OverrideUpdateType::CLEAR_OVERRIDES;
+    case 1:
+        return OverrideUpdateType::REMOVE_OVERRIDE;
+    case 2:
+        return OverrideUpdateType::SET_INT_OVERRIDE;
+    case 3:
+        return OverrideUpdateType::SET_FLOAT_OVERRIDE;
+    default:
+        throw PacketDecodeException("Invalid raw value " + std::to_string(value) + " for OverrideUpdateType");
+    }
+}
+
+}  // namespace bedrock_protocol::types

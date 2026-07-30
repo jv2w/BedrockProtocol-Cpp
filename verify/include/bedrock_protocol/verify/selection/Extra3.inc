@@ -1,0 +1,31 @@
+/*
+ * Selection fragment: session, HUD and polymorphic-payload packets that had no deep filler.
+ * Owned by verify/src/fillers/Fillers_Extra3.cpp. See PacketSelection.inc for the column meanings.
+ */
+
+BP_SELECTED_PACKET(ClientboundAttributeLayerSyncPacket, Rare, "T", 1, 1, "1 field; polymorphic AttributeLayerSyncPayload with a leading type id")
+BP_SELECTED_PACKET(ClientboundDataStorePacket, Rare, "T", 1, 1, "1 field; vector of polymorphic DataStoreOperation")
+BP_SELECTED_PACKET(PlayerLocationPacket, Common, "RT", 3, 1, "3 fields; position only written under PLAYER_LOCATION_COORDINATES")
+BP_SELECTED_PACKET(PlayerUpdateEntityOverridesPacket, Rare, "T", 5, 1, "5 fields; updateType selects which of the two optionals reaches the wire")
+BP_SELECTED_PACKET(PlayerVideoCapturePacket, Rare, "T", 3, 1, "3 fields; both optionals only written when recording is true")
+BP_SELECTED_PACKET(PrimitiveShapesPacket, Rare, "T", 1, 1, "1 field; vector<PacketShapeData>, nine engaged optionals and a polymorphic payload each")
+BP_SELECTED_PACKET(ServerStatsPacket, Rare, "R", 2, 1, "2 fields; two LE floats a swap would exchange")
+BP_SELECTED_PACKET(ServerToClientHandshakePacket, Core, "R", 1, 1, "1 field; JWT string")
+BP_SELECTED_PACKET(ServerboundDataDrivenScreenClosedPacket, Rare, "R", 2, 1, "2 fields; LE32 formId plus string")
+BP_SELECTED_PACKET(ServerboundLoadingScreenPacket, Common, "RT", 2, 1, "2 fields; validated enum plus optional<u32>")
+BP_SELECTED_PACKET(ServerboundPackSettingChangePacket, Rare, "T", 2, 1, "2 fields; polymorphic PackSetting with name and type id")
+BP_SELECTED_PACKET(SetCommandsEnabledPacket, Core, "R", 1, 1, "1 field; single bool")
+BP_SELECTED_PACKET(SetDefaultGameTypePacket, Common, "R", 1, 1, "1 field; signed varint gamemode")
+BP_SELECTED_PACKET(SetLastHurtByPacket, Common, "R", 1, 1, "1 field; signed varint entity type id")
+BP_SELECTED_PACKET(SetLocalPlayerAsInitializedPacket, Core, "R", 1, 1, "1 field; actor runtime id")
+BP_SELECTED_PACKET(SetSpawnPositionPacket, Core, "RF", 4, 1, "4 fields; two BlockPositions a swap would transpose")
+BP_SELECTED_PACKET(ShowProfilePacket, Rare, "R", 1, 1, "1 field; xuid string")
+BP_SELECTED_PACKET(ShowStoreOfferPacket, Rare, "RT", 2, 1, "2 fields; UUID plus validated enum")
+BP_SELECTED_PACKET(SimpleEventPacket, Rare, "R", 1, 1, "1 field; LE16 a varint mix-up would hide")
+BP_SELECTED_PACKET(SimulationTypePacket, Rare, "R", 1, 1, "1 field; single byte")
+BP_SELECTED_PACKET(StopSoundPacket, Common, "R", 3, 1, "3 fields; string plus two adjacent bools")
+BP_SELECTED_PACKET(SubClientLoginPacket, Rare, "R", 1, 1, "1 field; opaque connection request string")
+BP_SELECTED_PACKET(SyncActorPropertyPacket, Rare, "RT", 1, 1, "1 field; raw CacheableNbt")
+BP_SELECTED_PACKET(SyncWorldClocksPacket, Rare, "T", 1, 1, "1 field; polymorphic SyncWorldClocksPayload with a leading type id")
+BP_SELECTED_PACKET(TickingAreasLoadStatusPacket, Rare, "R", 1, 1, "1 field; single bool")
+BP_SELECTED_PACKET(UpdateClientInputLocksPacket, Common, "R", 1, 1, "1 field; unsigned varint bitflags")

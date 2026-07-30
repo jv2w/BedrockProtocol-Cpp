@@ -1,0 +1,1573 @@
+{
+    "ActorEventPacket": {
+        "name": "ActorEventPacket",
+        "networkId": "ProtocolInfo::ACTOR_EVENT_PACKET",
+        "implements": [
+            "ClientboundPacket",
+            "ServerboundPacket"
+        ],
+        "fieldCount": 4,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ActorPickRequestPacket": {
+        "name": "ActorPickRequestPacket",
+        "networkId": "ProtocolInfo::ACTOR_PICK_REQUEST_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "AddBehaviorTreePacket": {
+        "name": "AddBehaviorTreePacket",
+        "networkId": "ProtocolInfo::ADD_BEHAVIOR_TREE_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "AddPaintingPacket": {
+        "name": "AddPaintingPacket",
+        "networkId": "ProtocolInfo::ADD_PAINTING_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 5,
+        "todoCount": 0,
+        "todos": []
+    },
+    "AgentActionEventPacket": {
+        "name": "AgentActionEventPacket",
+        "networkId": "ProtocolInfo::AGENT_ACTION_EVENT_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "AgentAnimationPacket": {
+        "name": "AgentAnimationPacket",
+        "networkId": "ProtocolInfo::AGENT_ANIMATION_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "AnimateEntityPacket": {
+        "name": "AnimateEntityPacket",
+        "networkId": "ProtocolInfo::ANIMATE_ENTITY_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 7,
+        "todoCount": 0,
+        "todos": []
+    },
+    "AnimatePacket": {
+        "name": "AnimatePacket",
+        "networkId": "ProtocolInfo::ANIMATE_PACKET",
+        "implements": [
+            "ClientboundPacket",
+            "ServerboundPacket"
+        ],
+        "fieldCount": 4,
+        "todoCount": 0,
+        "todos": []
+    },
+    "AnvilDamagePacket": {
+        "name": "AnvilDamagePacket",
+        "networkId": "ProtocolInfo::ANVIL_DAMAGE_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "AutomationClientConnectPacket": {
+        "name": "AutomationClientConnectPacket",
+        "networkId": "ProtocolInfo::AUTOMATION_CLIENT_CONNECT_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "AwardAchievementPacket": {
+        "name": "AwardAchievementPacket",
+        "networkId": "ProtocolInfo::AWARD_ACHIEVEMENT_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "BiomeDefinitionListPacket": {
+        "name": "BiomeDefinitionListPacket",
+        "networkId": "ProtocolInfo::BIOME_DEFINITION_LIST_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "BlockEventPacket": {
+        "name": "BlockEventPacket",
+        "networkId": "ProtocolInfo::BLOCK_EVENT_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "BlockPickRequestPacket": {
+        "name": "BlockPickRequestPacket",
+        "networkId": "ProtocolInfo::BLOCK_PICK_REQUEST_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "BookEditPacket": {
+        "name": "BookEditPacket",
+        "networkId": "ProtocolInfo::BOOK_EDIT_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 9,
+        "todoCount": 0,
+        "todos": []
+    },
+    "BossEventPacket": {
+        "name": "BossEventPacket",
+        "networkId": "ProtocolInfo::BOSS_EVENT_PACKET",
+        "implements": [
+            "ClientboundPacket",
+            "ServerboundPacket"
+        ],
+        "fieldCount": 8,
+        "todoCount": 0,
+        "todos": []
+    },
+    "CameraAimAssistActorPriorityPacket": {
+        "name": "CameraAimAssistActorPriorityPacket",
+        "networkId": "ProtocolInfo::CAMERA_AIM_ASSIST_ACTOR_PRIORITY_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "CameraAimAssistPresetsPacket": {
+        "name": "CameraAimAssistPresetsPacket",
+        "networkId": "ProtocolInfo::CAMERA_AIM_ASSIST_PRESETS_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "CameraPacket": {
+        "name": "CameraPacket",
+        "networkId": "ProtocolInfo::CAMERA_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "CameraPresetsPacket": {
+        "name": "CameraPresetsPacket",
+        "networkId": "ProtocolInfo::CAMERA_PRESETS_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "CameraShakePacket": {
+        "name": "CameraShakePacket",
+        "networkId": "ProtocolInfo::CAMERA_SHAKE_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 4,
+        "todoCount": 0,
+        "todos": []
+    },
+    "CameraSplinePacket": {
+        "name": "CameraSplinePacket",
+        "networkId": "ProtocolInfo::CAMERA_SPLINE_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ChangeDimensionPacket": {
+        "name": "ChangeDimensionPacket",
+        "networkId": "ProtocolInfo::CHANGE_DIMENSION_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 4,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ChangeMobPropertyPacket": {
+        "name": "ChangeMobPropertyPacket",
+        "networkId": "ProtocolInfo::CHANGE_MOB_PROPERTY_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 6,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ChunkRadiusUpdatedPacket": {
+        "name": "ChunkRadiusUpdatedPacket",
+        "networkId": "ProtocolInfo::CHUNK_RADIUS_UPDATED_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ClientCacheBlobStatusPacket": {
+        "name": "ClientCacheBlobStatusPacket",
+        "networkId": "ProtocolInfo::CLIENT_CACHE_BLOB_STATUS_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ClientCacheMissResponsePacket": {
+        "name": "ClientCacheMissResponsePacket",
+        "networkId": "ProtocolInfo::CLIENT_CACHE_MISS_RESPONSE_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ClientCacheStatusPacket": {
+        "name": "ClientCacheStatusPacket",
+        "networkId": "ProtocolInfo::CLIENT_CACHE_STATUS_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ClientToServerHandshakePacket": {
+        "name": "ClientToServerHandshakePacket",
+        "networkId": "ProtocolInfo::CLIENT_TO_SERVER_HANDSHAKE_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 0,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ClientboundCloseFormPacket": {
+        "name": "ClientboundCloseFormPacket",
+        "networkId": "ProtocolInfo::CLIENTBOUND_CLOSE_FORM_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 0,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ClientboundDataDrivenUICloseScreenPacket": {
+        "name": "ClientboundDataDrivenUICloseScreenPacket",
+        "networkId": "ProtocolInfo::CLIENTBOUND_DATA_DRIVEN_UI_CLOSE_SCREEN_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ClientboundDataDrivenUIReloadPacket": {
+        "name": "ClientboundDataDrivenUIReloadPacket",
+        "networkId": "ProtocolInfo::CLIENTBOUND_DATA_DRIVEN_UI_RELOAD_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 0,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ClientboundDataDrivenUIShowScreenPacket": {
+        "name": "ClientboundDataDrivenUIShowScreenPacket",
+        "networkId": "ProtocolInfo::CLIENTBOUND_DATA_DRIVEN_UI_SHOW_SCREEN_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ClientboundTextureShiftPacket": {
+        "name": "ClientboundTextureShiftPacket",
+        "networkId": "ProtocolInfo::CLIENTBOUND_TEXTURE_SHIFT_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 8,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ClientboundUpdateSoundDataPacket": {
+        "name": "ClientboundUpdateSoundDataPacket",
+        "networkId": "ProtocolInfo::CLIENTBOUND_UPDATE_SOUND_DATA_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "CodeBuilderPacket": {
+        "name": "CodeBuilderPacket",
+        "networkId": "ProtocolInfo::CODE_BUILDER_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "CodeBuilderSourcePacket": {
+        "name": "CodeBuilderSourcePacket",
+        "networkId": "ProtocolInfo::CODE_BUILDER_SOURCE_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "CommandBlockUpdatePacket": {
+        "name": "CommandBlockUpdatePacket",
+        "networkId": "ProtocolInfo::COMMAND_BLOCK_UPDATE_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 13,
+        "todoCount": 0,
+        "todos": []
+    },
+    "CommandRequestPacket": {
+        "name": "CommandRequestPacket",
+        "networkId": "ProtocolInfo::COMMAND_REQUEST_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 4,
+        "todoCount": 0,
+        "todos": []
+    },
+    "CompletedUsingItemPacket": {
+        "name": "CompletedUsingItemPacket",
+        "networkId": "ProtocolInfo::COMPLETED_USING_ITEM_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ContainerClosePacket": {
+        "name": "ContainerClosePacket",
+        "networkId": "ProtocolInfo::CONTAINER_CLOSE_PACKET",
+        "implements": [
+            "ClientboundPacket",
+            "ServerboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ContainerOpenPacket": {
+        "name": "ContainerOpenPacket",
+        "networkId": "ProtocolInfo::CONTAINER_OPEN_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 4,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ContainerRegistryCleanupPacket": {
+        "name": "ContainerRegistryCleanupPacket",
+        "networkId": "ProtocolInfo::CONTAINER_REGISTRY_CLEANUP_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ContainerSetDataPacket": {
+        "name": "ContainerSetDataPacket",
+        "networkId": "ProtocolInfo::CONTAINER_SET_DATA_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "CorrectPlayerMovePredictionPacket": {
+        "name": "CorrectPlayerMovePredictionPacket",
+        "networkId": "ProtocolInfo::CORRECT_PLAYER_MOVE_PREDICTION_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 7,
+        "todoCount": 0,
+        "todos": []
+    },
+    "CreatePhotoPacket": {
+        "name": "CreatePhotoPacket",
+        "networkId": "ProtocolInfo::CREATE_PHOTO_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "CreativeContentPacket": {
+        "name": "CreativeContentPacket",
+        "networkId": "ProtocolInfo::CREATIVE_CONTENT_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "CurrentStructureFeaturePacket": {
+        "name": "CurrentStructureFeaturePacket",
+        "networkId": "ProtocolInfo::CURRENT_STRUCTURE_FEATURE_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "DeathInfoPacket": {
+        "name": "DeathInfoPacket",
+        "networkId": "ProtocolInfo::DEATH_INFO_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "DebugInfoPacket": {
+        "name": "DebugInfoPacket",
+        "networkId": "ProtocolInfo::DEBUG_INFO_PACKET",
+        "implements": [
+            "ClientboundPacket",
+            "ServerboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "EmoteListPacket": {
+        "name": "EmoteListPacket",
+        "networkId": "ProtocolInfo::EMOTE_LIST_PACKET",
+        "implements": [
+            "ClientboundPacket",
+            "ServerboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "EmotePacket": {
+        "name": "EmotePacket",
+        "networkId": "ProtocolInfo::EMOTE_PACKET",
+        "implements": [
+            "ClientboundPacket",
+            "ServerboundPacket"
+        ],
+        "fieldCount": 6,
+        "todoCount": 0,
+        "todos": []
+    },
+    "GameTestRequestPacket": {
+        "name": "GameTestRequestPacket",
+        "networkId": "ProtocolInfo::GAME_TEST_REQUEST_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 7,
+        "todoCount": 0,
+        "todos": []
+    },
+    "GameTestResultsPacket": {
+        "name": "GameTestResultsPacket",
+        "networkId": "ProtocolInfo::GAME_TEST_RESULTS_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "GuiDataPickItemPacket": {
+        "name": "GuiDataPickItemPacket",
+        "networkId": "ProtocolInfo::GUI_DATA_PICK_ITEM_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "HurtArmorPacket": {
+        "name": "HurtArmorPacket",
+        "networkId": "ProtocolInfo::HURT_ARMOR_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "InteractPacket": {
+        "name": "InteractPacket",
+        "networkId": "ProtocolInfo::INTERACT_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ItemRegistryPacket": {
+        "name": "ItemRegistryPacket",
+        "networkId": "ProtocolInfo::ITEM_REGISTRY_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ItemStackRequestPacket": {
+        "name": "ItemStackRequestPacket",
+        "networkId": "ProtocolInfo::ITEM_STACK_REQUEST_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ItemStackResponsePacket": {
+        "name": "ItemStackResponsePacket",
+        "networkId": "ProtocolInfo::ITEM_STACK_RESPONSE_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "LabTablePacket": {
+        "name": "LabTablePacket",
+        "networkId": "ProtocolInfo::LAB_TABLE_PACKET",
+        "implements": [
+            "ClientboundPacket",
+            "ServerboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "LecternUpdatePacket": {
+        "name": "LecternUpdatePacket",
+        "networkId": "ProtocolInfo::LECTERN_UPDATE_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "LegacyTelemetryEventPacket": {
+        "name": "LegacyTelemetryEventPacket",
+        "networkId": "ProtocolInfo::LEGACY_TELEMETRY_EVENT_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "LessonProgressPacket": {
+        "name": "LessonProgressPacket",
+        "networkId": "ProtocolInfo::LESSON_PROGRESS_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "LevelEventPacket": {
+        "name": "LevelEventPacket",
+        "networkId": "ProtocolInfo::LEVEL_EVENT_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "LevelSoundEventPacket": {
+        "name": "LevelSoundEventPacket",
+        "networkId": "ProtocolInfo::LEVEL_SOUND_EVENT_PACKET",
+        "implements": [
+            "ClientboundPacket",
+            "ServerboundPacket"
+        ],
+        "fieldCount": 8,
+        "todoCount": 0,
+        "todos": []
+    },
+    "LocatorBarPacket": {
+        "name": "LocatorBarPacket",
+        "networkId": "ProtocolInfo::LOCATOR_BAR_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "MapCreateLockedCopyPacket": {
+        "name": "MapCreateLockedCopyPacket",
+        "networkId": "ProtocolInfo::MAP_CREATE_LOCKED_COPY_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "MapInfoRequestPacket": {
+        "name": "MapInfoRequestPacket",
+        "networkId": "ProtocolInfo::MAP_INFO_REQUEST_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "MobEffectPacket": {
+        "name": "MobEffectPacket",
+        "networkId": "ProtocolInfo::MOB_EFFECT_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 8,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ModalFormRequestPacket": {
+        "name": "ModalFormRequestPacket",
+        "networkId": "ProtocolInfo::MODAL_FORM_REQUEST_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ModalFormResponsePacket": {
+        "name": "ModalFormResponsePacket",
+        "networkId": "ProtocolInfo::MODAL_FORM_RESPONSE_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "MotionPredictionHintsPacket": {
+        "name": "MotionPredictionHintsPacket",
+        "networkId": "ProtocolInfo::MOTION_PREDICTION_HINTS_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "MoveActorAbsolutePacket": {
+        "name": "MoveActorAbsolutePacket",
+        "networkId": "ProtocolInfo::MOVE_ACTOR_ABSOLUTE_PACKET",
+        "implements": [
+            "ClientboundPacket",
+            "ServerboundPacket"
+        ],
+        "fieldCount": 6,
+        "todoCount": 0,
+        "todos": []
+    },
+    "MovePlayerPacket": {
+        "name": "MovePlayerPacket",
+        "networkId": "ProtocolInfo::MOVE_PLAYER_PACKET",
+        "implements": [
+            "ClientboundPacket",
+            "ServerboundPacket"
+        ],
+        "fieldCount": 11,
+        "todoCount": 0,
+        "todos": []
+    },
+    "MultiplayerSettingsPacket": {
+        "name": "MultiplayerSettingsPacket",
+        "networkId": "ProtocolInfo::MULTIPLAYER_SETTINGS_PACKET",
+        "implements": [
+            "ClientboundPacket",
+            "ServerboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "NetworkSettingsPacket": {
+        "name": "NetworkSettingsPacket",
+        "networkId": "ProtocolInfo::NETWORK_SETTINGS_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 5,
+        "todoCount": 0,
+        "todos": []
+    },
+    "NetworkStackLatencyPacket": {
+        "name": "NetworkStackLatencyPacket",
+        "networkId": "ProtocolInfo::NETWORK_STACK_LATENCY_PACKET",
+        "implements": [
+            "ClientboundPacket",
+            "ServerboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "NpcDialoguePacket": {
+        "name": "NpcDialoguePacket",
+        "networkId": "ProtocolInfo::NPC_DIALOGUE_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 6,
+        "todoCount": 0,
+        "todos": []
+    },
+    "NpcRequestPacket": {
+        "name": "NpcRequestPacket",
+        "networkId": "ProtocolInfo::NPC_REQUEST_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 5,
+        "todoCount": 0,
+        "todos": []
+    },
+    "OnScreenTextureAnimationPacket": {
+        "name": "OnScreenTextureAnimationPacket",
+        "networkId": "ProtocolInfo::ON_SCREEN_TEXTURE_ANIMATION_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "OpenSignPacket": {
+        "name": "OpenSignPacket",
+        "networkId": "ProtocolInfo::OPEN_SIGN_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "PacketViolationWarningPacket": {
+        "name": "PacketViolationWarningPacket",
+        "networkId": "ProtocolInfo::PACKET_VIOLATION_WARNING_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 4,
+        "todoCount": 0,
+        "todos": []
+    },
+    "PartyChangedPacket": {
+        "name": "PartyChangedPacket",
+        "networkId": "ProtocolInfo::PARTY_CHANGED_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "PartyDestinationCookieResponsePacket": {
+        "name": "PartyDestinationCookieResponsePacket",
+        "networkId": "ProtocolInfo::PARTY_DESTINATION_COOKIE_RESPONSE_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "PhotoTransferPacket": {
+        "name": "PhotoTransferPacket",
+        "networkId": "ProtocolInfo::PHOTO_TRANSFER_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 7,
+        "todoCount": 0,
+        "todos": []
+    },
+    "PlaySoundPacket": {
+        "name": "PlaySoundPacket",
+        "networkId": "ProtocolInfo::PLAY_SOUND_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 7,
+        "todoCount": 0,
+        "todos": []
+    },
+    "PlayStatusPacket": {
+        "name": "PlayStatusPacket",
+        "networkId": "ProtocolInfo::PLAY_STATUS_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "PlayerActionPacket": {
+        "name": "PlayerActionPacket",
+        "networkId": "ProtocolInfo::PLAYER_ACTION_PACKET",
+        "implements": [
+            "ClientboundPacket",
+            "ServerboundPacket"
+        ],
+        "fieldCount": 5,
+        "todoCount": 0,
+        "todos": []
+    },
+    "PlayerArmorDamagePacket": {
+        "name": "PlayerArmorDamagePacket",
+        "networkId": "ProtocolInfo::PLAYER_ARMOR_DAMAGE_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "PlayerEnchantOptionsPacket": {
+        "name": "PlayerEnchantOptionsPacket",
+        "networkId": "ProtocolInfo::PLAYER_ENCHANT_OPTIONS_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "PlayerFogPacket": {
+        "name": "PlayerFogPacket",
+        "networkId": "ProtocolInfo::PLAYER_FOG_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "PlayerHotbarPacket": {
+        "name": "PlayerHotbarPacket",
+        "networkId": "ProtocolInfo::PLAYER_HOTBAR_PACKET",
+        "implements": [
+            "ClientboundPacket",
+            "ServerboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "PlayerStartItemCooldownPacket": {
+        "name": "PlayerStartItemCooldownPacket",
+        "networkId": "ProtocolInfo::PLAYER_START_ITEM_COOLDOWN_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "PlayerToggleCrafterSlotRequestPacket": {
+        "name": "PlayerToggleCrafterSlotRequestPacket",
+        "networkId": "ProtocolInfo::PLAYER_TOGGLE_CRAFTER_SLOT_REQUEST_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "PositionTrackingDBClientRequestPacket": {
+        "name": "PositionTrackingDBClientRequestPacket",
+        "networkId": "ProtocolInfo::POSITION_TRACKING_DB_CLIENT_REQUEST_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "PrimitiveShapesPacket": {
+        "name": "PrimitiveShapesPacket",
+        "networkId": "ProtocolInfo::PRIMITIVE_SHAPES_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "PurchaseReceiptPacket": {
+        "name": "PurchaseReceiptPacket",
+        "networkId": "ProtocolInfo::PURCHASE_RECEIPT_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "RefreshEntitlementsPacket": {
+        "name": "RefreshEntitlementsPacket",
+        "networkId": "ProtocolInfo::REFRESH_ENTITLEMENTS_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 0,
+        "todoCount": 0,
+        "todos": []
+    },
+    "RemoveActorPacket": {
+        "name": "RemoveActorPacket",
+        "networkId": "ProtocolInfo::REMOVE_ACTOR_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "RemoveObjectivePacket": {
+        "name": "RemoveObjectivePacket",
+        "networkId": "ProtocolInfo::REMOVE_OBJECTIVE_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "RemoveVolumeEntityPacket": {
+        "name": "RemoveVolumeEntityPacket",
+        "networkId": "ProtocolInfo::REMOVE_VOLUME_ENTITY_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "RequestChunkRadiusPacket": {
+        "name": "RequestChunkRadiusPacket",
+        "networkId": "ProtocolInfo::REQUEST_CHUNK_RADIUS_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "RequestNetworkSettingsPacket": {
+        "name": "RequestNetworkSettingsPacket",
+        "networkId": "ProtocolInfo::REQUEST_NETWORK_SETTINGS_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "RequestPermissionsPacket": {
+        "name": "RequestPermissionsPacket",
+        "networkId": "ProtocolInfo::REQUEST_PERMISSIONS_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ResourcePackChunkDataPacket": {
+        "name": "ResourcePackChunkDataPacket",
+        "networkId": "ProtocolInfo::RESOURCE_PACK_CHUNK_DATA_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 4,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ResourcePackChunkRequestPacket": {
+        "name": "ResourcePackChunkRequestPacket",
+        "networkId": "ProtocolInfo::RESOURCE_PACK_CHUNK_REQUEST_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ResourcePackDataInfoPacket": {
+        "name": "ResourcePackDataInfoPacket",
+        "networkId": "ProtocolInfo::RESOURCE_PACK_DATA_INFO_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 7,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ResourcePacksReadyForValidationPacket": {
+        "name": "ResourcePacksReadyForValidationPacket",
+        "networkId": "ProtocolInfo::RESOURCE_PACKS_READY_FOR_VALIDATION_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 0,
+        "todoCount": 0,
+        "todos": []
+    },
+    "RespawnPacket": {
+        "name": "RespawnPacket",
+        "networkId": "ProtocolInfo::RESPAWN_PACKET",
+        "implements": [
+            "ClientboundPacket",
+            "ServerboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ScriptMessagePacket": {
+        "name": "ScriptMessagePacket",
+        "networkId": "ProtocolInfo::SCRIPT_MESSAGE_PACKET",
+        "implements": [
+            "ClientboundPacket",
+            "ServerboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "SendPartyDestinationCookiePacket": {
+        "name": "SendPartyDestinationCookiePacket",
+        "networkId": "ProtocolInfo::SEND_PARTY_DESTINATION_COOKIE_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ServerPlayerPostMovePositionPacket": {
+        "name": "ServerPlayerPostMovePositionPacket",
+        "networkId": "ProtocolInfo::SERVER_PLAYER_POST_MOVE_POSITION_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ServerSettingsRequestPacket": {
+        "name": "ServerSettingsRequestPacket",
+        "networkId": "ProtocolInfo::SERVER_SETTINGS_REQUEST_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 0,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ServerSettingsResponsePacket": {
+        "name": "ServerSettingsResponsePacket",
+        "networkId": "ProtocolInfo::SERVER_SETTINGS_RESPONSE_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ServerStatsPacket": {
+        "name": "ServerStatsPacket",
+        "networkId": "ProtocolInfo::SERVER_STATS_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ServerToClientHandshakePacket": {
+        "name": "ServerToClientHandshakePacket",
+        "networkId": "ProtocolInfo::SERVER_TO_CLIENT_HANDSHAKE_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ServerboundDataDrivenScreenClosedPacket": {
+        "name": "ServerboundDataDrivenScreenClosedPacket",
+        "networkId": "ProtocolInfo::SERVERBOUND_DATA_DRIVEN_SCREEN_CLOSED_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ServerboundDiagnosticsPacket": {
+        "name": "ServerboundDiagnosticsPacket",
+        "networkId": "ProtocolInfo::SERVERBOUND_DIAGNOSTICS_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 13,
+        "todoCount": 0,
+        "todos": []
+    },
+    "SetActorMotionPacket": {
+        "name": "SetActorMotionPacket",
+        "networkId": "ProtocolInfo::SET_ACTOR_MOTION_PACKET",
+        "implements": [
+            "ClientboundPacket",
+            "ServerboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "SetCommandsEnabledPacket": {
+        "name": "SetCommandsEnabledPacket",
+        "networkId": "ProtocolInfo::SET_COMMANDS_ENABLED_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "SetDefaultGameTypePacket": {
+        "name": "SetDefaultGameTypePacket",
+        "networkId": "ProtocolInfo::SET_DEFAULT_GAME_TYPE_PACKET",
+        "implements": [
+            "ClientboundPacket",
+            "ServerboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "SetDifficultyPacket": {
+        "name": "SetDifficultyPacket",
+        "networkId": "ProtocolInfo::SET_DIFFICULTY_PACKET",
+        "implements": [
+            "ClientboundPacket",
+            "ServerboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "SetDisplayObjectivePacket": {
+        "name": "SetDisplayObjectivePacket",
+        "networkId": "ProtocolInfo::SET_DISPLAY_OBJECTIVE_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 5,
+        "todoCount": 0,
+        "todos": []
+    },
+    "SetHealthPacket": {
+        "name": "SetHealthPacket",
+        "networkId": "ProtocolInfo::SET_HEALTH_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "SetLastHurtByPacket": {
+        "name": "SetLastHurtByPacket",
+        "networkId": "ProtocolInfo::SET_LAST_HURT_BY_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "SetLocalPlayerAsInitializedPacket": {
+        "name": "SetLocalPlayerAsInitializedPacket",
+        "networkId": "ProtocolInfo::SET_LOCAL_PLAYER_AS_INITIALIZED_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "SetPlayerGameTypePacket": {
+        "name": "SetPlayerGameTypePacket",
+        "networkId": "ProtocolInfo::SET_PLAYER_GAME_TYPE_PACKET",
+        "implements": [
+            "ClientboundPacket",
+            "ServerboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "SetSpawnPositionPacket": {
+        "name": "SetSpawnPositionPacket",
+        "networkId": "ProtocolInfo::SET_SPAWN_POSITION_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 4,
+        "todoCount": 0,
+        "todos": []
+    },
+    "SetTimePacket": {
+        "name": "SetTimePacket",
+        "networkId": "ProtocolInfo::SET_TIME_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "SetTitlePacket": {
+        "name": "SetTitlePacket",
+        "networkId": "ProtocolInfo::SET_TITLE_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 8,
+        "todoCount": 0,
+        "todos": []
+    },
+    "SettingsCommandPacket": {
+        "name": "SettingsCommandPacket",
+        "networkId": "ProtocolInfo::SETTINGS_COMMAND_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ShowCreditsPacket": {
+        "name": "ShowCreditsPacket",
+        "networkId": "ProtocolInfo::SHOW_CREDITS_PACKET",
+        "implements": [
+            "ClientboundPacket",
+            "ServerboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ShowProfilePacket": {
+        "name": "ShowProfilePacket",
+        "networkId": "ProtocolInfo::SHOW_PROFILE_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "SimpleEventPacket": {
+        "name": "SimpleEventPacket",
+        "networkId": "ProtocolInfo::SIMPLE_EVENT_PACKET",
+        "implements": [
+            "ClientboundPacket",
+            "ServerboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "SimulationTypePacket": {
+        "name": "SimulationTypePacket",
+        "networkId": "ProtocolInfo::SIMULATION_TYPE_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "SpawnExperienceOrbPacket": {
+        "name": "SpawnExperienceOrbPacket",
+        "networkId": "ProtocolInfo::SPAWN_EXPERIENCE_ORB_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "StopSoundPacket": {
+        "name": "StopSoundPacket",
+        "networkId": "ProtocolInfo::STOP_SOUND_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "StructureBlockUpdatePacket": {
+        "name": "StructureBlockUpdatePacket",
+        "networkId": "ProtocolInfo::STRUCTURE_BLOCK_UPDATE_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 4,
+        "todoCount": 0,
+        "todos": []
+    },
+    "StructureTemplateDataRequestPacket": {
+        "name": "StructureTemplateDataRequestPacket",
+        "networkId": "ProtocolInfo::STRUCTURE_TEMPLATE_DATA_REQUEST_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 4,
+        "todoCount": 0,
+        "todos": []
+    },
+    "SubClientLoginPacket": {
+        "name": "SubClientLoginPacket",
+        "networkId": "ProtocolInfo::SUB_CLIENT_LOGIN_PACKET",
+        "implements": [
+            "ServerboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "TakeItemActorPacket": {
+        "name": "TakeItemActorPacket",
+        "networkId": "ProtocolInfo::TAKE_ITEM_ACTOR_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "TickingAreasLoadStatusPacket": {
+        "name": "TickingAreasLoadStatusPacket",
+        "networkId": "ProtocolInfo::TICKING_AREAS_LOAD_STATUS_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "ToastRequestPacket": {
+        "name": "ToastRequestPacket",
+        "networkId": "ProtocolInfo::TOAST_REQUEST_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "TransferPacket": {
+        "name": "TransferPacket",
+        "networkId": "ProtocolInfo::TRANSFER_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "TrimDataPacket": {
+        "name": "TrimDataPacket",
+        "networkId": "ProtocolInfo::TRIM_DATA_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "UnlockedRecipesPacket": {
+        "name": "UnlockedRecipesPacket",
+        "networkId": "ProtocolInfo::UNLOCKED_RECIPES_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "UpdateAdventureSettingsPacket": {
+        "name": "UpdateAdventureSettingsPacket",
+        "networkId": "ProtocolInfo::UPDATE_ADVENTURE_SETTINGS_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 5,
+        "todoCount": 0,
+        "todos": []
+    },
+    "UpdateAttributesPacket": {
+        "name": "UpdateAttributesPacket",
+        "networkId": "ProtocolInfo::UPDATE_ATTRIBUTES_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "UpdateBlockPacket": {
+        "name": "UpdateBlockPacket",
+        "networkId": "ProtocolInfo::UPDATE_BLOCK_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 4,
+        "todoCount": 0,
+        "todos": []
+    },
+    "UpdateBlockSyncedPacket": {
+        "name": "UpdateBlockSyncedPacket",
+        "networkId": "ProtocolInfo::UPDATE_BLOCK_SYNCED_PACKET",
+        "implements": [],
+        "fieldCount": 2,
+        "todoCount": 0,
+        "todos": []
+    },
+    "UpdateClientInputLocksPacket": {
+        "name": "UpdateClientInputLocksPacket",
+        "networkId": "ProtocolInfo::UPDATE_CLIENT_INPUT_LOCKS_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 1,
+        "todoCount": 0,
+        "todos": []
+    },
+    "UpdatePlayerGameTypePacket": {
+        "name": "UpdatePlayerGameTypePacket",
+        "networkId": "ProtocolInfo::UPDATE_PLAYER_GAME_TYPE_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "UpdateSoftEnumPacket": {
+        "name": "UpdateSoftEnumPacket",
+        "networkId": "ProtocolInfo::UPDATE_SOFT_ENUM_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    },
+    "UpdateSubChunkBlocksPacket": {
+        "name": "UpdateSubChunkBlocksPacket",
+        "networkId": "ProtocolInfo::UPDATE_SUB_CHUNK_BLOCKS_PACKET",
+        "implements": [
+            "ClientboundPacket"
+        ],
+        "fieldCount": 3,
+        "todoCount": 0,
+        "todos": []
+    }
+}

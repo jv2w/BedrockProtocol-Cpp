@@ -1,0 +1,20 @@
+# Build output. Every directory here is produced by CMakeLists.txt or by a script in tools/,
+# and each one is regenerated from scratch on the next run.
+build/
+out/
+cmake-build-*/
+
+# Compiler and test leftovers
+*.obj
+*.lib
+*.exe
+*.pdb
+*.ilk
+*.log
+*.rsp
+compile_commands.json
+
+# Editor
+.vs/
+.idea/
+.vscode/
