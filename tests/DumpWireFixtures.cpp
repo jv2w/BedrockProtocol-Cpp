@@ -17,6 +17,7 @@
  */
 
 #include <cstdio>
+#include <cstdlib>
 #include <memory>
 #include <string>
 
@@ -28,14 +29,20 @@
 
 using namespace bedrock_protocol;
 
-int main()
+int main(int argc, char **argv)
 {
-    verify::ValueWell well(0x5DEECE66DULL);
+    // The seed decides every field value, so one run only proves the two implementations agree on
+    // the values it happened to produce. BitSet is the standing proof that this matters: its sign
+    // extension defect is invisible unless bit 63 of a part is set, which one packet's values did
+    // and another's did not. Sweeping seeds is what turns a single sample into coverage.
+    const auto seed = argc > 1 ? std::strtoull(argv[1], nullptr, 0) : 0x5DEECE66DULL;
+    verify::ValueWell well(seed);
 
-    std::printf("# BedrockProtocol-Cpp wire fixtures - protocol %d (%.*s), seed 0x5DEECE66D\n",
+    std::printf("# BedrockProtocol-Cpp wire fixtures - protocol %d (%.*s), seed 0x%llX\n",
                 ProtocolInfo::CURRENT_PROTOCOL,
                 static_cast<int>(ProtocolInfo::MINECRAFT_VERSION_NETWORK.size()),
-                ProtocolInfo::MINECRAFT_VERSION_NETWORK.data());
+                ProtocolInfo::MINECRAFT_VERSION_NETWORK.data(),
+                static_cast<unsigned long long>(seed));
     std::printf("# <name> <pid> <hex of encode(), header included>\n");
 
     int written = 0;
@@ -69,6 +76,8 @@ int main()
         ++written;
     }
 
-    std::fprintf(stderr, "%d fixtures written, %d skipped\n", written, skipped);
+    // On stdout as a comment, not on stderr: PowerShell turns any stderr output from a native
+    // program into an error record, which aborts the sweep on a purely informational line.
+    std::printf("# %d fixtures written, %d skipped\n", written, skipped);
     return skipped == 0 ? 0 : 1;
 }

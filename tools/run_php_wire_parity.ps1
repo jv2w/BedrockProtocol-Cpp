@@ -14,6 +14,12 @@
 param(
     [Parameter(Mandatory = $true)][string]$Php,
     [Parameter(Mandatory = $true)][string]$PhpRoot,
+
+    # One seed proves the two implementations agree on the values that seed produced, and no more:
+    # the BitSet defect only surfaces when a part has bit 63 set, which some packets' values did and
+    # others' did not. Each extra seed is a fresh set of values through all 223 packets.
+    [string[]]$Seeds = @('0x5DEECE66D'),
+
     [string]$OutDir = 'build\wire-parity'
 )
 
@@ -46,10 +52,23 @@ $command = "call `"$vsPath\VC\Auxiliary\Build\vcvars64.bat`" >nul 2>&1 && " +
 cmd /c $command
 if ($LASTEXITCODE -ne 0) { throw "compile failed" }
 
-$fixtures = Join-Path $OutDir 'wire.txt'
-# Not `>`: that writes a UTF-8 BOM here, which PHP would read as part of the first line.
-& $exePath | Out-File -FilePath $fixtures -Encoding ascii
-if ($LASTEXITCODE -ne 0) { throw "some packets could not be dumped; see the messages above" }
+$failed = @()
+foreach ($seed in $Seeds) {
+    Write-Host "=== seed $seed"
+    $fixtures = Join-Path $OutDir "wire-$($seed -replace '[^0-9a-fA-Fx]', '').txt"
 
-& $Php (Join-Path $PSScriptRoot 'php_wire_parity.php') $PhpRoot $fixtures
-exit $LASTEXITCODE
+    # Not `>`: that writes a UTF-8 BOM here, which PHP would read as part of the first line.
+    & $exePath $seed | Out-File -FilePath $fixtures -Encoding ascii
+    if ($LASTEXITCODE -ne 0) { throw "seed ${seed}: some packets could not be dumped" }
+
+    & $Php (Join-Path $PSScriptRoot 'php_wire_parity.php') $PhpRoot $fixtures
+    if ($LASTEXITCODE -ne 0) { $failed += $seed }
+}
+
+Write-Host ""
+if ($failed.Count -eq 0) {
+    Write-Host "[OK] all $($Seeds.Count) seed(s) reproduced byte for byte through the PHP original"
+    exit 0
+}
+Write-Host "[FAIL] $($failed.Count) of $($Seeds.Count) seed(s) diverged: $($failed -join ', ')"
+exit 1
