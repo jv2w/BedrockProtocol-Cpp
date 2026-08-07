@@ -35,6 +35,7 @@
 #include "bedrock_protocol/protocol/LabTablePacket.h"
 #include "bedrock_protocol/protocol/LecternUpdatePacket.h"
 #include "bedrock_protocol/protocol/LessonProgressPacket.h"
+#include "bedrock_protocol/protocol/types/SoundDataUpdate.h"
 #include "bedrock_protocol/verify/WellTypes.h"
 
 namespace bedrock_protocol::verify {
@@ -68,13 +69,12 @@ BP_FILLER(AgentAnimationPacket, 2)
         AgentAnimationPacket::create(animationType, actorRuntimeId));
 }
 
-BP_FILLER(AnvilDamagePacket, 2)
+BP_FILLER(AnvilDamagePacket, 1)
 {
     auto &w = ctx.well;
     const auto blockPosition = makeBlockPosition(w);
-    const auto damageAmount = w.u8();
 
-    return std::make_unique<AnvilDamagePacket>(AnvilDamagePacket::create(blockPosition, damageAmount));
+    return std::make_unique<AnvilDamagePacket>(AnvilDamagePacket::create(blockPosition));
 }
 
 BP_FILLER(AutomationClientConnectPacket, 1)
@@ -139,14 +139,27 @@ BP_FILLER(ClientCacheStatusPacket, 1)
     return std::make_unique<ClientCacheStatusPacket>(ClientCacheStatusPacket::create(enabled));
 }
 
-BP_FILLER(ClientboundUpdateSoundDataPacket, 2)
+BP_FILLER(ClientboundUpdateSoundDataPacket, 8)
 {
     auto &w = ctx.well;
     const auto serverSoundHandle = w.u64();
-    const auto soundEvent = w.str("soundEvent");
+    // The seven slots are independent optionals, so all seven are engaged: a slot dropped or written
+    // out of order has to change the bytes. Each carries a DIFFERENT variant, because the variant
+    // type is what decides how many floats follow it - filling them all with the same one would hide
+    // a mix-up between the payload-less and the float-carrying forms.
+    const auto stop = w.some(types::SoundDataUpdate(types::SoundDataUpdate::TYPE_STOP, 0, 0, 0, 0, 0));
+    const auto setVolume = w.some(types::SoundDataUpdate(types::SoundDataUpdate::TYPE_SET_VOLUME, w.f32(), 0, 0, 0, 0));
+    const auto setPitch = w.some(types::SoundDataUpdate(types::SoundDataUpdate::TYPE_SET_PITCH, 0, w.f32(), 0, 0, 0));
+    const auto fadeDuration = w.f32();
+    const auto fadeTargetVolume = w.f32();
+    const auto fade = w.some(types::SoundDataUpdate(types::SoundDataUpdate::TYPE_FADE, 0, 0, fadeDuration, fadeTargetVolume, 0));
+    const auto seekTo = w.some(types::SoundDataUpdate(types::SoundDataUpdate::TYPE_SEEK_TO, 0, 0, 0, 0, w.f32()));
+    const auto pause = w.some(types::SoundDataUpdate(types::SoundDataUpdate::TYPE_PAUSE, 0, 0, 0, 0, 0));
+    const auto resume = w.some(types::SoundDataUpdate(types::SoundDataUpdate::TYPE_RESUME, 0, 0, 0, 0, 0));
 
     return std::make_unique<ClientboundUpdateSoundDataPacket>(
-        ClientboundUpdateSoundDataPacket::create(serverSoundHandle, soundEvent));
+        ClientboundUpdateSoundDataPacket::create(serverSoundHandle, stop, setVolume, setPitch, fade, seekTo, pause,
+                                                 resume));
 }
 
 BP_FILLER(CodeBuilderPacket, 2)

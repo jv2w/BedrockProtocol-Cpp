@@ -8,8 +8,8 @@
 
 BP_SELECTED_PACKET(UpdateBlockPacket, Core, "RF", 4, 4, "4 fields; three unsigned varints after a BlockPosition")
 BP_SELECTED_PACKET(UpdateBlockSyncedPacket, Rare, "F", 6, 1, "6 fields, 4 inherited; no create() - the only derived packet in the suite")
-BP_SELECTED_PACKET(LevelChunkPacket, Core, "RFT", 6, 4, "6 fields; fake-count discriminator plus optional<vector<u64>> blob hashes")
-BP_SELECTED_PACKET(SubChunkPacket, Common, "RFT", 3, 4, "3 fields; variant cached/uncached entry list, 256-entry heightmaps")
+BP_SELECTED_PACKET(LevelChunkPacket, Core, "RFT", 7, 4, "7 fields; optional sub-chunk limit plus an unconditional varuint32-counted vector<u64> of blob hashes")
+BP_SELECTED_PACKET(SubChunkPacket, Common, "RFT", 4, 4, "4 fields; varuint32-counted entry list, 256-entry heightmaps behind presence bytes")
 BP_SELECTED_PACKET(SubChunkRequestPacket, Common, "RT", 3, 4, "3 fields; vector<SubChunkPositionOffset> written before basePosition")
 BP_SELECTED_PACKET(UpdateSubChunkBlocksPacket, Common, "RT", 3, 1, "3 fields; two independent entry vectors")
 BP_SELECTED_PACKET(NetworkChunkPublisherUpdatePacket, Core, "RT", 3, 4, "3 fields; LE32-counted vector<ChunkPosition>")

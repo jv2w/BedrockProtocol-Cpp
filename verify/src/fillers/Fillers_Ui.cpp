@@ -298,22 +298,20 @@ BP_FILLER(ModalFormResponsePacket, 3)
         ModalFormResponsePacket::create(formId, formData, cancelReason));
 }
 
-BP_FILLER(SetScorePacket, 2)
+BP_FILLER(SetScorePacket, 1)
 {
     auto &w = ctx.well;
-    // TYPE_REMOVE suppresses the per-entry type byte and its payload, dropping three of the six
-    // ScorePacketEntry members off the wire. TYPE_CHANGE writes all of them.
-    const auto type = ValueWell::pin(static_cast<std::uint8_t>(SetScorePacket::TYPE_CHANGE));
     const std::vector<types::ScorePacketEntry> entries = {makeScorePacketEntry(w), makeScorePacketEntry(w),
                                                           makeScorePacketEntry(w)};
 
-    return std::make_unique<SetScorePacket>(SetScorePacket::create(type, entries));
+    return std::make_unique<SetScorePacket>(SetScorePacket::create(entries));
 }
 
 BP_FILLER(SetScoreboardIdentityPacket, 2)
 {
     auto &w = ctx.well;
-    // Only TYPE_REGISTER_IDENTITY writes the entries' actorUniqueId; the clear form is a bare id list.
+    // The action type is an enum the decoder dispatches on, so it has to be a legal option rather
+    // than a drawn value.
     const auto type = ValueWell::pin(SetScoreboardIdentityPacket::TYPE_REGISTER_IDENTITY);
     const std::vector<types::ScoreboardIdentityPacketEntry> entries = {makeScoreboardIdentityPacketEntry(w),
                                                                         makeScoreboardIdentityPacketEntry(w),

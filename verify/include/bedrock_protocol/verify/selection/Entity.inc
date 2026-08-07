@@ -10,7 +10,7 @@ BP_SELECTED_PACKET(AddActorPacket, Core, "RFT", 13, 1, "13 fields; EntityMetadat
 BP_SELECTED_PACKET(AddPlayerPacket, Core, "RFT", 17, 1, "17 fields; embeds a whole UpdateAbilitiesPacket body plus EntityMetadata")
 BP_SELECTED_PACKET(AddItemActorPacket, Common, "RFT", 7, 1, "7 fields; ItemStackWrapper plus EntityMetadata")
 BP_SELECTED_PACKET(AddPaintingPacket, Rare, "F", 5, 1, "5 fields; unique/runtime id pair and a Vector3")
-BP_SELECTED_PACKET(MoveActorDeltaPacket, Core, "RF", 8, 4, "8 fields, no create(); every field is written only under its own FLAG_HAS_* bit")
+BP_SELECTED_PACKET(MoveActorDeltaPacket, Core, "RF", 11, 4, "11 fields, no create(); six optionals behind their own presence bool, then four bools")
 BP_SELECTED_PACKET(MobArmorEquipmentPacket, Common, "RFT", 6, 1, "6 fields; five item descriptors, order-sensitive")
 BP_SELECTED_PACKET(MobEquipmentPacket, Core, "RFT", 5, 1, "5 fields; item descriptor plus three byte slots")
 BP_SELECTED_PACKET(UpdateAttributesPacket, Core, "RFT", 3, 1, "3 fields; UpdateAttribute carries six floats and nested modifiers")

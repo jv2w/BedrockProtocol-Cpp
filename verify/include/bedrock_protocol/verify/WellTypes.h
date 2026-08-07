@@ -54,6 +54,7 @@
 #include "bedrock_protocol/protocol/types/LevelSettings.h"
 #include "bedrock_protocol/protocol/types/NetworkPermissions.h"
 #include "bedrock_protocol/protocol/types/PackSetting.h"
+#include "bedrock_protocol/protocol/types/PlayerAuthInputFlagList.h"
 #include "bedrock_protocol/protocol/types/PlayerBlockAction.h"
 #include "bedrock_protocol/protocol/types/PlayerMovementSettings.h"
 #include "bedrock_protocol/protocol/types/ScoreboardIdentityPacketEntry.h"
@@ -84,7 +85,7 @@
 #include "bedrock_protocol/protocol/types/inventory/stackresponse/ItemStackResponseContainerInfo.h"
 #include "bedrock_protocol/protocol/types/inventory/stackresponse/ItemStackResponseSlotInfo.h"
 #include "bedrock_protocol/protocol/types/recipe/ItemDescriptor.h"
-#include "bedrock_protocol/protocol/types/recipe/RecipeWithTypeId.h"
+#include "bedrock_protocol/protocol/types/recipe/MultiRecipe.h"
 #include "bedrock_protocol/protocol/types/shape/PrimitiveShapePayload.h"
 #include "bedrock_protocol/protocol/types/skin/PersonaPieceTintColor.h"
 #include "bedrock_protocol/protocol/types/skin/PersonaSkinPiece.h"
@@ -133,6 +134,7 @@ types::CacheableNbt<nbt::tag::CompoundTag> makeCacheableNbt(ValueWell &w);
  *               the whole remainder of the packet.
  */
 serializer::BitSet makeBitSet(ValueWell &w, std::int32_t length);
+types::PlayerAuthInputFlagList makePlayerAuthInputFlagList(ValueWell &w, std::int32_t size);
 
 // ---- level and game --------------------------------------------------------------------------
 std::unique_ptr<types::GameRule> makeGameRule(ValueWell &w);
@@ -145,7 +147,7 @@ types::PlayerMovementSettings makePlayerMovementSettings(ValueWell &w);
 types::SpawnSettings makeSpawnSettings(ValueWell &w);
 types::EducationUriResource makeEducationUriResource(ValueWell &w);
 std::unique_ptr<types::PackSetting> makePackSetting(ValueWell &w);
-std::unique_ptr<types::PlayerBlockAction> makePlayerBlockAction(ValueWell &w);
+types::PlayerBlockAction makePlayerBlockAction(ValueWell &w);
 std::unique_ptr<types::shape::PrimitiveShapePayload> makePrimitiveShapePayload(ValueWell &w);
 std::unique_ptr<types::AttributeLayerSyncPayload> makeAttributeLayerSyncPayload(ValueWell &w);
 std::unique_ptr<types::SyncWorldClocksPayload> makeSyncWorldClocksPayload(ValueWell &w);
@@ -168,7 +170,7 @@ types::command::CommandOutputMessage makeCommandOutputMessage(ValueWell &w);
 
 // ---- recipe ----------------------------------------------------------------------------------
 std::unique_ptr<types::recipe::ItemDescriptor> makeItemDescriptor(ValueWell &w);
-std::unique_ptr<types::recipe::RecipeWithTypeId> makeRecipe(ValueWell &w);
+types::recipe::MultiRecipe makeRecipe(ValueWell &w);
 
 // ---- scoreboard ------------------------------------------------------------------------------
 types::ScorePacketEntry makeScorePacketEntry(ValueWell &w);

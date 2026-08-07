@@ -6,9 +6,9 @@
  * The two conventions from Fillers_Core.cpp hold here as well: one create() call with every argument
  * spelled out, and every value drawn into a named local first. See that file's header for why.
  *
- * This batch carries most of the protocol's polymorphism - TransactionData, ItemStackRequestAction and
- * RecipeWithTypeId are all abstract bases whose concrete type is chosen by a tag on the wire - so the
- * collections below deliberately mix concrete types where the decoder dispatches per element.
+ * This batch carries most of the protocol's polymorphism - TransactionData and ItemStackRequestAction are
+ * abstract bases whose concrete type is chosen by a tag on the wire - so the collections below
+ * deliberately mix concrete types where the decoder dispatches per element.
  */
 
 #include "bedrock_protocol/verify/Filler.h"
@@ -33,7 +33,10 @@
 #include "bedrock_protocol/protocol/UnlockedRecipesPacket.h"
 #include "bedrock_protocol/protocol/UpdateEquipPacket.h"
 #include "bedrock_protocol/protocol/UpdateTradePacket.h"
+#include "bedrock_protocol/protocol/types/recipe/ShapedRecipe.h"
 #include "bedrock_protocol/protocol/types/recipe/ShapelessRecipe.h"
+#include "bedrock_protocol/protocol/types/recipe/SmithingTransformRecipe.h"
+#include "bedrock_protocol/protocol/types/recipe/SmithingTrimRecipe.h"
 #include "bedrock_protocol/verify/WellTypes.h"
 
 namespace bedrock_protocol::verify {
@@ -46,17 +49,21 @@ types::recipe::RecipeIngredient makeRecipeIngredient(ValueWell &w)
 }
 
 /**
- * A ShapelessRecipe, which makeRecipe (a MultiRecipe) deliberately is not.
- *
- * CraftingDataPacket writes a per-entry type tag and dispatches on it, so a homogeneous recipe list
- * would leave every branch but ENTRY_MULTI untested - and MultiRecipe is by far the smallest of them.
- * The unlockingIngredients optional is engaged because RecipeUnlockingRequirement inverts the flag it
- * writes, so the disengaged form is the one that emits nothing.
+ * The unlocking requirement is engaged and its context is CONTEXT_NONE, because that is the only
+ * combination under which the ingredient list is written at all.
  */
-std::unique_ptr<types::recipe::RecipeWithTypeId> makeShapelessRecipe(ValueWell &w)
+types::recipe::RecipeUnlockingRequirement makeRecipeUnlockingRequirement(ValueWell &w)
 {
-    // ENTRY_SHAPELESS is the tag CraftingDataPacket maps back to ShapelessRecipe.
-    const auto typeId = ValueWell::pin(CraftingDataPacket::ENTRY_SHAPELESS);
+    const auto context = ValueWell::pin(types::recipe::RecipeUnlockingRequirement::CONTEXT_NONE);
+    std::vector<types::recipe::RecipeIngredient> unlockingIngredients;
+    unlockingIngredients.push_back(makeRecipeIngredient(w));
+    unlockingIngredients.push_back(makeRecipeIngredient(w));
+
+    return {context, std::move(unlockingIngredients)};
+}
+
+types::recipe::ShapelessRecipe makeShapelessRecipe(ValueWell &w)
+{
     auto recipeId = w.str("shapelessRecipeId");
     std::vector<types::recipe::RecipeIngredient> inputs;
     inputs.push_back(makeRecipeIngredient(w));
@@ -65,15 +72,58 @@ std::unique_ptr<types::recipe::RecipeWithTypeId> makeShapelessRecipe(ValueWell &
     const auto uuid = w.uuid();
     auto blockName = w.str("shapelessBlockName");
     const auto priority = w.i32();
-    std::vector<types::recipe::RecipeIngredient> unlockingIngredients;
-    unlockingIngredients.push_back(makeRecipeIngredient(w));
-    unlockingIngredients.push_back(makeRecipeIngredient(w));
-    types::recipe::RecipeUnlockingRequirement unlockingRequirement{std::move(unlockingIngredients)};
+    auto unlockingRequirement = w.some(makeRecipeUnlockingRequirement(w));
     const auto recipeNetId = w.u32();
 
-    return std::make_unique<types::recipe::ShapelessRecipe>(typeId, std::move(recipeId), std::move(inputs),
-                                                            std::move(outputs), uuid, std::move(blockName), priority,
-                                                            std::move(unlockingRequirement), recipeNetId);
+    return {std::move(recipeId), std::move(inputs), std::move(outputs), uuid, std::move(blockName), priority,
+            std::move(unlockingRequirement), recipeNetId};
+}
+
+types::recipe::ShapedRecipe makeShapedRecipe(ValueWell &w)
+{
+    auto recipeId = w.str("shapedRecipeId");
+    // The encoder derives the width and height from the shape of the input grid, and the decoder rejects
+    // an ingredient count that is not width * height, so the grid has to be rectangular.
+    std::vector<std::vector<types::recipe::RecipeIngredient>> input;
+    input.push_back({makeRecipeIngredient(w), makeRecipeIngredient(w)});
+    input.push_back({makeRecipeIngredient(w), makeRecipeIngredient(w)});
+    std::vector<types::inventory::ItemStack> output = {makeItemStack(w), makeItemStack(w)};
+    const auto uuid = w.uuid();
+    auto blockName = w.str("shapedBlockName");
+    const auto priority = w.i32();
+    const auto symmetric = w.flag();
+    auto unlockingRequirement = w.some(makeRecipeUnlockingRequirement(w));
+    const auto recipeNetId = w.u32();
+
+    return {std::move(recipeId), std::move(input), std::move(output),        uuid,        std::move(blockName),
+            priority,            symmetric,        std::move(unlockingRequirement), recipeNetId};
+}
+
+types::recipe::SmithingTransformRecipe makeSmithingTransformRecipe(ValueWell &w)
+{
+    auto recipeId = w.str("smithingTransformRecipeId");
+    auto template_ = makeRecipeIngredient(w);
+    auto input = makeRecipeIngredient(w);
+    auto addition = makeRecipeIngredient(w);
+    auto output = makeItemStack(w);
+    auto blockName = w.str("smithingTransformBlockName");
+    const auto recipeNetId = w.u32();
+
+    return {std::move(recipeId), std::move(template_),  std::move(input), std::move(addition),
+            std::move(output),   std::move(blockName), recipeNetId};
+}
+
+types::recipe::SmithingTrimRecipe makeSmithingTrimRecipe(ValueWell &w)
+{
+    auto recipeId = w.str("smithingTrimRecipeId");
+    auto template_ = makeRecipeIngredient(w);
+    auto input = makeRecipeIngredient(w);
+    auto addition = makeRecipeIngredient(w);
+    auto blockName = w.str("smithingTrimBlockName");
+    const auto recipeNetId = w.u32();
+
+    return {std::move(recipeId), std::move(template_), std::move(input), std::move(addition), std::move(blockName),
+            recipeNetId};
 }
 
 types::EnchantOption makeEnchantOption(ValueWell &w)
@@ -125,13 +175,17 @@ BP_FILLER(InventorySlotPacket, 5)
         windowId, inventorySlot, std::move(containerName), std::move(storage), std::move(item)));
 }
 
-BP_FILLER(CraftingDataPacket, 5)
+BP_FILLER(CraftingDataPacket, 12)
 {
     auto &w = ctx.well;
-    std::vector<std::unique_ptr<types::recipe::RecipeWithTypeId>> recipesWithTypeIds;
-    recipesWithTypeIds.push_back(makeRecipe(w));
-    recipesWithTypeIds.push_back(makeShapelessRecipe(w));
-    recipesWithTypeIds.push_back(makeRecipe(w));
+    std::vector<types::recipe::ShapedRecipe> shapedRecipes = {makeShapedRecipe(w)};
+    std::vector<types::recipe::ShapelessRecipe> shapelessRecipes = {makeShapelessRecipe(w)};
+    std::vector<types::recipe::MultiRecipe> multiRecipes = {makeRecipe(w), makeRecipe(w)};
+    std::vector<types::recipe::ShapelessRecipe> shulkerBoxRecipes = {makeShapelessRecipe(w)};
+    std::vector<types::recipe::ShapelessRecipe> shapelessChemistryRecipes = {makeShapelessRecipe(w)};
+    std::vector<types::recipe::ShapedRecipe> shapedChemistryRecipes = {makeShapedRecipe(w)};
+    std::vector<types::recipe::SmithingTransformRecipe> smithingTransformRecipes = {makeSmithingTransformRecipe(w)};
+    std::vector<types::recipe::SmithingTrimRecipe> smithingTrimRecipes = {makeSmithingTrimRecipe(w)};
 
     std::vector<types::recipe::PotionTypeRecipe> potionTypeRecipes = {
         {w.i32(), w.i32(), w.i32(), w.i32(), w.i32(), w.i32()},
@@ -156,8 +210,10 @@ BP_FILLER(CraftingDataPacket, 5)
     const auto cleanRecipes = w.flag();
 
     return std::make_unique<CraftingDataPacket>(CraftingDataPacket::create(
-        std::move(recipesWithTypeIds), std::move(potionTypeRecipes), std::move(potionContainerRecipes),
-        std::move(materialReducerRecipes), cleanRecipes));
+        std::move(shapedRecipes), std::move(shapelessRecipes), std::move(multiRecipes),
+        std::move(shulkerBoxRecipes), std::move(shapelessChemistryRecipes), std::move(shapedChemistryRecipes),
+        std::move(smithingTransformRecipes), std::move(smithingTrimRecipes), std::move(potionTypeRecipes),
+        std::move(potionContainerRecipes), std::move(materialReducerRecipes), cleanRecipes));
 }
 
 BP_FILLER(UpdateEquipPacket, 5)
@@ -278,10 +334,10 @@ BP_FILLER(PlayerToggleCrafterSlotRequestPacket, 3)
 BP_FILLER(CreativeContentPacket, 2)
 {
     auto &w = ctx.well;
-    const auto categoryIdA = w.i32();
+    const auto categoryIdA = w.u8();
     auto categoryNameA = w.str("groupName0");
     auto iconA = makeItemStack(w);
-    const auto categoryIdB = w.i32();
+    const auto categoryIdB = w.u8();
     auto categoryNameB = w.str("groupName1");
     auto iconB = makeItemStack(w);
     std::vector<types::inventory::CreativeGroupEntry> groups = {

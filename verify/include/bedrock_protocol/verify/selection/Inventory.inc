@@ -8,7 +8,7 @@
 
 BP_SELECTED_PACKET(UpdateTradePacket, Rare, "FT", 10, 1, "10 fields; CacheableNbt offers written as a raw byte array")
 BP_SELECTED_PACKET(InventorySlotPacket, Core, "RFT", 5, 1, "5 fields; two optionals plus a NetworkItemStackDescriptor")
-BP_SELECTED_PACKET(CraftingDataPacket, Common, "FT", 5, 1, "5 fields; vector<unique_ptr<RecipeWithTypeId>> mixing MultiRecipe and ShapelessRecipe")
+BP_SELECTED_PACKET(CraftingDataPacket, Common, "FT", 12, 1, "12 fields; eight separately-typed recipe vectors plus potions and material reducers")
 BP_SELECTED_PACKET(UpdateEquipPacket, Rare, "FT", 5, 1, "5 fields; CacheableNbt payload")
 BP_SELECTED_PACKET(SetPlayerInventoryOptionsPacket, Common, "RF", 5, 1, "5 fields; all four enums validated on decode")
 BP_SELECTED_PACKET(InventoryContentPacket, Core, "RFT", 4, 1, "4 fields; item vector plus two optionals the encoder dereferences unconditionally")

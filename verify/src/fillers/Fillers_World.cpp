@@ -21,7 +21,6 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #include "bedrock_protocol/protocol/AddVolumeEntityPacket.h"
@@ -46,7 +45,7 @@
 #include "bedrock_protocol/protocol/UpdateSubChunkBlocksPacket.h"
 #include "bedrock_protocol/protocol/types/DimensionData.h"
 #include "bedrock_protocol/protocol/types/DimensionNameIds.h"
-#include "bedrock_protocol/protocol/types/SubChunkPacketEntryCommon.h"
+#include "bedrock_protocol/protocol/types/SubChunkPacketEntry.h"
 #include "bedrock_protocol/protocol/types/SubChunkPacketHeightMapInfo.h"
 #include "bedrock_protocol/protocol/types/SubChunkPositionOffset.h"
 #include "bedrock_protocol/protocol/types/SubChunkRequestResult.h"
@@ -57,14 +56,7 @@ namespace bedrock_protocol::verify {
 
 namespace {
 
-/**
- * A 256-entry heightmap whose values are all in 0..15.
- *
- * The range matters: SubChunkPacketEntryCommon::write collapses a heightmap that is entirely below 0
- * to ALL_TOO_LOW and one entirely above 15 to ALL_TOO_HIGH, in both cases writing a single type byte
- * and none of the 256 heights. Staying inside 0..15 forces the DATA branch, which is the only one
- * that puts the heights themselves on the wire.
- */
+/** A 256-entry heightmap. Every height is written verbatim; the type byte no longer suppresses any. */
 types::SubChunkPacketHeightMapInfo makeHeightMap(ValueWell &w)
 {
     const auto base = w.u8();
@@ -85,19 +77,21 @@ types::SubChunkPositionOffset makeSubChunkPositionOffset(ValueWell &w)
     return {xOffset, yOffset, zOffset};
 }
 
-types::SubChunkPacketEntryCommon makeSubChunkPacketEntryCommon(ValueWell &w)
+types::SubChunkPacketEntry makeSubChunkPacketEntry(ValueWell &w)
 {
     auto offset = makeSubChunkPositionOffset(w);
-    // Under the cached form, terrainData is written only when the result is not SUCCESS_ALL_AIR.
     const auto requestResult = ValueWell::pin(types::SubChunkRequestResult::SUCCESS);
-    auto terrainData = w.str("terrainData");
-    // Both engaged, and both with real data: a nullopt renderHeightMap encodes as ALL_COPIED, which
-    // decodes back to a COPY of heightMap rather than to nullopt.
+    auto terrainData = w.some(w.str("terrainData"));
+    // The height map types are free-standing bytes now - they no longer decide whether the map that
+    // follows is on the wire, so they can be drawn rather than pinned to a branch-selecting value.
+    const auto heightMapType = w.u8();
     auto heightMap = w.some(makeHeightMap(w));
+    const auto renderHeightMapType = w.u8();
     auto renderHeightMap = w.some(makeHeightMap(w));
+    auto usedBlobHash = w.some(w.u64());
 
-    return {std::move(offset), requestResult, std::move(terrainData), std::move(heightMap),
-            std::move(renderHeightMap)};
+    return {std::move(offset),   requestResult,          std::move(terrainData), heightMapType,
+            std::move(heightMap), renderHeightMapType,   std::move(renderHeightMap), usedBlobHash};
 }
 
 types::UpdateSubChunkBlocksPacketEntry makeUpdateSubChunkBlocksEntry(ValueWell &w)
@@ -117,8 +111,9 @@ types::DimensionData makeDimensionData(ValueWell &w)
     const auto minHeight = w.i32();
     const auto generator = w.i32();
     const auto dimensionType = w.i32();
+    const auto packId = w.uuid();
 
-    return {maxHeight, minHeight, generator, dimensionType};
+    return {maxHeight, minHeight, generator, dimensionType, packId};
 }
 
 }  // namespace
@@ -149,40 +144,36 @@ BP_FILLER_NOCREATE(UpdateBlockSyncedPacket, 6)
     return packet;
 }
 
-BP_FILLER(LevelChunkPacket, 6)
+BP_FILLER(LevelChunkPacket, 7)
 {
     auto &w = ctx.well;
     auto chunkPosition = makeChunkPosition(w);
     const auto dimensionId = w.i32();
-    // clientSubChunkRequestsEnabled with a subChunkCount below int64 max selects the TRUNCATED-column
-    // branch, the only one of the three that writes a second field (the LE16 height) after the fake
-    // count. The count must therefore stay inside 16 bits, since that is what the decoder reads back.
-    const auto subChunkCount = static_cast<std::int64_t>(w.u16());
-    const auto clientSubChunkRequestsEnabled = ValueWell::pin(true);
-    const std::vector<std::uint64_t> blobHashes = {w.u64(), w.u64(), w.u64()};
-    const auto usedBlobHashes = w.some(blobHashes);
+    // Pinned: decodePayload rejects anything above 64, so a drawn value would not survive its own
+    // encoding. 64 is the largest legal one, so a narrowing of the field still shows.
+    const auto subChunkCount = ValueWell::pin<std::uint32_t>(64);
+    const auto subChunkLimit = w.some(w.i32());
+    const auto cacheEnabled = w.flag();
+    std::vector<std::uint64_t> usedBlobHashes = {w.u64(), w.u64(), w.u64()};
     auto extraPayload = w.str("extraPayload");
 
     return std::make_unique<LevelChunkPacket>(LevelChunkPacket::create(std::move(chunkPosition), dimensionId,
-                                                                      subChunkCount, clientSubChunkRequestsEnabled,
-                                                                      usedBlobHashes, std::move(extraPayload)));
+                                                                      subChunkCount, subChunkLimit, cacheEnabled,
+                                                                      std::move(usedBlobHashes),
+                                                                      std::move(extraPayload)));
 }
 
-BP_FILLER(SubChunkPacket, 3)
+BP_FILLER(SubChunkPacket, 4)
 {
     auto &w = ctx.well;
+    const auto cacheEnabled = w.flag();
     const auto dimension = w.i32();
     auto baseSubChunkPosition = makeSubChunkPosition(w);
-    // The variant alternative IS the cacheEnabled discriminator. The cached list is the richer of the
-    // two: it writes everything the uncached one does plus a per-entry LE64 blob hash.
-    std::vector<types::SubChunkPacketEntryWithCache> cacheEntries;
-    cacheEntries.emplace_back(makeSubChunkPacketEntryCommon(w), w.u64());
-    cacheEntries.emplace_back(makeSubChunkPacketEntryCommon(w), w.u64());
-    std::variant<types::SubChunkPacketEntryWithCacheList, types::SubChunkPacketEntryWithoutCacheList> entries =
-        types::SubChunkPacketEntryWithCacheList(std::move(cacheEntries));
+    // Two entries, so a count read as a fixed LE32 instead of a varuint32 cannot line up by accident.
+    std::vector<types::SubChunkPacketEntry> entries = {makeSubChunkPacketEntry(w), makeSubChunkPacketEntry(w)};
 
     return std::make_unique<SubChunkPacket>(
-        SubChunkPacket::create(dimension, std::move(baseSubChunkPosition), std::move(entries)));
+        SubChunkPacket::create(cacheEnabled, dimension, std::move(baseSubChunkPosition), std::move(entries)));
 }
 
 BP_FILLER(SubChunkRequestPacket, 3)

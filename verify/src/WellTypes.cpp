@@ -8,14 +8,12 @@
 #include "bedrock_protocol/nbt/tag/IntTag.h"
 #include "bedrock_protocol/nbt/tag/ListTag.h"
 #include "bedrock_protocol/nbt/tag/StringTag.h"
-#include "bedrock_protocol/protocol/CraftingDataPacket.h"
 #include "bedrock_protocol/protocol/types/AttributesRemoveEnvironment.h"
 #include "bedrock_protocol/protocol/types/BoolGameRule.h"
 #include "bedrock_protocol/protocol/types/BoolPackSetting.h"
 #include "bedrock_protocol/protocol/types/FloatGameRule.h"
 #include "bedrock_protocol/protocol/types/IntGameRule.h"
-#include "bedrock_protocol/protocol/types/PlayerAction.h"
-#include "bedrock_protocol/protocol/types/PlayerBlockActionWithBlockInfo.h"
+#include "bedrock_protocol/protocol/types/PlayerBlockAction.h"
 #include "bedrock_protocol/protocol/types/SyncWorldClockMarkerData.h"
 #include "bedrock_protocol/protocol/types/SyncWorldClocksAddTimeMarker.h"
 #include "bedrock_protocol/protocol/types/ddui/DataStoreUpdate.h"
@@ -89,19 +87,26 @@ types::SubChunkPosition makeSubChunkPosition(ValueWell &w)
 
 color::Color makeColor(ValueWell &w)
 {
-    const auto r = w.u8();
-    const auto g = w.u8();
-    const auto b = w.u8();
-    // Not the 0xff default: an alpha channel that is dropped or reordered has to change the bytes.
-    const auto a = w.u8();
-    return {r, g, b, a};
+    // One packed u32 draw rather than four u8 draws. The u8 pool holds 255 tokens per packet, and
+    // 1.26.40 turned persona tint colours into a fixed array of four colours per piece
+    // (gophertunnel v1.58.0 minecraft/protocol/skin.go:246), which multiplied the channel draws in
+    // PlayerListPacket until that pool ran dry. Drawing the colour as one token keeps colours
+    // distinct from each other without competing with genuine byte-width fields.
+    const auto packed = w.u32();
+    // Never 0, matching ValueWell::u8: a channel that is dropped has to change the bytes. The alpha
+    // is drawn rather than left at the 0xff default so that dropping or reordering it also shows.
+    const auto channel = [](std::uint32_t v) {
+        const auto byte = static_cast<std::uint8_t>(v & 0xffu);
+        return byte == 0 ? static_cast<std::uint8_t>(1) : byte;
+    };
+    return {channel(packed >> 24), channel(packed >> 16), channel(packed >> 8), channel(packed)};
 }
 
 types::inventory::ItemStack makeItemStack(ValueWell &w)
 {
     // putNetworkItemStackDescriptor narrows the id to a signed short, so a wider draw would not
-    // survive its own encoding. i16 is also never zero, which matters: id 0 is the null-item branch
-    // and would skip every remaining field of the stack.
+    // survive its own encoding. i16 is also never zero, which keeps the item-stack user-data blob
+    // from being suppressed by the air-item rule in putItemStackFooter.
     const auto id = static_cast<std::int32_t>(w.i16());
     const auto meta = w.u32();
     const auto count = w.u16();
@@ -115,12 +120,11 @@ types::inventory::ItemStack makeItemStack(ValueWell &w)
 
 types::inventory::ItemStackWrapper makeItemStackWrapper(ValueWell &w)
 {
-    // Non-zero: the writers treat stackId == 0 as "no net ID" and skip both the ID and its variant.
+    // Non-zero: the writers treat stackId == 0 as "no net ID" and skip the ID entirely.
     const auto stackId = w.i32();
-    const auto stackIdVariant = w.u32();
     auto itemStack = makeItemStack(w);
 
-    return {stackId, std::move(itemStack), stackIdVariant};
+    return {stackId, std::move(itemStack)};
 }
 
 types::inventory::FullContainerName makeFullContainerName(ValueWell &w)
@@ -206,7 +210,8 @@ types::inventory::stackresponse::ItemStackResponseSlotInfo makeItemStackResponse
     const auto slot = w.u8();
     const auto hotbarSlot = w.u8();
     const auto count = w.u8();
-    const auto itemStackId = w.i32();
+    // The stack ID is written only when positive, so a negative draw would not survive the round trip.
+    const auto itemStackId = static_cast<std::int32_t>(w.u32());
     auto customName = w.str("responseCustomName");
     auto filteredCustomName = w.str("responseFilteredCustomName");
     const auto durabilityCorrection = w.i32();
@@ -231,9 +236,9 @@ types::inventory::stackresponse::ItemStackResponseContainerInfo makeItemStackRes
 
 types::inventory::stackresponse::ItemStackResponse makeItemStackResponse(ValueWell &w)
 {
-    // RESULT_OK is the only result under which the container list is written at all; RESULT_ERROR
-    // would stop the encoder right after the request ID and leave every nested field untested.
-    const auto result = ValueWell::pin(types::inventory::stackresponse::ItemStackResponse::RESULT_OK);
+    // The container list is now gated on being non-empty rather than on the result, so the result is a
+    // plain drawn value.
+    const auto result = w.u8();
     const auto requestId = w.i32();
     std::vector<types::inventory::stackresponse::ItemStackResponseContainerInfo> containerInfos = {
         makeItemStackResponseContainerInfo(w), makeItemStackResponseContainerInfo(w)};
@@ -357,6 +362,22 @@ serializer::BitSet makeBitSet(ValueWell &w, std::int32_t length)
     }
 
     return bits;
+}
+
+types::PlayerAuthInputFlagList makePlayerAuthInputFlagList(ValueWell &w, std::int32_t size)
+{
+    (void)w;  // the flag IDs are positional, not drawn - see below
+
+    types::PlayerAuthInputFlagList flags(size);
+    // First, middle and last ID rather than random ones: the ends are what catch an off-by-one in the
+    // size bound, which is the only thing read() validates the IDs against.
+    if (size > 0) {
+        flags.set(0, true);
+        flags.set(size / 2, true);
+        flags.set(size - 1, true);
+    }
+
+    return flags;
 }
 
 std::unique_ptr<types::GameRule> makeGameRule(ValueWell &w)
@@ -491,15 +512,15 @@ std::unique_ptr<types::PackSetting> makePackSetting(ValueWell &w)
     return std::make_unique<types::BoolPackSetting>(std::move(name), value);
 }
 
-std::unique_ptr<types::PlayerBlockAction> makePlayerBlockAction(ValueWell &w)
+types::PlayerBlockAction makePlayerBlockAction(ValueWell &w)
 {
-    // START_BREAK is one of the five action types PlayerBlockActionWithBlockInfo accepts; the
-    // constructor throws on any other, and it is also the branch that carries a position and a face.
-    const auto actionType = ValueWell::pin(types::PlayerAction::START_BREAK);
+    // There is one element shape and no per-action branch, so the action type is a plain value
+    // rather than a discriminator (player.go:158-163).
+    const auto actionType = w.i32();
     const auto blockPosition = makeBlockPosition(w);
     const auto face = w.i32();
 
-    return std::make_unique<types::PlayerBlockActionWithBlockInfo>(actionType, blockPosition, face);
+    return {actionType, blockPosition, face};
 }
 
 std::unique_ptr<types::shape::PrimitiveShapePayload> makePrimitiveShapePayload(ValueWell &w)
@@ -580,7 +601,7 @@ types::StructureEditorData makeStructureEditorData(ValueWell &w)
     // unknown value would put the decoder on a branch that reads none of the settings back.
     data.structureBlockType = ValueWell::pin(types::StructureEditorData::TYPE_SAVE);
     data.structureSettings = makeStructureSettings(w);
-    data.structureRedstoneSaveMode = w.i32();
+    data.structureRedstoneSaveMode = w.u8();
 
     return data;
 }
@@ -603,20 +624,22 @@ types::skin::SkinAnimation makeSkinAnimation(ValueWell &w)
 types::skin::PersonaSkinPiece makePersonaSkinPiece(ValueWell &w)
 {
     auto pieceId = w.str("pieceId");
-    auto pieceType = w.str("pieceType");
-    auto packId = w.str("packId");
+    const auto pieceType = w.u32();
+    const auto packId = w.uuid();
     const auto isDefaultPiece = w.flag();
     auto productId = w.str("productId");
 
-    return {std::move(pieceId), std::move(pieceType), std::move(packId), isDefaultPiece, std::move(productId)};
+    return {std::move(pieceId), pieceType, packId, isDefaultPiece, std::move(productId)};
 }
 
 types::skin::PersonaPieceTintColor makePersonaPieceTintColor(ValueWell &w)
 {
-    auto pieceType = w.str("tintPieceType");
-    std::vector<std::string> colors = {w.str("tint0"), w.str("tint1"), w.str("tint2")};
+    // Pinned: putSkin strips the persona_ prefix on write and getSkin puts it back, so a filled instance
+    // only compares equal to a decoded one if the name survives that round trip.
+    auto pieceType = ValueWell::pin(std::string(types::skin::PersonaPieceTintColor::PIECE_TYPE_PERSONA_EYES));
+    types::skin::PersonaPieceTintColor::Colors colors = {makeColor(w), makeColor(w), makeColor(w), makeColor(w)};
 
-    return {std::move(pieceType), std::move(colors)};
+    return {std::move(pieceType), colors};
 }
 
 types::skin::SkinData makeSkinData(ValueWell &w)
@@ -634,19 +657,19 @@ types::skin::SkinData makeSkinData(ValueWell &w)
     // Engaged: left empty, the constructor substitutes a random UUID and the packet would encode to
     // different bytes on every run, which would make any failure impossible to reproduce.
     auto fullSkinId = w.some(w.str("fullSkinId"));
-    auto armSize = w.str("armSize");
-    auto skinColor = w.str("skinColor");
+    const auto armSize = w.u8();
+    const auto skinColor = makeColor(w);
     std::vector<types::skin::PersonaSkinPiece> personaPieces = {makePersonaSkinPiece(w), makePersonaSkinPiece(w)};
     std::vector<types::skin::PersonaPieceTintColor> pieceTintColors = {makePersonaPieceTintColor(w),
                                                                       makePersonaPieceTintColor(w)};
-    // isVerified is not on the wire: putSkin never writes it and getSkin hardcodes true. Pinned to
-    // true so a filled instance compares equal to a decoded one on that member.
-    const auto isVerified = ValueWell::pin(true);
+    // isVerified is the skin body's trailing "true"/"false" string as of protocol 2168 (skin.go:113-118).
+    const auto isVerified = w.flag();
     const auto premium = w.flag();
     const auto persona = w.flag();
     const auto personaCapeOnClassic = w.flag();
     const auto isPrimaryUser = w.flag();
     const auto override = w.flag();
+    auto profileHash = w.str("profileHash");
 
     return {std::move(skinId),
             std::move(playFabId),
@@ -659,8 +682,8 @@ types::skin::SkinData makeSkinData(ValueWell &w)
             std::move(animationData),
             std::move(capeId),
             std::move(fullSkinId),
-            std::move(armSize),
-            std::move(skinColor),
+            armSize,
+            skinColor,
             std::move(personaPieces),
             std::move(pieceTintColors),
             isVerified,
@@ -668,7 +691,8 @@ types::skin::SkinData makeSkinData(ValueWell &w)
             persona,
             personaCapeOnClassic,
             isPrimaryUser,
-            override};
+            override,
+            std::move(profileHash)};
 }
 
 types::PlayerListEntry makePlayerListEntry(ValueWell &w)
@@ -676,6 +700,8 @@ types::PlayerListEntry makePlayerListEntry(ValueWell &w)
     // Built member-wise rather than through createAdditionEntry, because that factory leaves `color`
     // disengaged by default and the optional colour branch is exactly what needs exercising.
     types::PlayerListEntry entry;
+    // ACTION_REMOVE ends the entry after its UUID; only ACTION_ADD puts the rest on the wire.
+    entry.actionType = ValueWell::pin(types::PlayerListEntry::ACTION_ADD);
     entry.uuid = w.uuid();
     entry.actorUniqueId = w.i64();
     entry.username = w.str("username");
@@ -715,20 +741,19 @@ types::command::CommandOutputMessage makeCommandOutputMessage(ValueWell &w)
 std::unique_ptr<types::recipe::ItemDescriptor> makeItemDescriptor(ValueWell &w)
 {
     auto id = w.str("descriptorId");
-    const auto meta = w.u16();
+    // The name descriptor carries a signed varint32 meta, so a signed draw is what separates it from a
+    // plain varint or a fixed short.
+    const auto meta = w.i32();
 
     return std::make_unique<types::recipe::StringIdMetaItemDescriptor>(std::move(id), meta);
 }
 
-std::unique_ptr<types::recipe::RecipeWithTypeId> makeRecipe(ValueWell &w)
+types::recipe::MultiRecipe makeRecipe(ValueWell &w)
 {
-    // The type ID is written by the owning packet as the entry tag it will dispatch on when decoding,
-    // so it has to be the tag that maps back to MultiRecipe rather than a drawn value.
-    const auto typeId = ValueWell::pin(CraftingDataPacket::ENTRY_MULTI);
     const auto recipeId = w.uuid();
     const auto recipeNetId = w.u32();
 
-    return std::make_unique<types::recipe::MultiRecipe>(typeId, recipeId, recipeNetId);
+    return {recipeId, recipeNetId};
 }
 
 types::ScorePacketEntry makeScorePacketEntry(ValueWell &w)

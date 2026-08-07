@@ -182,25 +182,23 @@ BP_FILLER(AddPaintingPacket, 5)
         AddPaintingPacket::create(actorUniqueId, actorRuntimeId, position, direction, std::move(title)));
 }
 
-BP_FILLER_NOCREATE(MoveActorDeltaPacket, 8)
+BP_FILLER_NOCREATE(MoveActorDeltaPacket, 11)
 {
     auto &w = ctx.well;
     auto packet = std::make_unique<MoveActorDeltaPacket>();
     packet->actorRuntimeId = w.u64();
-    // Every FLAG_HAS_* bit set: each coordinate and rotation is written only when its own bit is on,
-    // so any other value would leave up to six of the eight fields entirely untested. The three
-    // non-positional bits are included too, since flags itself is a plain u16 on the wire.
-    packet->flags = ValueWell::pin<std::uint16_t>(
-        MoveActorDeltaPacket::FLAG_HAS_X | MoveActorDeltaPacket::FLAG_HAS_Y | MoveActorDeltaPacket::FLAG_HAS_Z |
-        MoveActorDeltaPacket::FLAG_HAS_PITCH | MoveActorDeltaPacket::FLAG_HAS_YAW |
-        MoveActorDeltaPacket::FLAG_HAS_HEAD_YAW | MoveActorDeltaPacket::FLAG_GROUND |
-        MoveActorDeltaPacket::FLAG_TELEPORT | MoveActorDeltaPacket::FLAG_FORCE_MOVE_LOCAL_ENTITY);
-    packet->xPos = w.f32();
-    packet->yPos = w.f32();
-    packet->zPos = w.f32();
-    packet->pitch = w.f32();
-    packet->yaw = w.f32();
-    packet->headYaw = w.f32();
+    // Every optional engaged: each coordinate and rotation is written only behind its own presence
+    // bool, so a disengaged one would leave that field entirely untested.
+    packet->xPos = w.some(w.f32());
+    packet->yPos = w.some(w.f32());
+    packet->zPos = w.some(w.f32());
+    packet->pitch = w.some(w.f32());
+    packet->yaw = w.some(w.f32());
+    packet->headYaw = w.some(w.f32());
+    packet->onGround = w.flag();
+    packet->forceMove = w.flag();
+    packet->forceMoveLocalEntity = w.flag();
+    packet->forceCompletion = w.flag();
 
     return packet;
 }

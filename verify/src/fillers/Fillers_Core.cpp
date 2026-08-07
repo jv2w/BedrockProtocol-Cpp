@@ -50,7 +50,7 @@
 
 namespace bedrock_protocol::verify {
 
-BP_FILLER(MovePlayerPacket, 11)
+BP_FILLER(MovePlayerPacket, 10)
 {
     auto &w = ctx.well;
     const auto actorRuntimeId = w.u64();
@@ -58,18 +58,19 @@ BP_FILLER(MovePlayerPacket, 11)
     const auto pitch = w.f32();
     const auto yaw = w.f32();
     const auto headYaw = w.f32();
-    // MODE_TELEPORT is the only mode under which encodePayload writes teleportCause and
-    // teleportItem. Any other value would leave two of the eleven fields untested.
     const auto mode = ValueWell::pin(MovePlayerPacket::MODE_TELEPORT);
     const auto onGround = w.flag();
     const auto ridingActorRuntimeId = w.u64();
+    // Engaged: the presence bool is always on the wire now, and only the engaged branch writes the
+    // two LE32s behind it.
     const auto teleportCause = w.i32();
     const auto teleportItem = w.i32();
+    auto teleportData = w.some(types::TeleportData(teleportCause, teleportItem));
     const auto tick = w.u64();
 
     return std::make_unique<MovePlayerPacket>(MovePlayerPacket::create(
-        actorRuntimeId, position, pitch, yaw, headYaw, mode, onGround, ridingActorRuntimeId, teleportCause,
-        teleportItem, tick));
+        actorRuntimeId, position, pitch, yaw, headYaw, mode, onGround, ridingActorRuntimeId,
+        std::move(teleportData), tick));
 }
 
 BP_FILLER(LevelSoundEventPacket, 8)
@@ -156,7 +157,7 @@ BP_FILLER(AnimateEntityPacket, 7)
         animation, nextState, stopExpression, stopExpressionVersion, controller, blendOutTime, actorRuntimeIds));
 }
 
-BP_FILLER(PlaySoundPacket, 7)
+BP_FILLER(PlaySoundPacket, 8)
 {
     auto &w = ctx.well;
     const auto soundName = w.str("soundName");
@@ -168,10 +169,11 @@ BP_FILLER(PlaySoundPacket, 7)
     const auto z = w.f32();
     const auto volume = w.f32();
     const auto pitch = w.f32();
+    const auto loopCount = w.i32();
     const auto serverSoundHandle = w.some(w.u64());
 
     return std::make_unique<PlaySoundPacket>(
-        PlaySoundPacket::create(soundName, x, y, z, volume, pitch, serverSoundHandle));
+        PlaySoundPacket::create(soundName, x, y, z, volume, pitch, loopCount, serverSoundHandle));
 }
 
 BP_FILLER(EmotePacket, 6)
@@ -234,16 +236,16 @@ BP_FILLER(SetActorDataPacket, 4)
 namespace {
 
 /**
- * A NetworkInventoryAction that survives writeAuthInput.
+ * A NetworkInventoryAction as the auth-input path writes it.
  *
- * sourceType is a discriminator: writeAuthInput switches on it and throws for anything outside the
- * four known values, and each branch writes a different trailing field. Passing it in lets the caller
- * cover more than one branch.
+ * Since 2168 the auth-input actions are the ordinary InventoryAction (inventory.go:44-51), so
+ * sourceType is no longer a discriminator over the framing - it is a plain varuint32 and windowId
+ * and sourceFlags are both always present as DoubleOptionals.
  */
-types::inventory::NetworkInventoryAction makeAuthInputInventoryAction(ValueWell &w, std::uint32_t sourceType)
+types::inventory::NetworkInventoryAction makeAuthInputInventoryAction(ValueWell &w)
 {
     types::inventory::NetworkInventoryAction action;
-    action.sourceType = ValueWell::pin(sourceType);
+    action.sourceType = w.u32();
     // windowId goes out as a signed byte, so anything wider would not survive its own encoding.
     action.windowId = w.some(static_cast<std::int32_t>(w.i8()));
     action.sourceFlags = w.some(w.u32());
@@ -256,8 +258,6 @@ types::inventory::NetworkInventoryAction makeAuthInputInventoryAction(ValueWell 
 
 types::ItemInteractionData makeItemInteractionData(ValueWell &w)
 {
-    // Non-zero on purpose: ItemInteractionData::write emits requestChangedSlots only when requestId
-    // is non-zero, so a zero here would silently drop the whole collection.
     const auto requestId = w.i32();
 
     const auto slotsContainerA = w.u8();
@@ -269,8 +269,8 @@ types::ItemInteractionData makeItemInteractionData(ValueWell &w)
     changedSlots.emplace_back(slotsContainerB, slotIndexesB);
 
     std::vector<types::inventory::NetworkInventoryAction> actions;
-    actions.push_back(makeAuthInputInventoryAction(w, types::inventory::NetworkInventoryAction::SOURCE_CONTAINER));
-    actions.push_back(makeAuthInputInventoryAction(w, types::inventory::NetworkInventoryAction::SOURCE_WORLD));
+    actions.push_back(makeAuthInputInventoryAction(w));
+    actions.push_back(makeAuthInputInventoryAction(w));
 
     const auto actionType = w.i32();
     // TriggerTypeFromPacket and PredictedResultFromPacket both reject unknown values, so these two are
@@ -290,7 +290,7 @@ types::ItemInteractionData makeItemInteractionData(ValueWell &w)
         std::move(actions), actionType, triggerType, blockPosition, face, hotbarSlot, std::move(itemInHand),
         playerPosition, clickPosition, blockRuntimeId, clientInteractPrediction, clientCooldownState);
 
-    return types::ItemInteractionData(requestId, std::move(changedSlots), std::move(transactionData));
+    return types::ItemInteractionData(requestId, w.some(std::move(changedSlots)), std::move(transactionData));
 }
 
 types::ServerJoinInformation makeServerJoinInformation(ValueWell &w)
@@ -332,7 +332,7 @@ types::ServerTelemetryData makeServerTelemetryData(ValueWell &w)
 
 }  // namespace
 
-BP_FILLER(StartGamePacket, 27)
+BP_FILLER(StartGamePacket, 26)
 {
     auto &w = ctx.well;
     const auto actorUniqueId = w.i64();
@@ -357,7 +357,6 @@ BP_FILLER(StartGamePacket, 27)
     const auto enableClientSideChunkGeneration = w.flag();
     const auto blockNetworkIdsAreHashes = w.flag();
     auto networkPermissions = makeNetworkPermissions(w);
-    const auto isLoggingChat = w.flag();
     // Engaged, and with all three of its own sub-optionals engaged: an empty ServerJoinInformation
     // would collapse four nested writeOptional value branches into their absent form.
     auto serverJoinInformation = w.some(makeServerJoinInformation(w));
@@ -373,11 +372,11 @@ BP_FILLER(StartGamePacket, 27)
         std::move(levelSettings), levelId, worldName, premiumWorldTemplateId, isTrial, std::move(playerMovementSettings),
         currentTick, enchantmentSeed, multiplayerCorrelationId, enableNewInventorySystem, serverSoftwareVersion,
         worldTemplateId, enableClientSideChunkGeneration, blockNetworkIdsAreHashes, std::move(networkPermissions),
-        isLoggingChat, std::move(serverJoinInformation), std::move(serverTelemetryData), std::move(blockPalette),
+        std::move(serverJoinInformation), std::move(serverTelemetryData), std::move(blockPalette),
         blockPaletteChecksum));
 }
 
-BP_FILLER(PlayerAuthInputPacket, 21)
+BP_FILLER(PlayerAuthInputPacket, 22)
 {
     auto &w = ctx.well;
     const auto position = w.vec3();
@@ -386,33 +385,25 @@ BP_FILLER(PlayerAuthInputPacket, 21)
     const auto headYaw = w.f32();
     const auto moveVecX = w.f32();
     const auto moveVecZ = w.f32();
-    // Exact bit length is mandatory: BitSet::write derives its part count from the length, and
-    // decodePayload reads back with NUMBER_OF_FLAGS. Any other length desynchronises everything after it.
-    auto inputFlags = makeBitSet(w, types::PlayerAuthInputFlags::NUMBER_OF_FLAGS);
+    // Exact size is mandatory: create() rejects any other, and decodePayload reads back with
+    // NUMBER_OF_FLAGS and rejects every ID beyond it.
+    auto inputFlags = makePlayerAuthInputFlagList(w, types::PlayerAuthInputFlags::NUMBER_OF_FLAGS);
     const auto inputMode = w.u32();
     const auto playMode = w.u32();
-    const auto interactionMode = w.u32();
+    const auto interactionMode = w.i32();
     const auto interactRotation = w.vec2();
     const auto tick = w.u64();
     const auto delta = w.vec3();
-    // The four optionals below are the packet's discriminators: create() sets
-    // PERFORM_ITEM_INTERACTION / PERFORM_ITEM_STACK_REQUEST / PERFORM_BLOCK_ACTIONS /
-    // IN_CLIENT_PREDICTED_VEHICLE from their engagement, and encodePayload writes each block only when
-    // its flag is set. All four are engaged so that no branch of the payload is left unwritten.
+    // The five optionals below no longer depend on the input flags: each carries its own
+    // DoubleOptional framing. All five are engaged so that no inner branch is left unwritten.
     auto itemInteractionData = w.some(makeItemInteractionData(w));
     auto itemStackRequest = w.some(makeItemStackRequest(w));
-    std::vector<std::unique_ptr<types::PlayerBlockAction>> blockActionList;
+    std::vector<types::PlayerBlockAction> blockActionList;
     blockActionList.push_back(makePlayerBlockAction(w));
     blockActionList.push_back(makePlayerBlockAction(w));
-    // STOP_BREAK is the other decode branch - it carries no payload beyond its own action type, and a
-    // list of only WithBlockInfo actions would never reach it.
-    blockActionList.push_back(std::make_unique<types::PlayerBlockActionStopBreak>());
     auto blockActions = w.some(std::move(blockActionList));
-    const auto vehicleRotationX = w.f32();
-    const auto vehicleRotationZ = w.f32();
-    const auto predictedVehicleActorUniqueId = w.i64();
-    auto vehicleInfo =
-        w.some(types::PlayerAuthInputVehicleInfo(vehicleRotationX, vehicleRotationZ, predictedVehicleActorUniqueId));
+    auto vehicleRotation = w.some(w.vec2());
+    auto clientPredictedVehicle = w.some(w.i64());
     const auto analogMoveVecX = w.f32();
     const auto analogMoveVecZ = w.f32();
     const auto cameraOrientation = w.vec3();
@@ -421,7 +412,8 @@ BP_FILLER(PlayerAuthInputPacket, 21)
     return std::make_unique<PlayerAuthInputPacket>(PlayerAuthInputPacket::create(
         position, pitch, yaw, headYaw, moveVecX, moveVecZ, std::move(inputFlags), inputMode, playMode, interactionMode,
         interactRotation, tick, delta, std::move(itemInteractionData), std::move(itemStackRequest),
-        std::move(blockActions), std::move(vehicleInfo), analogMoveVecX, analogMoveVecZ, cameraOrientation, rawMove));
+        std::move(blockActions), std::move(vehicleRotation), clientPredictedVehicle, analogMoveVecX, analogMoveVecZ,
+        cameraOrientation, rawMove));
 }
 
 BP_FILLER(ClientMovementPredictionSyncPacket, 15)
@@ -561,14 +553,25 @@ BP_FILLER(DisconnectPacket, 3)
     return std::make_unique<DisconnectPacket>(DisconnectPacket::create(reason, message, filteredMessage));
 }
 
-BP_FILLER(TransferPacket, 3)
+BP_FILLER(TransferPacket, 4)
 {
     auto &w = ctx.well;
     const auto address = w.str("address");
     const auto port = w.u16();
     const auto reloadWorld = w.flag();
+    const auto experienceId = w.uuid();
+    auto experienceName = w.str("experienceName");
+    const auto experienceWorldId = w.uuid();
+    auto experienceWorldName = w.str("experienceWorldName");
+    auto creatorId = w.str("creatorId");
+    const auto targetId = w.uuid();
+    auto gatheringScenarioId = w.str("gatheringScenarioId");
+    auto gatheringServerId = w.str("gatheringServerId");
+    auto gatheringJoinInfo = w.some(types::GatheringJoinInfo(
+        experienceId, std::move(experienceName), experienceWorldId, std::move(experienceWorldName),
+        std::move(creatorId), targetId, std::move(gatheringScenarioId), std::move(gatheringServerId)));
 
-    return std::make_unique<TransferPacket>(TransferPacket::create(address, port, reloadWorld));
+    return std::make_unique<TransferPacket>(TransferPacket::create(address, port, reloadWorld, std::move(gatheringJoinInfo)));
 }
 
 BP_FILLER(PlayStatusPacket, 1)

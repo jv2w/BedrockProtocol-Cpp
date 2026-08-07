@@ -7,9 +7,8 @@
  * spelled out, and every value drawn into a named local first.
  *
  * Packets in this file with no generated create(), and why:
- *   - ClientboundMapItemDataPacket: its `type` field is a bitmask DERIVED by encodePayload from which
- *     of parentMapIds / decorations / colors are populated, so a factory taking `type` would be able
- *     to construct instances that cannot exist on the wire.
+ *   - ClientboundMapItemDataPacket: PHP has no @generate-create-func on it. It assigns its thirteen
+ *     fields individually.
  *   - BookEditPacket: `type` selects which of the remaining fields are written at all, so no factory
  *     can take all nine and mean anything.
  *   - CommandOutputPacket: PHP has no @generate-create-func on it either.
@@ -239,7 +238,7 @@ types::biome::BiomeDefinitionData makeBiomeDefinitionData(ValueWell &w)
 
 }  // namespace
 
-BP_FILLER(ServerboundDiagnosticsPacket, 13)
+BP_FILLER(ServerboundDiagnosticsPacket, 14)
 {
     auto &w = ctx.well;
     const auto avgFps = w.f32();
@@ -258,6 +257,9 @@ BP_FILLER(ServerboundDiagnosticsPacket, 13)
     std::vector<types::SystemDiagnosticTimingInfo> systemDiagnostics = {
         {w.str("systemDisplayName0"), w.u64(), w.u64(), w.u8()},
         {w.str("systemDisplayName1"), w.u64(), w.u64(), w.u8()}};
+    std::vector<types::SystemCategory> systemCategories = {
+        {w.str("systemCategoryName0"), w.u64()},
+        {w.str("systemCategoryName1"), w.u64()}};
     std::vector<types::WhiskerScopeDataSummary> whiskerScopes = {
         {w.str("whiskerLabel0"), w.str("whiskerIndent0"), w.u64(), w.u64(), w.u64()},
         {w.str("whiskerLabel1"), w.str("whiskerIndent1"), w.u64(), w.u64(), w.u64()}};
@@ -265,10 +267,11 @@ BP_FILLER(ServerboundDiagnosticsPacket, 13)
     return std::make_unique<ServerboundDiagnosticsPacket>(ServerboundDiagnosticsPacket::create(
         avgFps, avgServerSimTickTimeMS, avgClientSimTickTimeMS, avgBeginFrameTimeMS, avgInputTimeMS, avgRenderTimeMS,
         avgEndFrameTimeMS, avgRemainderTimePercent, avgUnaccountedTimePercent, std::move(memoryCategoryValues),
-        std::move(entityDiagnostics), std::move(systemDiagnostics), std::move(whiskerScopes)));
+        std::move(entityDiagnostics), std::move(systemDiagnostics), std::move(systemCategories),
+        std::move(whiskerScopes)));
 }
 
-BP_FILLER_NOCREATE(ClientboundMapItemDataPacket, 12)
+BP_FILLER_NOCREATE(ClientboundMapItemDataPacket, 13)
 {
     auto &w = ctx.well;
     auto packet = std::make_unique<ClientboundMapItemDataPacket>();
@@ -277,31 +280,29 @@ BP_FILLER_NOCREATE(ClientboundMapItemDataPacket, 12)
     packet->dimensionId = w.u8();
     packet->isLocked = w.flag();
     packet->origin = makeBlockPosition(w);
-    // parentMapIds, decorations and colors are all populated because encodePayload derives `type`
-    // from exactly those three: leaving any of them empty would clear its bitflag and silently drop
-    // a third of the packet from the wire.
-    packet->parentMapIds = {w.i64(), w.i64()};
+    // Every optional is engaged: each now carries its own presence byte, so an absent one would only
+    // exercise the cheap half of the branch.
+    packet->parentMapIds = std::vector<std::int64_t>{w.i64(), w.i64()};
     packet->scale = w.u8();
-    // One of each tracked-object kind, so both arms of the TYPE_BLOCK / TYPE_ENTITY branch run.
+    // Both tracked-object kinds, and both of each object's own optionals engaged - the type no longer
+    // decides which of them reaches the wire.
     types::MapTrackedObject blockObject;
     blockObject.type = ValueWell::pin(types::MapTrackedObject::TYPE_BLOCK);
+    blockObject.actorUniqueId = w.i64();
     blockObject.blockPosition = makeBlockPosition(w);
     types::MapTrackedObject entityObject;
     entityObject.type = ValueWell::pin(types::MapTrackedObject::TYPE_ENTITY);
     entityObject.actorUniqueId = w.i64();
-    packet->trackedEntities = {blockObject, entityObject};
-    packet->decorations = {makeMapDecoration(w), makeMapDecoration(w)};
+    entityObject.blockPosition = makeBlockPosition(w);
+    packet->trackedEntities = std::vector<types::MapTrackedObject>{blockObject, entityObject};
+    packet->decorations = std::vector<types::MapDecoration>{makeMapDecoration(w), makeMapDecoration(w)};
+    packet->width = w.i32();
+    packet->height = w.i32();
     packet->xOffset = w.i32();
     packet->yOffset = w.i32();
-    // Deliberately not square: width and height are written in one order and consumed in another, so
-    // a 2x2 image would hide a transposition.
-    packet->colors = types::MapImage({{makeColor(w), makeColor(w), makeColor(w)},
-                                      {makeColor(w), makeColor(w), makeColor(w)}});
-    // Derived, never read by encodePayload - set to what encodePayload will compute so the filled
-    // instance matches a decoded one on this member too.
-    packet->type = ClientboundMapItemDataPacket::BITFLAG_MAP_CREATION |
-                   ClientboundMapItemDataPacket::BITFLAG_DECORATION_UPDATE |
-                   ClientboundMapItemDataPacket::BITFLAG_TEXTURE_UPDATE;
+    // A pixel count deliberately unequal to width * height: the two are independent on the wire now,
+    // and an implementation that re-derived one from the other would have to be wrong here.
+    packet->colors = std::vector<color::Color>{makeColor(w), makeColor(w), makeColor(w)};
 
     return packet;
 }
@@ -507,15 +508,14 @@ BP_FILLER(StructureTemplateDataResponsePacket, 3)
         std::move(structureTemplateName), std::move(nbtData), responseType));
 }
 
-BP_FILLER(PlayerListPacket, 2)
+BP_FILLER(PlayerListPacket, 1)
 {
     auto &w = ctx.well;
-    // TYPE_REMOVE writes nothing but the UUID of each entry - eleven of the twelve members of every
-    // PlayerListEntry, SkinData included, are only on the wire under TYPE_ADD.
-    const auto type = ValueWell::pin(PlayerListPacket::TYPE_ADD);
+    // makePlayerListEntry pins every entry to ACTION_ADD: a removal entry writes nothing but its
+    // UUID, leaving eleven of the twelve members of PlayerListEntry, SkinData included, untested.
     std::vector<types::PlayerListEntry> entries = {makePlayerListEntry(w), makePlayerListEntry(w)};
 
-    return std::make_unique<PlayerListPacket>(PlayerListPacket::create(type, std::move(entries)));
+    return std::make_unique<PlayerListPacket>(PlayerListPacket::create(std::move(entries)));
 }
 
 BP_FILLER(MapInfoRequestPacket, 2)
@@ -550,7 +550,7 @@ BP_FILLER(ResourcePackChunkRequestPacket, 2)
 BP_FILLER(ResourcePackClientResponsePacket, 2)
 {
     auto &w = ctx.well;
-    const auto status = ValueWell::pin<std::uint8_t>(ResourcePackClientResponsePacket::STATUS_SEND_PACKS);
+    const auto status = ValueWell::pin<std::uint32_t>(ResourcePackClientResponsePacket::STATUS_SEND_PACKS);
     std::vector<std::string> packIds = {w.str("packId0"), w.str("packId1"), w.str("packId2")};
 
     return std::make_unique<ResourcePackClientResponsePacket>(
