@@ -15,11 +15,20 @@ bridge target needs Endstone — so it also works for proxies, packet analysers,
 
 ## Continuing the original
 
-This is a 1:1 port of [PocketMine-MP's BedrockProtocol](https://github.com/pmmp/BedrockProtocol),
-which is written in PHP and is now archived and no longer updated. **This repository carries it
-forward**, and will keep following new Minecraft versions.
+This began as a 1:1 port of [PocketMine-MP's BedrockProtocol](https://github.com/pmmp/BedrockProtocol),
+written in PHP. That repository is archived and stops at Minecraft 1.26.30 (protocol 1001).
+**This repository carries it forward** from there, and will keep following new Minecraft versions.
 
-Class, field, and constant names match the original, so its documentation and examples still apply.
+Class, field, and constant names still match the original, so its documentation and examples apply to
+everything it covers. Past 1.26.30 there is no original left to match, so the wire formats for newer
+versions are taken from [gophertunnel](https://github.com/Sandertv/gophertunnel), pinned to the
+version [dragonfly](https://github.com/df-mc/dragonfly) ships against, and the naming conventions of
+the PHP original are carried over by hand.
+
+Where a Minecraft update deletes a format outright, the class that represented it goes too — 1.26.40
+removed eleven of them, among them `RecipeWithTypeId`, `IntIdMetaItemDescriptor` and the
+`SubChunkPacketEntry` cache variants. Formats with no PHP counterpart get a new class named in the
+original's style.
 
 - Targets Minecraft **1.26.40** (protocol 2168)
 - LGPL-3.0, as a derivative work of the PocketMine Team's original
