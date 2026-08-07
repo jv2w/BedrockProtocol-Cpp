@@ -14,6 +14,9 @@ cmake-build-*/
 *.rsp
 compile_commands.json
 
+# Working notes for the 1.26.40 (protocol 2168) conformance pass. Local only.
+MISMATCHES-2168.md
+
 # Editor
 .vs/
 .idea/
