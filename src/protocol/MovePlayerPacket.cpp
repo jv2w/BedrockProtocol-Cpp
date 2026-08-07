@@ -24,7 +24,7 @@
 
 namespace bedrock_protocol {
 
-MovePlayerPacket MovePlayerPacket::create(std::uint64_t actorRuntimeId, math::Vector3 position, float pitch, float yaw, float headYaw, std::uint8_t mode, bool onGround, std::uint64_t ridingActorRuntimeId, std::int32_t teleportCause, std::int32_t teleportItem, std::uint64_t tick)
+MovePlayerPacket MovePlayerPacket::create(std::uint64_t actorRuntimeId, math::Vector3 position, float pitch, float yaw, float headYaw, std::uint8_t mode, bool onGround, std::uint64_t ridingActorRuntimeId, std::optional<types::TeleportData> teleportData, std::uint64_t tick)
 {
     MovePlayerPacket result;
     result.actorRuntimeId = actorRuntimeId;
@@ -35,15 +35,14 @@ MovePlayerPacket MovePlayerPacket::create(std::uint64_t actorRuntimeId, math::Ve
     result.mode = mode;
     result.onGround = onGround;
     result.ridingActorRuntimeId = ridingActorRuntimeId;
-    result.teleportCause = teleportCause;
-    result.teleportItem = teleportItem;
+    result.teleportData = std::move(teleportData);
     result.tick = tick;
     return result;
 }
 
 MovePlayerPacket MovePlayerPacket::simple(std::uint64_t actorRuntimeId, math::Vector3 position, float pitch, float yaw, float headYaw, std::uint8_t mode, bool onGround, std::uint64_t ridingActorRuntimeId, std::uint64_t tick)
 {
-    return create(actorRuntimeId, position, pitch, yaw, headYaw, mode, onGround, ridingActorRuntimeId, 0, 0, tick);
+    return create(actorRuntimeId, position, pitch, yaw, headYaw, mode, onGround, ridingActorRuntimeId, std::nullopt, tick);
 }
 
 void MovePlayerPacket::decodePayload(encoding::ByteBufferReader &in)
@@ -56,9 +55,10 @@ void MovePlayerPacket::decodePayload(encoding::ByteBufferReader &in)
     mode = encoding::Byte::readUnsigned(in);
     onGround = serializer::CommonTypes::getBool(in);
     ridingActorRuntimeId = serializer::CommonTypes::getActorRuntimeId(in);
-    if (mode == MovePlayerPacket::MODE_TELEPORT) {
-        teleportCause = encoding::LE::readSignedInt(in);
-        teleportItem = encoding::LE::readSignedInt(in);
+    // move_player.go:68 - an OptionalMarshaler: the presence bool is always there, whatever the mode.
+    teleportData = std::nullopt;
+    if (serializer::CommonTypes::getBool(in)) {
+        teleportData = types::TeleportData::read(in);
     }
     tick = encoding::VarInt::readUnsignedLong(in);
 
@@ -74,9 +74,9 @@ void MovePlayerPacket::encodePayload(encoding::ByteBufferWriter &out) const
     encoding::Byte::writeUnsigned(out, mode);
     serializer::CommonTypes::putBool(out, onGround);
     serializer::CommonTypes::putActorRuntimeId(out, ridingActorRuntimeId);
-    if (mode == MovePlayerPacket::MODE_TELEPORT) {
-        encoding::LE::writeSignedInt(out, teleportCause);
-        encoding::LE::writeSignedInt(out, teleportItem);
+    serializer::CommonTypes::putBool(out, teleportData.has_value());
+    if (teleportData.has_value()) {
+        teleportData->write(out);
     }
     encoding::VarInt::writeUnsignedLong(out, tick);
 

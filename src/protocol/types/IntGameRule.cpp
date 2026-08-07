@@ -12,26 +12,24 @@
 #include "bedrock_protocol/protocol/types/IntGameRule.h"
 
 #include "bedrock_protocol/encoding/LE.h"
-#include "bedrock_protocol/encoding/VarInt.h"
 
 namespace bedrock_protocol::types {
 
 using encoding::LE;
-using encoding::VarInt;
 
-void IntGameRule::encode(encoding::ByteBufferWriter &out, const bool isStartGame) const
+/**
+ * gophertunnel v1.58.0 minecraft/protocol/writer.go:215-218 and reader.go:278-281 write this as a fixed
+ * 4-byte LE uint32. The StartGame-only varint form went away with GameRuleLegacy, so both StartGame and
+ * GameRulesChanged now use this one encoding.
+ */
+void IntGameRule::encode(encoding::ByteBufferWriter &out) const
 {
-    if (isStartGame) {
-        VarInt::writeUnsignedInt(out, value);
-    }
-    else {
-        LE::writeUnsignedInt(out, value);
-    }
+    LE::writeUnsignedInt(out, value);
 }
 
-IntGameRule IntGameRule::decode(encoding::ByteBufferReader &in, const bool isPlayerModifiable, const bool isStartGame)
+IntGameRule IntGameRule::decode(encoding::ByteBufferReader &in, const bool isPlayerModifiable)
 {
-    return IntGameRule(isStartGame ? VarInt::readUnsignedInt(in) : LE::readUnsignedInt(in), isPlayerModifiable);
+    return IntGameRule(LE::readUnsignedInt(in), isPlayerModifiable);
 }
 
 }  // namespace bedrock_protocol::types

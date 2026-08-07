@@ -12,7 +12,6 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
 #include <string>
 #include <utility>
 
@@ -20,16 +19,15 @@
 #include "bedrock_protocol/encoding/ByteBufferWriter.h"
 #include "bedrock_protocol/protocol/types/inventory/ItemStack.h"
 #include "bedrock_protocol/protocol/types/recipe/RecipeIngredient.h"
-#include "bedrock_protocol/protocol/types/recipe/RecipeWithTypeId.h"
 
 namespace bedrock_protocol::types::recipe {
 
-class SmithingTransformRecipe final : public RecipeWithTypeId {
+class SmithingTransformRecipe final {
 public:
-    SmithingTransformRecipe(std::int32_t typeId, std::string recipeId, RecipeIngredient template_,
-                            RecipeIngredient input, RecipeIngredient addition, inventory::ItemStack output,
-                            std::string blockName, std::uint32_t recipeNetId)
-        : RecipeWithTypeId(typeId), recipeId(std::move(recipeId)), template_(std::move(template_)),
+    SmithingTransformRecipe(std::string recipeId, RecipeIngredient template_, RecipeIngredient input,
+                            RecipeIngredient addition, inventory::ItemStack output, std::string blockName,
+                            std::uint32_t recipeNetId)
+        : recipeId(std::move(recipeId)), template_(std::move(template_)),
           input(std::move(input)), addition(std::move(addition)), output(std::move(output)),
           blockName(std::move(blockName)), recipeNetId(recipeNetId)
     {
@@ -51,14 +49,9 @@ public:
     [[nodiscard]] std::uint32_t getRecipeNetId() const { return recipeNetId; }
 
     /** @throws DataDecodeException */
-    static SmithingTransformRecipe decode(std::int32_t typeId, encoding::ByteBufferReader &in);
+    static SmithingTransformRecipe decode(encoding::ByteBufferReader &in);
 
-    void encode(encoding::ByteBufferWriter &out) const override;
-
-    [[nodiscard]] std::unique_ptr<RecipeWithTypeId> clone() const override
-    {
-        return std::make_unique<SmithingTransformRecipe>(*this);
-    }
+    void encode(encoding::ByteBufferWriter &out) const;
 
 private:
     std::string recipeId;

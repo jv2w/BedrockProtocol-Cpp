@@ -147,8 +147,11 @@ public:
     static constexpr std::int32_t CAN_USE_VERTICAL_MOVEMENT_ACTION = 125;
     static constexpr std::int32_t ROTATION_LOCKED_TO_VEHICLE = 126;
     static constexpr std::int32_t USES_LEGACY_FRICTION = 127;
+    static constexpr std::int32_t USES_UNIFORM_AIR_DRAG = 128;
+    static constexpr std::int32_t NAMEPLATE_DEPTH_TESTED = 129;
+    static constexpr std::int32_t NOT_PICKABLE_FROM_INSIDE = 130;
 
-    static constexpr std::int32_t NUMBER_OF_FLAGS = 128;
+    static constexpr std::int32_t NUMBER_OF_FLAGS = 131;
 };
 
 }  // namespace bedrock_protocol::types::entity

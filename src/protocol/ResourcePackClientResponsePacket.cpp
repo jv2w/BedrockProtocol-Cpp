@@ -11,7 +11,10 @@
 
 #include "bedrock_protocol/protocol/ResourcePackClientResponsePacket.h"
 
+#include <iterator>
 #include <stdexcept>
+#include <string>
+#include <string_view>
 #include <utility>
 
 #include "bedrock_protocol/encoding/BE.h"
@@ -24,7 +27,18 @@
 
 namespace bedrock_protocol {
 
-ResourcePackClientResponsePacket ResourcePackClientResponsePacket::create(std::uint8_t status, std::vector<std::string> packIds)
+namespace {
+
+/**
+ * gophertunnel v1.58.0 minecraft/protocol/packet/resource_pack_client_response.go:45 writes this name
+ * after the numeric response, indexed by the response itself.
+ */
+constexpr std::string_view RESPONSE_NAMES[] = {"cancel", "downloading", "downloadingfinished",
+                                               "resourcepackstackfinished"};
+
+}  // namespace
+
+ResourcePackClientResponsePacket ResourcePackClientResponsePacket::create(std::uint32_t status, std::vector<std::string> packIds)
 {
     ResourcePackClientResponsePacket result;
     result.status = status;
@@ -34,23 +48,35 @@ ResourcePackClientResponsePacket ResourcePackClientResponsePacket::create(std::u
 
 void ResourcePackClientResponsePacket::decodePayload(encoding::ByteBufferReader &in)
 {
-    status = encoding::Byte::readUnsigned(in);
-    auto entryCount = encoding::LE::readUnsignedShort(in);
-    packIds.clear();
-    while (entryCount-- > 0) {
-        packIds.push_back(serializer::CommonTypes::getString(in));
+    status = encoding::VarInt::readUnsignedInt(in);
+    if (status >= std::size(RESPONSE_NAMES)) {
+        throw PacketDecodeException("Unknown resource pack response " + std::to_string(status));
     }
+    // The name is redundant with the numeric response, so it is read and discarded.
+    serializer::CommonTypes::getString(in);
 
+    packIds.clear();
+    if (status == STATUS_SEND_PACKS) {
+        for (auto entryCount = encoding::VarInt::readUnsignedInt(in); entryCount-- > 0;) {
+            packIds.push_back(serializer::CommonTypes::getString(in));
+        }
+    }
 }
 
 void ResourcePackClientResponsePacket::encodePayload(encoding::ByteBufferWriter &out) const
 {
-    encoding::Byte::writeUnsigned(out, status);
-    encoding::LE::writeUnsignedShort(out, static_cast<std::uint16_t>(packIds.size()));
-    for (const auto &id : packIds) {
-        serializer::CommonTypes::putString(out, id);
+    if (status >= std::size(RESPONSE_NAMES)) {
+        throw std::invalid_argument("Unknown resource pack response " + std::to_string(status));
     }
+    encoding::VarInt::writeUnsignedInt(out, status);
+    serializer::CommonTypes::putString(out, std::string(RESPONSE_NAMES[status]));
 
+    if (status == STATUS_SEND_PACKS) {
+        encoding::VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(packIds.size()));
+        for (const auto &id : packIds) {
+            serializer::CommonTypes::putString(out, id);
+        }
+    }
 }
 
 bool ResourcePackClientResponsePacket::handle(PacketHandlerInterface &handler)

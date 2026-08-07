@@ -13,17 +13,16 @@
 
 #include <utility>
 
-#include "bedrock_protocol/encoding/LE.h"
+#include "bedrock_protocol/encoding/Byte.h"
 #include "bedrock_protocol/protocol/serializer/CommonTypes.h"
 
 namespace bedrock_protocol::types::inventory {
 
-using encoding::LE;
 using serializer::CommonTypes;
 
 CreativeGroupEntry CreativeGroupEntry::read(encoding::ByteBufferReader &in)
 {
-    const auto categoryId = LE::readSignedInt(in);
+    const auto categoryId = encoding::Byte::readUnsigned(in);
     auto categoryName = CommonTypes::getString(in);
     auto icon = CommonTypes::getItemStackWithoutStackId(in);
     return {categoryId, std::move(categoryName), std::move(icon)};
@@ -31,7 +30,7 @@ CreativeGroupEntry CreativeGroupEntry::read(encoding::ByteBufferReader &in)
 
 void CreativeGroupEntry::write(encoding::ByteBufferWriter &out) const
 {
-    LE::writeSignedInt(out, categoryId);
+    encoding::Byte::writeUnsigned(out, categoryId);
     CommonTypes::putString(out, categoryName);
     CommonTypes::putItemStackWithoutStackId(out, icon);
 }

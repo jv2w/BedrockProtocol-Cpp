@@ -24,7 +24,7 @@
 
 namespace bedrock_protocol {
 
-ServerboundDiagnosticsPacket ServerboundDiagnosticsPacket::create(float avgFps, float avgServerSimTickTimeMS, float avgClientSimTickTimeMS, float avgBeginFrameTimeMS, float avgInputTimeMS, float avgRenderTimeMS, float avgEndFrameTimeMS, float avgRemainderTimePercent, float avgUnaccountedTimePercent, std::vector<types::MemoryCategoryCounter> memoryCategoryValues, std::vector<types::EntityDiagnosticTimingInfo> entityDiagnostics, std::vector<types::SystemDiagnosticTimingInfo> systemDiagnostics, std::vector<types::WhiskerScopeDataSummary> whiskerScopes)
+ServerboundDiagnosticsPacket ServerboundDiagnosticsPacket::create(float avgFps, float avgServerSimTickTimeMS, float avgClientSimTickTimeMS, float avgBeginFrameTimeMS, float avgInputTimeMS, float avgRenderTimeMS, float avgEndFrameTimeMS, float avgRemainderTimePercent, float avgUnaccountedTimePercent, std::vector<types::MemoryCategoryCounter> memoryCategoryValues, std::vector<types::EntityDiagnosticTimingInfo> entityDiagnostics, std::vector<types::SystemDiagnosticTimingInfo> systemDiagnostics, std::vector<types::SystemCategory> systemCategories, std::vector<types::WhiskerScopeDataSummary> whiskerScopes)
 {
     ServerboundDiagnosticsPacket result;
     result.avgFps = avgFps;
@@ -39,6 +39,7 @@ ServerboundDiagnosticsPacket ServerboundDiagnosticsPacket::create(float avgFps, 
     result.memoryCategoryValues = std::move(memoryCategoryValues);
     result.entityDiagnostics = std::move(entityDiagnostics);
     result.systemDiagnostics = std::move(systemDiagnostics);
+    result.systemCategories = std::move(systemCategories);
     result.whiskerScopes = std::move(whiskerScopes);
     return result;
 }
@@ -68,6 +69,11 @@ void ServerboundDiagnosticsPacket::decodePayload(encoding::ByteBufferReader &in)
     systemDiagnostics.clear();
     for (std::uint32_t i = 0, count = encoding::VarInt::readUnsignedInt(in); i < count; ++i) {
         systemDiagnostics.push_back(types::SystemDiagnosticTimingInfo::read(in));
+    }
+
+    systemCategories.clear();
+    for (std::uint32_t i = 0, count = encoding::VarInt::readUnsignedInt(in); i < count; ++i) {
+        systemCategories.push_back(types::SystemCategory::read(in));
     }
 
     whiskerScopes.clear();
@@ -101,6 +107,11 @@ void ServerboundDiagnosticsPacket::encodePayload(encoding::ByteBufferWriter &out
 
     encoding::VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(systemDiagnostics.size()));
     for (const auto &value : systemDiagnostics) {
+        value.write(out);
+    }
+
+    encoding::VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(systemCategories.size()));
+    for (const auto &value : systemCategories) {
         value.write(out);
     }
 

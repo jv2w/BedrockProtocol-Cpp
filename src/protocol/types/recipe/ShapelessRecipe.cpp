@@ -19,7 +19,7 @@ namespace bedrock_protocol::types::recipe {
 using encoding::VarInt;
 using serializer::CommonTypes;
 
-ShapelessRecipe ShapelessRecipe::decode(std::int32_t recipeType, encoding::ByteBufferReader &in)
+ShapelessRecipe ShapelessRecipe::decode(encoding::ByteBufferReader &in)
 {
     auto recipeId = CommonTypes::getString(in);
     std::vector<RecipeIngredient> input;
@@ -33,12 +33,14 @@ ShapelessRecipe ShapelessRecipe::decode(std::int32_t recipeType, encoding::ByteB
     const auto uuid = CommonTypes::getUUID(in);
     auto block = CommonTypes::getString(in);
     const auto priority = VarInt::readSignedInt(in);
-    auto unlockingRequirement = RecipeUnlockingRequirement::read(in);
+    //gophertunnel minecraft/protocol/recipe.go:298 - the requirement is wrapped in an optional.
+    auto unlockingRequirement = CommonTypes::readOptional(
+        in, [](encoding::ByteBufferReader &reader) { return RecipeUnlockingRequirement::read(reader); });
 
     const auto recipeNetId = CommonTypes::readRecipeNetId(in);
 
-    return ShapelessRecipe(recipeType, std::move(recipeId), std::move(input), std::move(output), uuid,
-                           std::move(block), priority, std::move(unlockingRequirement), recipeNetId);
+    return ShapelessRecipe(std::move(recipeId), std::move(input), std::move(output), uuid, std::move(block), priority,
+                           std::move(unlockingRequirement), recipeNetId);
 }
 
 void ShapelessRecipe::encode(encoding::ByteBufferWriter &out) const
@@ -57,7 +59,9 @@ void ShapelessRecipe::encode(encoding::ByteBufferWriter &out) const
     CommonTypes::putUUID(out, uuid);
     CommonTypes::putString(out, blockName);
     VarInt::writeSignedInt(out, priority);
-    unlockingRequirement.write(out);
+    CommonTypes::writeOptional(
+        out, unlockingRequirement,
+        [](encoding::ByteBufferWriter &writer, const RecipeUnlockingRequirement &value) { value.write(writer); });
 
     CommonTypes::writeRecipeNetId(out, recipeNetId);
 }

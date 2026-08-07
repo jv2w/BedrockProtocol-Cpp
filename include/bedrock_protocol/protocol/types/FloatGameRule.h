@@ -32,9 +32,8 @@ public:
 
     [[nodiscard]] std::int32_t getTypeId() const override { return ID; }
 
-    void encode(encoding::ByteBufferWriter &out, bool isStartGame) const override
+    void encode(encoding::ByteBufferWriter &out) const override
     {
-        (void)isStartGame;
         encoding::LE::writeFloat(out, value);
     }
 

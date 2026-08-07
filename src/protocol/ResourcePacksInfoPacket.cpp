@@ -46,7 +46,7 @@ void ResourcePacksInfoPacket::decodePayload(encoding::ByteBufferReader &in)
     worldTemplateId = serializer::CommonTypes::getUUID(in);
     worldTemplateVersion = serializer::CommonTypes::getString(in);
 
-    auto resourcePackCount = encoding::LE::readUnsignedShort(in);
+    auto resourcePackCount = encoding::VarInt::readUnsignedInt(in);
     while (resourcePackCount-- > 0) {
         resourcePackEntries.push_back(types::resourcepacks::ResourcePackInfoEntry::read(in));
     }
@@ -61,7 +61,7 @@ void ResourcePacksInfoPacket::encodePayload(encoding::ByteBufferWriter &out) con
     serializer::CommonTypes::putBool(out, forceDisableVibrantVisuals);
     serializer::CommonTypes::putUUID(out, worldTemplateId);
     serializer::CommonTypes::putString(out, worldTemplateVersion);
-    encoding::LE::writeUnsignedShort(out, static_cast<std::uint32_t>(resourcePackEntries.size()));
+    encoding::VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(resourcePackEntries.size()));
     for (const auto &entry : resourcePackEntries) {
         entry.write(out);
     }

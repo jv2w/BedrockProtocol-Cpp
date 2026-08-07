@@ -13,7 +13,6 @@
 
 #include <stdexcept>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #include "bedrock_protocol/encoding/BE.h"
@@ -26,9 +25,10 @@
 
 namespace bedrock_protocol {
 
-SubChunkPacket SubChunkPacket::create(std::int32_t dimension, types::SubChunkPosition baseSubChunkPosition, std::variant<types::SubChunkPacketEntryWithCacheList, types::SubChunkPacketEntryWithoutCacheList> entries)
+SubChunkPacket SubChunkPacket::create(bool cacheEnabled, std::int32_t dimension, types::SubChunkPosition baseSubChunkPosition, std::vector<types::SubChunkPacketEntry> entries)
 {
     SubChunkPacket result;
+    result.cacheEnabled = cacheEnabled;
     result.dimension = dimension;
     result.baseSubChunkPosition = std::move(baseSubChunkPosition);
     result.entries = std::move(entries);
@@ -37,42 +37,29 @@ SubChunkPacket SubChunkPacket::create(std::int32_t dimension, types::SubChunkPos
 
 void SubChunkPacket::decodePayload(encoding::ByteBufferReader &in)
 {
-    const auto cacheEnabled = serializer::CommonTypes::getBool(in);
+    //gophertunnel v1.58.0 minecraft/protocol/packet/sub_chunk.go:25-30. The position is three fixed
+    //LE int32s (minecraft/protocol/reader.go:141-145), and the entry list is varuint32-counted.
+    cacheEnabled = serializer::CommonTypes::getBool(in);
     dimension = encoding::VarInt::readSignedInt(in);
-    baseSubChunkPosition = types::SubChunkPosition::readVarInts(in);
+    baseSubChunkPosition = types::SubChunkPosition::readFixedInts(in);
 
-    const auto count = encoding::LE::readUnsignedInt(in);
-    if (cacheEnabled) {
-        std::vector<types::SubChunkPacketEntryWithCache> newEntries;
-        for (std::uint32_t i = 0; i < count; i++) {
-            newEntries.push_back(types::SubChunkPacketEntryWithCache::read(in));
-        }
-        entries = types::SubChunkPacketEntryWithCacheList(std::move(newEntries));
-    }
-    else {
-        std::vector<types::SubChunkPacketEntryWithoutCache> newEntries;
-        for (std::uint32_t i = 0; i < count; i++) {
-            newEntries.push_back(types::SubChunkPacketEntryWithoutCache::read(in));
-        }
-        entries = types::SubChunkPacketEntryWithoutCacheList(std::move(newEntries));
+    entries.clear();
+    const auto count = encoding::VarInt::readUnsignedInt(in);
+    for (std::uint32_t i = 0; i < count; i++) {
+        entries.push_back(types::SubChunkPacketEntry::read(in));
     }
 }
 
 void SubChunkPacket::encodePayload(encoding::ByteBufferWriter &out) const
 {
-    serializer::CommonTypes::putBool(out, std::holds_alternative<types::SubChunkPacketEntryWithCacheList>(entries));
+    serializer::CommonTypes::putBool(out, cacheEnabled);
     encoding::VarInt::writeSignedInt(out, dimension);
-    baseSubChunkPosition.writeVarInts(out);
+    baseSubChunkPosition.writeFixedInts(out);
 
-    std::visit(
-        [&out](const auto &list) {
-            encoding::LE::writeUnsignedInt(out, static_cast<std::uint32_t>(list.getEntries().size()));
-
-            for (const auto &entry : list.getEntries()) {
-                entry.write(out);
-            }
-        },
-        entries);
+    encoding::VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(entries.size()));
+    for (const auto &entry : entries) {
+        entry.write(out);
+    }
 }
 
 bool SubChunkPacket::handle(PacketHandlerInterface &handler)

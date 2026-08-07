@@ -33,13 +33,13 @@ GameRulesChangedPacket GameRulesChangedPacket::create(std::vector<std::pair<std:
 
 void GameRulesChangedPacket::decodePayload(encoding::ByteBufferReader &in)
 {
-    gameRules = serializer::CommonTypes::getGameRules(in, false);
+    gameRules = serializer::CommonTypes::getGameRules(in);
 
 }
 
 void GameRulesChangedPacket::encodePayload(encoding::ByteBufferWriter &out) const
 {
-    serializer::CommonTypes::putGameRules(out, gameRules, false);
+    serializer::CommonTypes::putGameRules(out, gameRules);
 
 }
 

@@ -11,10 +11,12 @@
 
 #pragma once
 
+#include <array>
 #include <string>
 #include <string_view>
 #include <utility>
-#include <vector>
+
+#include "bedrock_protocol/color/Color.h"
 
 namespace bedrock_protocol::types::skin {
 
@@ -24,19 +26,20 @@ public:
     static constexpr std::string_view PIECE_TYPE_PERSONA_HAIR = "persona_hair";
     static constexpr std::string_view PIECE_TYPE_PERSONA_MOUTH = "persona_mouth";
 
-    /**
-     * @param colors
-     */
-    PersonaPieceTintColor(std::string pieceType, std::vector<std::string> colors)
-        : pieceType(std::move(pieceType)), colors(std::move(colors)) {}
+    /** Exactly four tint colours are on the wire, without a count prefix
+     *  (gophertunnel minecraft/protocol/skin.go:246,256-258). */
+    using Colors = std::array<color::Color, 4>;
+
+    PersonaPieceTintColor(std::string pieceType, Colors colors)
+        : pieceType(std::move(pieceType)), colors(colors) {}
 
     [[nodiscard]] const std::string &getPieceType() const { return pieceType; }
 
-    [[nodiscard]] const std::vector<std::string> &getColors() const { return colors; }
+    [[nodiscard]] const Colors &getColors() const { return colors; }
 
 private:
     std::string pieceType;
-    std::vector<std::string> colors;
+    Colors colors;
 };
 
 }  // namespace bedrock_protocol::types::skin

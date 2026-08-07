@@ -26,6 +26,10 @@ public:
     static constexpr std::int32_t DESTROY = 4;
     static constexpr std::int32_t CRAFTING_CONSUME_INPUT = 5;
     static constexpr std::int32_t CRAFTING_CREATE_SPECIFIC_RESULT = 6;
+    //Never sent, but they occupy IDs 7 and 8 and so shift the variant of everything above them.
+    //@see gophertunnel minecraft/protocol/item_stack.go:47-52
+    static constexpr std::int32_t PLACE_IN_CONTAINER = 7;
+    static constexpr std::int32_t TAKE_OUT_CONTAINER = 8;
     static constexpr std::int32_t LAB_TABLE_COMBINE = 9;
     static constexpr std::int32_t BEACON_PAYMENT = 10;
     static constexpr std::int32_t MINE_BLOCK = 11;

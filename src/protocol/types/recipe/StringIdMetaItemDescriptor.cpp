@@ -11,18 +11,19 @@
 
 #include "bedrock_protocol/protocol/types/recipe/StringIdMetaItemDescriptor.h"
 
-#include "bedrock_protocol/encoding/LE.h"
+#include "bedrock_protocol/encoding/VarInt.h"
 #include "bedrock_protocol/protocol/serializer/CommonTypes.h"
 
 namespace bedrock_protocol::types::recipe {
 
-using encoding::LE;
+using encoding::VarInt;
 using serializer::CommonTypes;
 
 StringIdMetaItemDescriptor StringIdMetaItemDescriptor::read(encoding::ByteBufferReader &in)
 {
     auto stringId = CommonTypes::getString(in);
-    const auto meta = LE::readUnsignedShort(in);
+    //gophertunnel minecraft/protocol/item_descriptor.go:44-47 - DefaultItemDescriptor is name + varint32 meta.
+    const auto meta = VarInt::readSignedInt(in);
 
     return StringIdMetaItemDescriptor(std::move(stringId), meta);
 }
@@ -30,7 +31,7 @@ StringIdMetaItemDescriptor StringIdMetaItemDescriptor::read(encoding::ByteBuffer
 void StringIdMetaItemDescriptor::write(encoding::ByteBufferWriter &out) const
 {
     CommonTypes::putString(out, id);
-    LE::writeUnsignedShort(out, meta);
+    VarInt::writeSignedInt(out, meta);
 }
 
 }  // namespace bedrock_protocol::types::recipe

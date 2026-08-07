@@ -27,17 +27,13 @@ class StringIdMetaItemDescriptor final : public ItemDescriptor {
 public:
     static constexpr std::uint8_t ID = ItemDescriptorType::STRING_ID_META;
 
-    /**
-     * The PHP original rejects a negative meta here; meta is decoded as an unsigned short, so the C++
-     * field type makes that state unrepresentable and the check is omitted.
-     */
-    StringIdMetaItemDescriptor(std::string id, std::uint16_t meta) : id(std::move(id)), meta(meta) {}
+    StringIdMetaItemDescriptor(std::string id, std::int32_t meta) : id(std::move(id)), meta(meta) {}
 
     [[nodiscard]] std::uint8_t getTypeId() const override { return ID; }
 
     [[nodiscard]] const std::string &getId() const { return id; }
 
-    [[nodiscard]] std::uint16_t getMeta() const { return meta; }
+    [[nodiscard]] std::int32_t getMeta() const { return meta; }
 
     /** @throws DataDecodeException */
     static StringIdMetaItemDescriptor read(encoding::ByteBufferReader &in);
@@ -51,7 +47,7 @@ public:
 
 private:
     std::string id;
-    std::uint16_t meta;
+    std::int32_t meta;
 };
 
 }  // namespace bedrock_protocol::types::recipe

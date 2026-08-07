@@ -34,7 +34,8 @@ public:
     bool showBoundingBox = false;
     std::int32_t structureBlockType = 0;
     StructureSettings structureSettings;
-    std::int32_t structureRedstoneSaveMode = 0;
+    //gophertunnel v1.58.0 minecraft/protocol/packet/structure_block_update.go:53,75 - a plain uint8.
+    std::uint8_t structureRedstoneSaveMode = 0;
 };
 
 }  // namespace bedrock_protocol::types

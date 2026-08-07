@@ -31,24 +31,20 @@ class MoveActorDeltaPacket final : public DataPacket, public ClientboundPacket {
 public:
     static constexpr std::uint32_t NETWORK_ID = ProtocolInfo::MOVE_ACTOR_DELTA_PACKET;
 
-    static constexpr std::int32_t FLAG_HAS_X = 0x01;
-    static constexpr std::int32_t FLAG_HAS_Y = 0x02;
-    static constexpr std::int32_t FLAG_HAS_Z = 0x04;
-    static constexpr std::int32_t FLAG_HAS_PITCH = 0x08;
-    static constexpr std::int32_t FLAG_HAS_YAW = 0x10;
-    static constexpr std::int32_t FLAG_HAS_HEAD_YAW = 0x20;
-    static constexpr std::int32_t FLAG_GROUND = 0x40;
-    static constexpr std::int32_t FLAG_TELEPORT = 0x80;
-    static constexpr std::int32_t FLAG_FORCE_MOVE_LOCAL_ENTITY = 0x100;
-
+    // The packed flags word is gone as of 1.26.40: every coordinate and rotation carries its own
+    // presence bool, and the former FLAG_GROUND/FLAG_TELEPORT/FLAG_FORCE_MOVE_LOCAL_ENTITY bits are
+    // trailing bools (move_actor_delta.go:40-52).
     std::uint64_t actorRuntimeId = 0;
-    std::uint16_t flags = 0;
-    float xPos = 0;
-    float yPos = 0;
-    float zPos = 0;
-    float pitch = 0.0;
-    float yaw = 0.0;
-    float headYaw = 0.0;
+    std::optional<float> xPos = std::nullopt;
+    std::optional<float> yPos = std::nullopt;
+    std::optional<float> zPos = std::nullopt;
+    std::optional<float> pitch = std::nullopt;
+    std::optional<float> yaw = std::nullopt;
+    std::optional<float> headYaw = std::nullopt;
+    bool onGround = false;
+    bool forceMove = false;
+    bool forceMoveLocalEntity = false;
+    bool forceCompletion = false;
 
     [[nodiscard]] std::uint32_t networkId() const override { return NETWORK_ID; }
     [[nodiscard]] std::string_view getName() const override { return "MoveActorDeltaPacket"; }
@@ -57,17 +53,6 @@ public:
 protected:
     void decodePayload(encoding::ByteBufferReader &in) override;
     void encodePayload(encoding::ByteBufferWriter &out) const override;
-
-private:
-    /** @throws encoding::DataDecodeException */
-    [[nodiscard]] float maybeReadCoord(std::int32_t flag, encoding::ByteBufferReader &in) const;
-
-    /** @throws encoding::DataDecodeException */
-    [[nodiscard]] float maybeReadRotation(std::int32_t flag, encoding::ByteBufferReader &in) const;
-
-    void maybeWriteCoord(std::int32_t flag, float val, encoding::ByteBufferWriter &out) const;
-
-    void maybeWriteRotation(std::int32_t flag, float val, encoding::ByteBufferWriter &out) const;
 };
 
 }  // namespace bedrock_protocol

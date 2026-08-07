@@ -32,11 +32,10 @@ class CraftRecipeAutoStackRequestAction final : public ItemStackRequestAction {
 public:
     static constexpr std::int32_t ID = ItemStackRequestActionType::CRAFTING_RECIPE_AUTO;
 
-    CraftRecipeAutoStackRequestAction(std::uint32_t recipeId, std::uint8_t repetitions, std::uint8_t repetitions2,
+    CraftRecipeAutoStackRequestAction(std::uint32_t recipeId, std::uint8_t repetitions,
                                       std::vector<recipe::RecipeIngredient> ingredients) :
         recipeId(recipeId),
         repetitions(repetitions),
-        repetitions2(repetitions2),
         ingredients(std::move(ingredients)) {}
 
     [[nodiscard]] std::int32_t getTypeId() const override { return ID; }
@@ -44,8 +43,6 @@ public:
     [[nodiscard]] std::uint32_t getRecipeId() const { return recipeId; }
 
     [[nodiscard]] std::uint8_t getRepetitions() const { return repetitions; }
-
-    [[nodiscard]] std::uint8_t getRepetitions2() const { return repetitions2; }
 
     [[nodiscard]] const std::vector<recipe::RecipeIngredient> &getIngredients() const { return ingredients; }
 
@@ -58,7 +55,6 @@ public:
 private:
     std::uint32_t recipeId;
     std::uint8_t repetitions;
-    std::uint8_t repetitions2;
     std::vector<recipe::RecipeIngredient> ingredients;
 };
 

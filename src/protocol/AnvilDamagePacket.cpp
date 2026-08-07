@@ -24,24 +24,21 @@
 
 namespace bedrock_protocol {
 
-AnvilDamagePacket AnvilDamagePacket::create(types::BlockPosition blockPosition, std::uint8_t damageAmount)
+AnvilDamagePacket AnvilDamagePacket::create(types::BlockPosition blockPosition)
 {
     AnvilDamagePacket result;
     result.blockPosition = std::move(blockPosition);
-    result.damageAmount = damageAmount;
     return result;
 }
 
 void AnvilDamagePacket::decodePayload(encoding::ByteBufferReader &in)
 {
-    damageAmount = encoding::Byte::readUnsigned(in);
     blockPosition = serializer::CommonTypes::getBlockPosition(in);
 
 }
 
 void AnvilDamagePacket::encodePayload(encoding::ByteBufferWriter &out) const
 {
-    encoding::Byte::writeUnsigned(out, damageAmount);
     serializer::CommonTypes::putBlockPosition(out, blockPosition);
 
 }

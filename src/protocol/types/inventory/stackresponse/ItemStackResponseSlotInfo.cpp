@@ -26,7 +26,12 @@ ItemStackResponseSlotInfo ItemStackResponseSlotInfo::read(encoding::ByteBufferRe
     const auto slot = Byte::readUnsigned(in);
     const auto hotbarSlot = Byte::readUnsigned(in);
     const auto count = Byte::readUnsigned(in);
-    const auto itemStackId = CommonTypes::readServerItemStackId(in);
+    //gophertunnel minecraft/protocol/item_stack.go:283-301 - the stack ID is a double optional, present
+    //only when it is positive.
+    std::int32_t itemStackId = 0;
+    if (CommonTypes::getBool(in) && CommonTypes::getBool(in)) {
+        itemStackId = CommonTypes::readServerItemStackId(in);
+    }
     auto customName = CommonTypes::getString(in);
     auto filteredCustomName = CommonTypes::getString(in);
     const auto durabilityCorrection = VarInt::readSignedInt(in);
@@ -39,7 +44,12 @@ void ItemStackResponseSlotInfo::write(encoding::ByteBufferWriter &out) const
     Byte::writeUnsigned(out, slot);
     Byte::writeUnsigned(out, hotbarSlot);
     Byte::writeUnsigned(out, count);
-    CommonTypes::writeServerItemStackId(out, itemStackId);
+    CommonTypes::putBool(out, true);
+    const auto hasItemStackId = itemStackId > 0;
+    CommonTypes::putBool(out, hasItemStackId);
+    if (hasItemStackId) {
+        CommonTypes::writeServerItemStackId(out, itemStackId);
+    }
     CommonTypes::putString(out, customName);
     CommonTypes::putString(out, filteredCustomName);
     VarInt::writeSignedInt(out, durabilityCorrection);

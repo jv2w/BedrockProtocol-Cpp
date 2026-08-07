@@ -17,8 +17,8 @@
 #include "bedrock_protocol/encoding/Byte.h"
 #include "bedrock_protocol/encoding/ByteBufferReader.h"
 #include "bedrock_protocol/encoding/ByteBufferWriter.h"
+#include "bedrock_protocol/encoding/LE.h"
 #include "bedrock_protocol/encoding/VarInt.h"
-#include "bedrock_protocol/protocol/serializer/CommonTypes.h"
 #include "bedrock_protocol/protocol/types/inventory/stackrequest/ItemStackRequestAction.h"
 #include "bedrock_protocol/protocol/types/inventory/stackrequest/ItemStackRequestActionType.h"
 
@@ -44,17 +44,20 @@ public:
     [[nodiscard]] std::uint8_t getRepetitions() const { return repetitions; }
 
     static GrindstoneStackRequestAction read(encoding::ByteBufferReader &in) {
-        const auto recipeId = serializer::CommonTypes::readRecipeNetId(in);
-        const auto repairCost = encoding::VarInt::readSignedInt(in); //WHY!!!!
+        //gophertunnel minecraft/protocol/item_stack.go:566-570 - a fixed int32 recipe ID, then the repetition
+        //count, then the cost. The recipe ID is no longer a varuint32 and the last two fields are the other
+        //way round from the previous version.
+        const auto recipeId = static_cast<std::uint32_t>(encoding::LE::readSignedInt(in));
         const auto repetitions = encoding::Byte::readUnsigned(in);
+        const auto repairCost = encoding::VarInt::readSignedInt(in); //WHY!!!!
 
         return GrindstoneStackRequestAction(recipeId, repairCost, repetitions);
     }
 
     void write(encoding::ByteBufferWriter &out) const override {
-        serializer::CommonTypes::writeRecipeNetId(out, recipeId);
-        encoding::VarInt::writeSignedInt(out, repairCost);
+        encoding::LE::writeSignedInt(out, static_cast<std::int32_t>(recipeId));
         encoding::Byte::writeUnsigned(out, repetitions);
+        encoding::VarInt::writeSignedInt(out, repairCost);
     }
 
     [[nodiscard]] std::unique_ptr<ItemStackRequestAction> clone() const override {

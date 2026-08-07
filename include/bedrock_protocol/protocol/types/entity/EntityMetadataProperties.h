@@ -42,7 +42,7 @@ public:
     static constexpr std::int32_t MINECART_DISPLAY_BLOCK = 16; //int (block runtime ID)
     static constexpr std::int32_t HORSE_FLAGS = 16; //int
     static constexpr std::int32_t FIREWORK_ITEM = 16; //compoundtag
-    /* 16 (byte) used by wither skull */
+    static constexpr std::int32_t WITHER_SKULL_DANGEROUS = 16; //byte
     static constexpr std::int32_t MINECART_DISPLAY_OFFSET = 17; //int
     static constexpr std::int32_t SHOOTER_ID = 17; //long (used by arrows)
     static constexpr std::int32_t MINECART_HAS_DISPLAY = 18; //byte (must be 1 for minecart to show block inside)
@@ -167,8 +167,11 @@ public:
     static constexpr std::int32_t AIM_ASSIST_PRIORITY_PRESET_ID = 136; //int
     static constexpr std::int32_t AIM_ASSIST_PRIORITY_CATEGORY_ID = 137; //int
     static constexpr std::int32_t AIM_ASSIST_PRIORITY_ACTOR_ID = 138; //int
-    static constexpr std::int32_t RESERVED_139 = 139; //long
-    static constexpr std::int32_t NAMEPLATE_RENDER_DISTANCE_MAX = 140; //float
+    static constexpr std::int32_t ARROW_SHOOTER_ID = 139; //long
+    static constexpr std::int32_t FIREWORK_DIRECTION = 140; //int
+    static constexpr std::int32_t FIREWORK_SHOOTER_ID = 141; //long
+    static constexpr std::int32_t RESERVED_139 = 142; //long
+    static constexpr std::int32_t NAMEPLATE_RENDER_DISTANCE_MAX = 143; //float
 };
 
 }  // namespace bedrock_protocol::types::entity

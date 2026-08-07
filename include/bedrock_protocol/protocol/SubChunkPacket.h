@@ -16,17 +16,13 @@
 #include <optional>
 #include <string>
 #include <string_view>
-#include <variant>
 #include <vector>
 
 #include "bedrock_protocol/protocol/ClientboundPacket.h"
 #include "bedrock_protocol/protocol/DataPacket.h"
 #include "bedrock_protocol/protocol/ProtocolInfo.h"
 #include "bedrock_protocol/protocol/ServerboundPacket.h"
-#include "bedrock_protocol/protocol/types/SubChunkPacketEntryWithCache.h"
-#include "bedrock_protocol/protocol/types/SubChunkPacketEntryWithCacheList.h"
-#include "bedrock_protocol/protocol/types/SubChunkPacketEntryWithoutCache.h"
-#include "bedrock_protocol/protocol/types/SubChunkPacketEntryWithoutCacheList.h"
+#include "bedrock_protocol/protocol/types/SubChunkPacketEntry.h"
 #include "bedrock_protocol/protocol/types/SubChunkPosition.h"
 
 namespace bedrock_protocol {
@@ -38,15 +34,15 @@ public:
     static constexpr std::uint32_t NETWORK_ID = ProtocolInfo::SUB_CHUNK_PACKET;
 
 
+    bool cacheEnabled = false;
     std::int32_t dimension = 0;
     types::SubChunkPosition baseSubChunkPosition{0, 0, 0};
-    std::variant<types::SubChunkPacketEntryWithCacheList, types::SubChunkPacketEntryWithoutCacheList> entries =
-        types::SubChunkPacketEntryWithoutCacheList({});
+    std::vector<types::SubChunkPacketEntry> entries;
 
     /**
      * @generate-create-func
      */
-    static SubChunkPacket create(std::int32_t dimension, types::SubChunkPosition baseSubChunkPosition, std::variant<types::SubChunkPacketEntryWithCacheList, types::SubChunkPacketEntryWithoutCacheList> entries);
+    static SubChunkPacket create(bool cacheEnabled, std::int32_t dimension, types::SubChunkPosition baseSubChunkPosition, std::vector<types::SubChunkPacketEntry> entries);
 
     [[nodiscard]] std::uint32_t networkId() const override { return NETWORK_ID; }
     [[nodiscard]] std::string_view getName() const override { return "SubChunkPacket"; }

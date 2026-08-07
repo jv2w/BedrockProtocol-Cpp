@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -22,12 +23,14 @@ namespace bedrock_protocol::types {
 
 class GatheringJoinInfo final {
 public:
-    GatheringJoinInfo(const uuid::Uuid &experienceId, std::string experienceName, const uuid::Uuid &experienceWorldId,
-                      std::string experienceWorldName, std::string creatorId, const uuid::Uuid &targetId,
-                      std::string scenarioId, std::string serverId)
-        : experienceId(experienceId), experienceName(std::move(experienceName)), experienceWorldId(experienceWorldId),
-          experienceWorldName(std::move(experienceWorldName)), creatorId(std::move(creatorId)), targetId(targetId),
-          scenarioId(std::move(scenarioId)), serverId(std::move(serverId))
+    GatheringJoinInfo(const uuid::Uuid &experienceId, std::string experienceName,
+                      std::optional<uuid::Uuid> experienceWorldId, std::optional<std::string> experienceWorldName,
+                      std::string creatorId, std::optional<uuid::Uuid> targetId,
+                      std::optional<std::string> scenarioId, std::optional<std::string> serverId)
+        : experienceId(experienceId), experienceName(std::move(experienceName)),
+          experienceWorldId(experienceWorldId), experienceWorldName(std::move(experienceWorldName)),
+          creatorId(std::move(creatorId)), targetId(targetId), scenarioId(std::move(scenarioId)),
+          serverId(std::move(serverId))
     {
     }
 
@@ -35,17 +38,17 @@ public:
 
     [[nodiscard]] const std::string &getExperienceName() const { return experienceName; }
 
-    [[nodiscard]] const uuid::Uuid &getExperienceWorldId() const { return experienceWorldId; }
+    [[nodiscard]] const std::optional<uuid::Uuid> &getExperienceWorldId() const { return experienceWorldId; }
 
-    [[nodiscard]] const std::string &getExperienceWorldName() const { return experienceWorldName; }
+    [[nodiscard]] const std::optional<std::string> &getExperienceWorldName() const { return experienceWorldName; }
 
     [[nodiscard]] const std::string &getCreatorId() const { return creatorId; }
 
-    [[nodiscard]] const uuid::Uuid &getTargetId() const { return targetId; }
+    [[nodiscard]] const std::optional<uuid::Uuid> &getTargetId() const { return targetId; }
 
-    [[nodiscard]] const std::string &getScenarioId() const { return scenarioId; }
+    [[nodiscard]] const std::optional<std::string> &getScenarioId() const { return scenarioId; }
 
-    [[nodiscard]] const std::string &getServerId() const { return serverId; }
+    [[nodiscard]] const std::optional<std::string> &getServerId() const { return serverId; }
 
     /** @throws DataDecodeException */
     static GatheringJoinInfo read(encoding::ByteBufferReader &in);
@@ -55,12 +58,12 @@ public:
 private:
     uuid::Uuid experienceId;
     std::string experienceName;
-    uuid::Uuid experienceWorldId;
-    std::string experienceWorldName;
+    std::optional<uuid::Uuid> experienceWorldId;
+    std::optional<std::string> experienceWorldName;
     std::string creatorId;
-    uuid::Uuid targetId;
-    std::string scenarioId;
-    std::string serverId;
+    std::optional<uuid::Uuid> targetId;
+    std::optional<std::string> scenarioId;
+    std::optional<std::string> serverId;
 };
 
 }  // namespace bedrock_protocol::types

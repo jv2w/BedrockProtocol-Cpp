@@ -11,7 +11,6 @@
 
 #include "bedrock_protocol/protocol/PlayerAuthInputPacket.h"
 
-#include <memory>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -26,7 +25,39 @@
 
 namespace bedrock_protocol {
 
-PlayerAuthInputPacket PlayerAuthInputPacket::internalCreate(math::Vector3 position, float pitch, float yaw, float headYaw, float moveVecX, float moveVecZ, serializer::BitSet inputFlags, std::uint32_t inputMode, std::uint32_t playMode, std::uint32_t interactionMode, math::Vector2 interactRotation, std::uint64_t tick, math::Vector3 delta, std::optional<types::ItemInteractionData> itemInteractionData, std::optional<types::inventory::stackrequest::ItemStackRequest> itemStackRequest, std::optional<std::vector<std::unique_ptr<types::PlayerBlockAction>>> blockActions, std::optional<types::PlayerAuthInputVehicleInfo> vehicleInfo, float analogMoveVecX, float analogMoveVecZ, math::Vector3 cameraOrientation, math::Vector2 rawMove)
+namespace {
+
+/**
+ * The outer bool of a DoubleOptionalFunc is always written as true; the inner one carries the actual
+ * presence (minecraft/protocol/io.go, function DoubleOptionalFunc).
+ */
+template <typename T, typename Writer>
+void putDoubleOptional(encoding::ByteBufferWriter &out, const std::optional<T> &value, Writer writer)
+{
+    serializer::CommonTypes::putBool(out, true);
+    serializer::CommonTypes::putBool(out, value.has_value());
+    if (value.has_value()) {
+        writer(out, *value);
+    }
+}
+
+template <typename Reader>
+auto getDoubleOptional(encoding::ByteBufferReader &in, Reader reader)
+    -> std::optional<decltype(reader(in))>
+{
+    std::optional<decltype(reader(in))> result = std::nullopt;
+    if (!serializer::CommonTypes::getBool(in)) {
+        return result;
+    }
+    if (serializer::CommonTypes::getBool(in)) {
+        result = reader(in);
+    }
+    return result;
+}
+
+}  // namespace
+
+PlayerAuthInputPacket PlayerAuthInputPacket::internalCreate(math::Vector3 position, float pitch, float yaw, float headYaw, float moveVecX, float moveVecZ, types::PlayerAuthInputFlagList inputFlags, std::uint32_t inputMode, std::uint32_t playMode, std::int32_t interactionMode, math::Vector2 interactRotation, std::uint64_t tick, math::Vector3 delta, std::optional<types::ItemInteractionData> itemInteractionData, std::optional<types::inventory::stackrequest::ItemStackRequest> itemStackRequest, std::optional<std::vector<types::PlayerBlockAction>> blockActions, std::optional<math::Vector2> vehicleRotation, std::optional<std::int64_t> clientPredictedVehicle, float analogMoveVecX, float analogMoveVecZ, math::Vector3 cameraOrientation, math::Vector2 rawMove)
 {
     PlayerAuthInputPacket result;
     result.position = std::move(position);
@@ -45,7 +76,8 @@ PlayerAuthInputPacket PlayerAuthInputPacket::internalCreate(math::Vector3 positi
     result.itemInteractionData = std::move(itemInteractionData);
     result.itemStackRequest = std::move(itemStackRequest);
     result.blockActions = std::move(blockActions);
-    result.vehicleInfo = std::move(vehicleInfo);
+    result.vehicleRotation = std::move(vehicleRotation);
+    result.clientPredictedVehicle = clientPredictedVehicle;
     result.analogMoveVecX = analogMoveVecX;
     result.analogMoveVecZ = analogMoveVecZ;
     result.cameraOrientation = std::move(cameraOrientation);
@@ -53,16 +85,13 @@ PlayerAuthInputPacket PlayerAuthInputPacket::internalCreate(math::Vector3 positi
     return result;
 }
 
-PlayerAuthInputPacket PlayerAuthInputPacket::create(math::Vector3 position, float pitch, float yaw, float headYaw, float moveVecX, float moveVecZ, serializer::BitSet inputFlags, std::uint32_t inputMode, std::uint32_t playMode, std::uint32_t interactionMode, math::Vector2 interactRotation, std::uint64_t tick, math::Vector3 delta, std::optional<types::ItemInteractionData> itemInteractionData, std::optional<types::inventory::stackrequest::ItemStackRequest> itemStackRequest, std::optional<std::vector<std::unique_ptr<types::PlayerBlockAction>>> blockActions, std::optional<types::PlayerAuthInputVehicleInfo> vehicleInfo, float analogMoveVecX, float analogMoveVecZ, math::Vector3 cameraOrientation, math::Vector2 rawMove)
+PlayerAuthInputPacket PlayerAuthInputPacket::create(math::Vector3 position, float pitch, float yaw, float headYaw, float moveVecX, float moveVecZ, types::PlayerAuthInputFlagList inputFlags, std::uint32_t inputMode, std::uint32_t playMode, std::int32_t interactionMode, math::Vector2 interactRotation, std::uint64_t tick, math::Vector3 delta, std::optional<types::ItemInteractionData> itemInteractionData, std::optional<types::inventory::stackrequest::ItemStackRequest> itemStackRequest, std::optional<std::vector<types::PlayerBlockAction>> blockActions, std::optional<math::Vector2> vehicleRotation, std::optional<std::int64_t> clientPredictedVehicle, float analogMoveVecX, float analogMoveVecZ, math::Vector3 cameraOrientation, math::Vector2 rawMove)
 {
-    if (inputFlags.getLength() != types::PlayerAuthInputFlags::NUMBER_OF_FLAGS) {
-        throw std::invalid_argument("Input flags must be " + std::to_string(types::PlayerAuthInputFlags::NUMBER_OF_FLAGS) + " bits long");
+    // An absent flag list is legal and has no size (input_flags.go:8-9); a present one must be sized
+    // exactly, since decodePayload reads it back with NUMBER_OF_FLAGS and rejects any ID beyond it.
+    if (inputFlags.isPresent() && inputFlags.getSize() != types::PlayerAuthInputFlags::NUMBER_OF_FLAGS) {
+        throw std::invalid_argument("Input flags must hold " + std::to_string(types::PlayerAuthInputFlags::NUMBER_OF_FLAGS) + " flags");
     }
-
-    inputFlags.set(types::PlayerAuthInputFlags::PERFORM_ITEM_STACK_REQUEST, itemStackRequest.has_value());
-    inputFlags.set(types::PlayerAuthInputFlags::PERFORM_ITEM_INTERACTION, itemInteractionData.has_value());
-    inputFlags.set(types::PlayerAuthInputFlags::PERFORM_BLOCK_ACTIONS, blockActions.has_value());
-    inputFlags.set(types::PlayerAuthInputFlags::IN_CLIENT_PREDICTED_VEHICLE, vehicleInfo.has_value());
 
     return internalCreate(
         std::move(position),
@@ -81,7 +110,8 @@ PlayerAuthInputPacket PlayerAuthInputPacket::create(math::Vector3 position, floa
         std::move(itemInteractionData),
         std::move(itemStackRequest),
         std::move(blockActions),
-        std::move(vehicleInfo),
+        std::move(vehicleRotation),
+        clientPredictedVehicle,
         analogMoveVecX,
         analogMoveVecZ,
         std::move(cameraOrientation),
@@ -97,37 +127,37 @@ void PlayerAuthInputPacket::decodePayload(encoding::ByteBufferReader &in)
     moveVecX = encoding::LE::readFloat(in);
     moveVecZ = encoding::LE::readFloat(in);
     headYaw = encoding::LE::readFloat(in);
-    inputFlags = serializer::BitSet::read(in, types::PlayerAuthInputFlags::NUMBER_OF_FLAGS);
+    inputFlags = types::PlayerAuthInputFlagList::read(in, types::PlayerAuthInputFlags::NUMBER_OF_FLAGS);
     inputMode = encoding::VarInt::readUnsignedInt(in);
     playMode = encoding::VarInt::readUnsignedInt(in);
-    interactionMode = encoding::VarInt::readUnsignedInt(in);
+    interactionMode = encoding::VarInt::readSignedInt(in);
     interactRotation = serializer::CommonTypes::getVector2(in);
     tick = encoding::VarInt::readUnsignedLong(in);
     delta = serializer::CommonTypes::getVector3(in);
-    if (inputFlags.get(types::PlayerAuthInputFlags::PERFORM_ITEM_INTERACTION)) {
-        itemInteractionData = types::ItemInteractionData::read(in);
-    }
-    if (inputFlags.get(types::PlayerAuthInputFlags::PERFORM_ITEM_STACK_REQUEST)) {
-        itemStackRequest = types::inventory::stackrequest::ItemStackRequest::read(in);
-    }
-    if (inputFlags.get(types::PlayerAuthInputFlags::PERFORM_BLOCK_ACTIONS)) {
-        blockActions.emplace();
-        const auto max = encoding::VarInt::readSignedInt(in);
-        for (std::int32_t i = 0; i < max; ++i) {
-            const auto actionType = encoding::VarInt::readSignedInt(in);
-            if (types::PlayerBlockActionWithBlockInfo::isValidActionType(actionType)) {
-                blockActions->push_back(std::make_unique<types::PlayerBlockActionWithBlockInfo>(
-                    types::PlayerBlockActionWithBlockInfo::read(in, actionType)));
-            } else if (actionType == types::PlayerAction::STOP_BREAK) {
-                blockActions->push_back(std::make_unique<types::PlayerBlockActionStopBreak>());
-            } else {
-                throw PacketDecodeException("Unexpected block action type " + std::to_string(actionType));
-            }
+    // player_auth_input.go:186-194 - five DoubleOptionalFunc payloads, each with its own framing and
+    // no dependence on the input flags.
+    itemInteractionData = getDoubleOptional(in, [](encoding::ByteBufferReader &r) {
+        return types::ItemInteractionData::read(r);
+    });
+    itemStackRequest = getDoubleOptional(in, [](encoding::ByteBufferReader &r) {
+        return types::inventory::stackrequest::ItemStackRequest::read(r);
+    });
+    blockActions = getDoubleOptional(in, [](encoding::ByteBufferReader &r) {
+        std::vector<types::PlayerBlockAction> actions;
+        // Not reserved up front: the count is attacker-controlled, and a truncated payload must fail
+        // on the reader rather than on a multi-gigabyte allocation.
+        const auto count = encoding::VarInt::readUnsignedInt(r);
+        for (std::uint32_t i = 0; i < count; ++i) {
+            actions.push_back(types::PlayerBlockAction::read(r));
         }
-    }
-    if (inputFlags.get(types::PlayerAuthInputFlags::IN_CLIENT_PREDICTED_VEHICLE)) {
-        vehicleInfo = types::PlayerAuthInputVehicleInfo::read(in);
-    }
+        return actions;
+    });
+    vehicleRotation = getDoubleOptional(in, [](encoding::ByteBufferReader &r) {
+        return serializer::CommonTypes::getVector2(r);
+    });
+    clientPredictedVehicle = getDoubleOptional(in, [](encoding::ByteBufferReader &r) {
+        return serializer::CommonTypes::getActorUniqueId(r);
+    });
     analogMoveVecX = encoding::LE::readFloat(in);
     analogMoveVecZ = encoding::LE::readFloat(in);
     cameraOrientation = serializer::CommonTypes::getVector3(in);
@@ -146,26 +176,28 @@ void PlayerAuthInputPacket::encodePayload(encoding::ByteBufferWriter &out) const
     inputFlags.write(out);
     encoding::VarInt::writeUnsignedInt(out, inputMode);
     encoding::VarInt::writeUnsignedInt(out, playMode);
-    encoding::VarInt::writeUnsignedInt(out, interactionMode);
+    encoding::VarInt::writeSignedInt(out, interactionMode);
     serializer::CommonTypes::putVector2(out, interactRotation);
     encoding::VarInt::writeUnsignedLong(out, tick);
     serializer::CommonTypes::putVector3(out, delta);
-    if (itemInteractionData.has_value()) {
-        itemInteractionData->write(out);
-    }
-    if (itemStackRequest.has_value()) {
-        itemStackRequest->write(out);
-    }
-    if (blockActions.has_value()) {
-        encoding::VarInt::writeSignedInt(out, static_cast<std::int32_t>(blockActions->size()));
-        for (const auto &blockAction : *blockActions) {
-            encoding::VarInt::writeSignedInt(out, blockAction->getActionType());
-            blockAction->write(out);
-        }
-    }
-    if (vehicleInfo.has_value()) {
-        vehicleInfo->write(out);
-    }
+    putDoubleOptional(out, itemInteractionData,
+                      [](encoding::ByteBufferWriter &w, const types::ItemInteractionData &v) { v.write(w); });
+    putDoubleOptional(out, itemStackRequest,
+                      [](encoding::ByteBufferWriter &w,
+                         const types::inventory::stackrequest::ItemStackRequest &v) { v.write(w); });
+    putDoubleOptional(out, blockActions,
+                      [](encoding::ByteBufferWriter &w, const std::vector<types::PlayerBlockAction> &v) {
+                          encoding::VarInt::writeUnsignedInt(w, static_cast<std::uint32_t>(v.size()));
+                          for (const auto &blockAction : v) {
+                              blockAction.write(w);
+                          }
+                      });
+    putDoubleOptional(out, vehicleRotation, [](encoding::ByteBufferWriter &w, const math::Vector2 &v) {
+        serializer::CommonTypes::putVector2(w, v);
+    });
+    putDoubleOptional(out, clientPredictedVehicle, [](encoding::ByteBufferWriter &w, const std::int64_t v) {
+        serializer::CommonTypes::putActorUniqueId(w, v);
+    });
     encoding::LE::writeFloat(out, analogMoveVecX);
     encoding::LE::writeFloat(out, analogMoveVecZ);
     serializer::CommonTypes::putVector3(out, cameraOrientation);

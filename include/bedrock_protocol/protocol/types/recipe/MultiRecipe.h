@@ -12,17 +12,15 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
 #include <string_view>
 
 #include "bedrock_protocol/encoding/ByteBufferReader.h"
 #include "bedrock_protocol/encoding/ByteBufferWriter.h"
-#include "bedrock_protocol/protocol/types/recipe/RecipeWithTypeId.h"
 #include "bedrock_protocol/uuid/Uuid.h"
 
 namespace bedrock_protocol::types::recipe {
 
-class MultiRecipe final : public RecipeWithTypeId {
+class MultiRecipe final {
 public:
     static constexpr std::string_view TYPE_REPAIR_ITEM = "00000000-0000-0000-0000-000000000001";
     static constexpr std::string_view TYPE_MAP_EXTENDING = "D392B075-4BA1-40AE-8789-AF868D56F6CE";
@@ -37,24 +35,16 @@ public:
     static constexpr std::string_view TYPE_FIREWORKS = "00000000-0000-0000-0000-000000000002";
     static constexpr std::string_view TYPE_MAP_LOCKING_CARTOGRAPHY = "602234E4-CAC1-4353-8BB7-B1EBFF70024B";
 
-    MultiRecipe(std::int32_t typeId, uuid::Uuid recipeId, std::uint32_t recipeNetId)
-        : RecipeWithTypeId(typeId), recipeId(recipeId), recipeNetId(recipeNetId)
-    {
-    }
+    MultiRecipe(uuid::Uuid recipeId, std::uint32_t recipeNetId) : recipeId(recipeId), recipeNetId(recipeNetId) {}
 
     [[nodiscard]] const uuid::Uuid &getRecipeId() const { return recipeId; }
 
     [[nodiscard]] std::uint32_t getRecipeNetId() const { return recipeNetId; }
 
     /** @throws DataDecodeException */
-    static MultiRecipe decode(std::int32_t typeId, encoding::ByteBufferReader &in);
+    static MultiRecipe decode(encoding::ByteBufferReader &in);
 
-    void encode(encoding::ByteBufferWriter &out) const override;
-
-    [[nodiscard]] std::unique_ptr<RecipeWithTypeId> clone() const override
-    {
-        return std::make_unique<MultiRecipe>(*this);
-    }
+    void encode(encoding::ByteBufferWriter &out) const;
 
 private:
     uuid::Uuid recipeId;

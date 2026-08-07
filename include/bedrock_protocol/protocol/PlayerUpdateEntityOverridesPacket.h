@@ -33,7 +33,7 @@ public:
     static constexpr std::uint32_t NETWORK_ID = ProtocolInfo::PLAYER_UPDATE_ENTITY_OVERRIDES_PACKET;
 
 
-    std::uint64_t actorRuntimeId = 0;
+    std::int64_t actorUniqueId = 0;
     std::uint32_t propertyIndex = 0;
     types::OverrideUpdateType updateType = types::OverrideUpdateType::CLEAR_OVERRIDES;
     std::optional<std::int32_t> intOverrideValue;
@@ -42,15 +42,15 @@ public:
     /**
      * @generate-create-func
      */
-    static PlayerUpdateEntityOverridesPacket create(std::uint64_t actorRuntimeId, std::uint32_t propertyIndex, types::OverrideUpdateType updateType, std::optional<std::int32_t> intOverrideValue, std::optional<float> floatOverrideValue);
+    static PlayerUpdateEntityOverridesPacket create(std::int64_t actorUniqueId, std::uint32_t propertyIndex, types::OverrideUpdateType updateType, std::optional<std::int32_t> intOverrideValue, std::optional<float> floatOverrideValue);
 
-    static PlayerUpdateEntityOverridesPacket createIntOverride(std::uint64_t actorRuntimeId, std::uint32_t propertyIndex, std::int32_t value);
+    static PlayerUpdateEntityOverridesPacket createIntOverride(std::int64_t actorUniqueId, std::uint32_t propertyIndex, std::int32_t value);
 
-    static PlayerUpdateEntityOverridesPacket createFloatOverride(std::uint64_t actorRuntimeId, std::uint32_t propertyIndex, float value);
+    static PlayerUpdateEntityOverridesPacket createFloatOverride(std::int64_t actorUniqueId, std::uint32_t propertyIndex, float value);
 
-    static PlayerUpdateEntityOverridesPacket createClearOverrides(std::uint64_t actorRuntimeId, std::uint32_t propertyIndex);
+    static PlayerUpdateEntityOverridesPacket createClearOverrides(std::int64_t actorUniqueId, std::uint32_t propertyIndex);
 
-    static PlayerUpdateEntityOverridesPacket createRemoveOverride(std::uint64_t actorRuntimeId, std::uint32_t propertyIndex);
+    static PlayerUpdateEntityOverridesPacket createRemoveOverride(std::int64_t actorUniqueId, std::uint32_t propertyIndex);
 
     [[nodiscard]] std::uint32_t networkId() const override { return NETWORK_ID; }
     [[nodiscard]] std::string_view getName() const override { return "PlayerUpdateEntityOverridesPacket"; }

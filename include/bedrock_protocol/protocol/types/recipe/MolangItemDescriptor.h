@@ -27,7 +27,7 @@ class MolangItemDescriptor final : public ItemDescriptor {
 public:
     static constexpr std::uint8_t ID = ItemDescriptorType::MOLANG;
 
-    MolangItemDescriptor(std::string molangExpression, std::uint8_t molangVersion)
+    MolangItemDescriptor(std::string molangExpression, std::int16_t molangVersion)
         : molangExpression(std::move(molangExpression)), molangVersion(molangVersion)
     {
     }
@@ -36,7 +36,7 @@ public:
 
     [[nodiscard]] const std::string &getMolangExpression() const { return molangExpression; }
 
-    [[nodiscard]] std::uint8_t getMolangVersion() const { return molangVersion; }
+    [[nodiscard]] std::int16_t getMolangVersion() const { return molangVersion; }
 
     /** @throws DataDecodeException */
     static MolangItemDescriptor read(encoding::ByteBufferReader &in);
@@ -50,7 +50,7 @@ public:
 
 private:
     std::string molangExpression;
-    std::uint8_t molangVersion;
+    std::int16_t molangVersion;
 };
 
 }  // namespace bedrock_protocol::types::recipe

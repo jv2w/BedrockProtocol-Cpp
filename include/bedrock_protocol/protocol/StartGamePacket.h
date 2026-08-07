@@ -65,7 +65,6 @@ public:
     bool enableClientSideChunkGeneration = false;
     bool blockNetworkIdsAreHashes = false;  //new in 1.19.80, possibly useful for multi version
     std::optional<types::NetworkPermissions> networkPermissions;  //@note see playerMovementSettings
-    bool isLoggingChat = false;
     std::optional<types::ServerJoinInformation> serverJoinInformation;
     std::optional<types::ServerTelemetryData> serverTelemetryData;  //@note see playerMovementSettings
     /**
@@ -81,7 +80,7 @@ public:
     /**
      * @generate-create-func
      */
-    static StartGamePacket create(std::int64_t actorUniqueId, std::uint64_t actorRuntimeId, std::int32_t playerGamemode, math::Vector3 playerPosition, float pitch, float yaw, types::CacheableNbt<nbt::tag::CompoundTag> playerActorProperties, types::LevelSettings levelSettings, std::string levelId, std::string worldName, std::string premiumWorldTemplateId, bool isTrial, types::PlayerMovementSettings playerMovementSettings, std::uint64_t currentTick, std::int32_t enchantmentSeed, std::string multiplayerCorrelationId, bool enableNewInventorySystem, std::string serverSoftwareVersion, uuid::Uuid worldTemplateId, bool enableClientSideChunkGeneration, bool blockNetworkIdsAreHashes, types::NetworkPermissions networkPermissions, bool isLoggingChat, std::optional<types::ServerJoinInformation> serverJoinInformation, types::ServerTelemetryData serverTelemetryData, std::vector<types::BlockPaletteEntry> blockPalette, std::uint64_t blockPaletteChecksum);
+    static StartGamePacket create(std::int64_t actorUniqueId, std::uint64_t actorRuntimeId, std::int32_t playerGamemode, math::Vector3 playerPosition, float pitch, float yaw, types::CacheableNbt<nbt::tag::CompoundTag> playerActorProperties, types::LevelSettings levelSettings, std::string levelId, std::string worldName, std::string premiumWorldTemplateId, bool isTrial, types::PlayerMovementSettings playerMovementSettings, std::uint64_t currentTick, std::int32_t enchantmentSeed, std::string multiplayerCorrelationId, bool enableNewInventorySystem, std::string serverSoftwareVersion, uuid::Uuid worldTemplateId, bool enableClientSideChunkGeneration, bool blockNetworkIdsAreHashes, types::NetworkPermissions networkPermissions, std::optional<types::ServerJoinInformation> serverJoinInformation, types::ServerTelemetryData serverTelemetryData, std::vector<types::BlockPaletteEntry> blockPalette, std::uint64_t blockPaletteChecksum);
 
     [[nodiscard]] std::uint32_t networkId() const override { return NETWORK_ID; }
     [[nodiscard]] std::string_view getName() const override { return "StartGamePacket"; }

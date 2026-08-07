@@ -19,11 +19,12 @@ class ItemDescriptorType final {
 public:
     ItemDescriptorType() = delete;
 
-    static constexpr std::uint8_t INT_ID_META = 1;
+    //gophertunnel minecraft/protocol/item_descriptor.go:19-24 - the table was renumbered in 1.26.40 and the
+    //int-ID, deferred and complex-alias descriptors no longer exist. Slot 1 is the string-name descriptor.
+    static constexpr std::uint8_t INVALID = 0;
+    static constexpr std::uint8_t STRING_ID_META = 1;
     static constexpr std::uint8_t MOLANG = 2;
     static constexpr std::uint8_t TAG = 3;
-    static constexpr std::uint8_t STRING_ID_META = 4;
-    static constexpr std::uint8_t COMPLEX_ALIAS = 5;
 };
 
 }  // namespace bedrock_protocol::types::recipe

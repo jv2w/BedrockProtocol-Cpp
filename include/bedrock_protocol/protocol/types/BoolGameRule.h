@@ -31,7 +31,7 @@ public:
 
     [[nodiscard]] bool getValue() const { return value; }
 
-    void encode(encoding::ByteBufferWriter &out, bool isStartGame) const override;
+    void encode(encoding::ByteBufferWriter &out) const override;
 
     static BoolGameRule decode(encoding::ByteBufferReader &in, bool isPlayerModifiable);
 

@@ -34,12 +34,11 @@ public:
 
 
     types::BlockPosition blockPosition;
-    std::uint8_t damageAmount = 0;
 
     /**
      * @generate-create-func
      */
-    static AnvilDamagePacket create(types::BlockPosition blockPosition, std::uint8_t damageAmount);
+    static AnvilDamagePacket create(types::BlockPosition blockPosition);
 
     [[nodiscard]] std::uint32_t networkId() const override { return NETWORK_ID; }
     [[nodiscard]] std::string_view getName() const override { return "AnvilDamagePacket"; }

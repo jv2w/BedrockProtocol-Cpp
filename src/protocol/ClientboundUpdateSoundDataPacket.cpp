@@ -24,25 +24,59 @@
 
 namespace bedrock_protocol {
 
-ClientboundUpdateSoundDataPacket ClientboundUpdateSoundDataPacket::create(std::uint64_t serverSoundHandle, std::string soundEvent)
+ClientboundUpdateSoundDataPacket ClientboundUpdateSoundDataPacket::create(std::uint64_t serverSoundHandle, std::optional<types::SoundDataUpdate> stop, std::optional<types::SoundDataUpdate> setVolume, std::optional<types::SoundDataUpdate> setPitch, std::optional<types::SoundDataUpdate> fade, std::optional<types::SoundDataUpdate> seekTo, std::optional<types::SoundDataUpdate> pause, std::optional<types::SoundDataUpdate> resume)
 {
     ClientboundUpdateSoundDataPacket result;
     result.serverSoundHandle = serverSoundHandle;
-    result.soundEvent = std::move(soundEvent);
+    result.stop = stop;
+    result.setVolume = setVolume;
+    result.setPitch = setPitch;
+    result.fade = fade;
+    result.seekTo = seekTo;
+    result.pause = pause;
+    result.resume = resume;
     return result;
 }
 
+namespace {
+std::optional<types::SoundDataUpdate> getSoundDataUpdate(encoding::ByteBufferReader &in)
+{
+    return serializer::CommonTypes::getBool(in) ? std::optional(types::SoundDataUpdate::read(in)) : std::nullopt;
+}
+
+void putSoundDataUpdate(encoding::ByteBufferWriter &out, const std::optional<types::SoundDataUpdate> &update)
+{
+    serializer::CommonTypes::putBool(out, update.has_value());
+    if (update.has_value()) {
+        update->write(out);
+    }
+}
+}  // namespace
+
 void ClientboundUpdateSoundDataPacket::decodePayload(encoding::ByteBufferReader &in)
 {
+    //gophertunnel v1.58.0 minecraft/protocol/packet/clientbound_update_sound_data.go:25-34.
     serverSoundHandle = encoding::LE::readUnsignedLong(in);
-    soundEvent = serializer::CommonTypes::getString(in);
+    stop = getSoundDataUpdate(in);
+    setVolume = getSoundDataUpdate(in);
+    setPitch = getSoundDataUpdate(in);
+    fade = getSoundDataUpdate(in);
+    seekTo = getSoundDataUpdate(in);
+    pause = getSoundDataUpdate(in);
+    resume = getSoundDataUpdate(in);
 
 }
 
 void ClientboundUpdateSoundDataPacket::encodePayload(encoding::ByteBufferWriter &out) const
 {
     encoding::LE::writeUnsignedLong(out, serverSoundHandle);
-    serializer::CommonTypes::putString(out, soundEvent);
+    putSoundDataUpdate(out, stop);
+    putSoundDataUpdate(out, setVolume);
+    putSoundDataUpdate(out, setPitch);
+    putSoundDataUpdate(out, fade);
+    putSoundDataUpdate(out, seekTo);
+    putSoundDataUpdate(out, pause);
+    putSoundDataUpdate(out, resume);
 
 }
 

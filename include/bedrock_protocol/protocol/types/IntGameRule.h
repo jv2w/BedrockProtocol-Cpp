@@ -31,12 +31,12 @@ public:
 
     [[nodiscard]] std::uint32_t getValue() const { return value; }
 
-    void encode(encoding::ByteBufferWriter &out, bool isStartGame) const override;
+    void encode(encoding::ByteBufferWriter &out) const override;
 
     /**
      * @throws DataDecodeException
      */
-    static IntGameRule decode(encoding::ByteBufferReader &in, bool isPlayerModifiable, bool isStartGame);
+    static IntGameRule decode(encoding::ByteBufferReader &in, bool isPlayerModifiable);
 
     /** Not present in the PHP original; needed to preserve value semantics for owning containers. */
     [[nodiscard]] std::unique_ptr<GameRule> clone() const override { return std::make_unique<IntGameRule>(*this); }

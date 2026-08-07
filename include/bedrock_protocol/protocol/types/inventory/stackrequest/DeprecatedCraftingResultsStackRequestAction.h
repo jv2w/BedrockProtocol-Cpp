@@ -21,7 +21,7 @@
 #include "bedrock_protocol/encoding/ByteBufferWriter.h"
 #include "bedrock_protocol/encoding/VarInt.h"
 #include "bedrock_protocol/protocol/serializer/CommonTypes.h"
-#include "bedrock_protocol/protocol/types/inventory/ItemStack.h"
+#include "bedrock_protocol/protocol/types/inventory/StackRequestItem.h"
 #include "bedrock_protocol/protocol/types/inventory/stackrequest/ItemStackRequestAction.h"
 #include "bedrock_protocol/protocol/types/inventory/stackrequest/ItemStackRequestActionType.h"
 
@@ -35,19 +35,21 @@ class DeprecatedCraftingResultsStackRequestAction final : public ItemStackReques
 public:
     static constexpr std::int32_t ID = ItemStackRequestActionType::CRAFTING_RESULTS_DEPRECATED_ASK_TY_LAING;
 
-    DeprecatedCraftingResultsStackRequestAction(std::vector<inventory::ItemStack> results, std::uint8_t iterations) :
+    DeprecatedCraftingResultsStackRequestAction(std::vector<inventory::StackRequestItem> results,
+                                                std::uint8_t iterations) :
         results(std::move(results)), iterations(iterations) {}
 
     [[nodiscard]] std::int32_t getTypeId() const override { return ID; }
 
-    [[nodiscard]] const std::vector<inventory::ItemStack> &getResults() const { return results; }
+    [[nodiscard]] const std::vector<inventory::StackRequestItem> &getResults() const { return results; }
 
     [[nodiscard]] std::uint8_t getIterations() const { return iterations; }
 
     static DeprecatedCraftingResultsStackRequestAction read(encoding::ByteBufferReader &in) {
-        std::vector<inventory::ItemStack> results;
+        //gophertunnel minecraft/protocol/item_stack.go:598-607 - the results are name-based StackRequestItems.
+        std::vector<inventory::StackRequestItem> results;
         for (std::uint32_t i = 0, len = encoding::VarInt::readUnsignedInt(in); i < len; ++i) {
-            results.push_back(serializer::CommonTypes::getItemStackWithoutStackId(in));
+            results.push_back(serializer::CommonTypes::getStackRequestItem(in));
         }
         const auto iterations = encoding::Byte::readUnsigned(in);
         return DeprecatedCraftingResultsStackRequestAction(std::move(results), iterations);
@@ -56,7 +58,7 @@ public:
     void write(encoding::ByteBufferWriter &out) const override {
         encoding::VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(results.size()));
         for (const auto &result : results) {
-            serializer::CommonTypes::putItemStackWithoutStackId(out, result);
+            serializer::CommonTypes::putStackRequestItem(out, result);
         }
         encoding::Byte::writeUnsigned(out, iterations);
     }
@@ -66,7 +68,7 @@ public:
     }
 
 private:
-    std::vector<inventory::ItemStack> results;
+    std::vector<inventory::StackRequestItem> results;
     std::uint8_t iterations;
 };
 

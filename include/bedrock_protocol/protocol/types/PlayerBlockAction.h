@@ -12,30 +12,45 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
 
+#include "bedrock_protocol/encoding/ByteBufferReader.h"
 #include "bedrock_protocol/encoding/ByteBufferWriter.h"
+#include "bedrock_protocol/protocol/types/BlockPosition.h"
 
 namespace bedrock_protocol::types {
 
 /**
- * This is used for PlayerAuthInput packet when the flags include PERFORM_BLOCK_ACTIONS
+ * This is used for the PlayerAuthInput packet's block action list.
+ *
+ * There is one element shape and no per-action branch: every action carries a block position and a
+ * face (minecraft/protocol/player.go:158-163).
  */
-class PlayerBlockAction {
+class PlayerBlockAction final {
 public:
-    virtual ~PlayerBlockAction() = default;
-
-    [[nodiscard]] virtual std::int32_t getActionType() const = 0;
-
-    virtual void write(encoding::ByteBufferWriter &out) const = 0;
-
-    /** Not present in the PHP original; needed to preserve value semantics for owning containers. */
-    [[nodiscard]] virtual std::unique_ptr<PlayerBlockAction> clone() const = 0;
-
-protected:
     PlayerBlockAction() = default;
-    PlayerBlockAction(const PlayerBlockAction &) = default;
-    PlayerBlockAction &operator=(const PlayerBlockAction &) = default;
+
+    PlayerBlockAction(std::int32_t actionType, const BlockPosition &blockPosition, std::int32_t face)
+        : actionType(actionType), blockPosition(blockPosition), face(face)
+    {
+    }
+
+    [[nodiscard]] std::int32_t getActionType() const { return actionType; }
+
+    [[nodiscard]] const BlockPosition &getBlockPosition() const { return blockPosition; }
+
+    [[nodiscard]] std::int32_t getFace() const { return face; }
+
+    /**
+     * @throws encoding::DataDecodeException
+     */
+    static PlayerBlockAction read(encoding::ByteBufferReader &in);
+
+    void write(encoding::ByteBufferWriter &out) const;
+
+private:
+    std::int32_t actionType = 0;
+    BlockPosition blockPosition;
+    std::int32_t face = 0;
 };
 
 }  // namespace bedrock_protocol::types

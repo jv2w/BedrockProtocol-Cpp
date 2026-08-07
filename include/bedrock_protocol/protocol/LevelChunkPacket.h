@@ -37,16 +37,18 @@ public:
     types::ChunkPosition chunkPosition{0, 0};
     /** @phpstan-var DimensionIds::* */
     std::int32_t dimensionId = 0;
-    std::int64_t subChunkCount = 0;
-    bool clientSubChunkRequestsEnabled = false;
-    /** @var int[]|null */
-    std::optional<std::vector<std::uint64_t>> usedBlobHashes = std::nullopt;
+    std::uint32_t subChunkCount = 0;
+    /** Maximum number of sub-chunks a client in request mode will ask for; -1 means no limit. */
+    std::optional<std::int32_t> subChunkLimit = std::nullopt;
+    bool cacheEnabled = false;
+    /** @var int[] */
+    std::vector<std::uint64_t> usedBlobHashes;
     std::string extraPayload;
 
     /**
      * @generate-create-func
      */
-    static LevelChunkPacket create(types::ChunkPosition chunkPosition, std::int32_t dimensionId, std::int64_t subChunkCount, bool clientSubChunkRequestsEnabled, std::optional<std::vector<std::uint64_t>> usedBlobHashes, std::string extraPayload);
+    static LevelChunkPacket create(types::ChunkPosition chunkPosition, std::int32_t dimensionId, std::uint32_t subChunkCount, std::optional<std::int32_t> subChunkLimit, bool cacheEnabled, std::vector<std::uint64_t> usedBlobHashes, std::string extraPayload);
 
     [[nodiscard]] std::uint32_t networkId() const override { return NETWORK_ID; }
     [[nodiscard]] std::string_view getName() const override { return "LevelChunkPacket"; }
@@ -57,17 +59,8 @@ protected:
     void encodePayload(encoding::ByteBufferWriter &out) const override;
 
 private:
-    /**
-     * Client will request all subchunks as needed up to the top of the world
-     */
-    static constexpr std::uint32_t CLIENT_REQUEST_FULL_COLUMN_FAKE_COUNT = 0xFFFFFFFFU;
-    /**
-     * Client will request subchunks as needed up to the height written in the packet, and assume that anything above
-     * that height is air (wtf mojang ...)
-     */
-    static constexpr std::uint32_t CLIENT_REQUEST_TRUNCATED_COLUMN_FAKE_COUNT = 0xFFFFFFFFU - 1;
-    //this appears large enough for a world height of 1024 blocks - it may need to be increased in the future
-    static constexpr std::uint32_t MAX_BLOB_HASHES = 64;
+    //gophertunnel v1.58.0 minecraft/protocol/packet/level_chunk.go:47-49 rejects anything above this.
+    static constexpr std::uint32_t MAX_SUB_CHUNK_COUNT = 64;
 };
 
 }  // namespace bedrock_protocol

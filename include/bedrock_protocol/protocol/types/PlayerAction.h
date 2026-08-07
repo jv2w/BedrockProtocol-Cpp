@@ -58,8 +58,9 @@ public:
     static constexpr std::int32_t STOP_CRAWLING = 33;
     static constexpr std::int32_t START_FLYING = 34;
     static constexpr std::int32_t STOP_FLYING = 35;
-
+    static constexpr std::int32_t RECEIVED_SERVER_DATA = 36;
     static constexpr std::int32_t START_USING_ITEM = 37;
+    static constexpr std::int32_t INTERNAL_UPDATE = 38;
 
     //Backwards compatibility (blame @dktapps)
     static constexpr std::int32_t CRACK_BREAK = 18;

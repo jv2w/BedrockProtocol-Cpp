@@ -19,6 +19,8 @@ struct GameRuleType final {
     GameRuleType() = delete;
     //NOOP
 
+    /** New in 1.26.40; carries no payload. gophertunnel v1.58.0 minecraft/protocol/reader.go:272-273. */
+    static constexpr std::int32_t NULL_ = 0;
     static constexpr std::int32_t BOOL = 1;
     static constexpr std::int32_t INT = 2;
     static constexpr std::int32_t FLOAT = 3;

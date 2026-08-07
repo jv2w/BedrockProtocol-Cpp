@@ -11,8 +11,11 @@
 
 #include "bedrock_protocol/protocol/SetScorePacket.h"
 
+#include <iterator>
+#include <optional>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <utility>
 
 #include "bedrock_protocol/encoding/BE.h"
@@ -25,35 +28,55 @@
 
 namespace bedrock_protocol {
 
-SetScorePacket SetScorePacket::create(std::uint8_t type, std::vector<types::ScorePacketEntry> entries)
+namespace {
+
+/**
+ * The variant name written directly after the variant ID, indexed by that ID.
+ * @see gophertunnel minecraft/protocol/scoreboard.go:42
+ */
+constexpr std::string_view VARIANT_NAMES[] = {"remove", "changeplayer", "changeentity", "changefakeplayer"};
+
+}  // namespace
+
+SetScorePacket SetScorePacket::create(std::vector<types::ScorePacketEntry> entries)
 {
     SetScorePacket result;
-    result.type = type;
     result.entries = std::move(entries);
     return result;
 }
 
 void SetScorePacket::decodePayload(encoding::ByteBufferReader &in)
 {
-    type = encoding::Byte::readUnsigned(in);
     for (std::uint32_t i = 0, i2 = encoding::VarInt::readUnsignedInt(in); i < i2; ++i) {
         types::ScorePacketEntry entry;
+        const auto variant = encoding::VarInt::readUnsignedInt(in);
+        if (variant >= std::size(VARIANT_NAMES)) {
+            throw PacketDecodeException("Unknown entry type " + std::to_string(variant));
+        }
+        entry.type = static_cast<std::uint8_t>(variant);
+        serializer::CommonTypes::getString(in);  // the variant name, redundant with the variant ID
         entry.scoreboardId = encoding::VarInt::readSignedLong(in);
-        entry.objectiveName = serializer::CommonTypes::getString(in);
-        entry.score = encoding::LE::readSignedInt(in);
-        if (type != TYPE_REMOVE) {
-            entry.type = encoding::Byte::readUnsigned(in);
-            switch (entry.type) {
-                case types::ScorePacketEntry::TYPE_PLAYER:
-                case types::ScorePacketEntry::TYPE_ENTITY:
-                    entry.actorUniqueId = serializer::CommonTypes::getActorUniqueId(in);
-                    break;
-                case types::ScorePacketEntry::TYPE_FAKE_PLAYER:
-                    entry.customName = serializer::CommonTypes::getString(in);
-                    break;
-                default:
-                    throw PacketDecodeException("Unknown entry type " + std::to_string(entry.type));
+        switch (entry.type) {
+            case types::ScorePacketEntry::TYPE_REMOVE: {
+                // The objective name is optional in this variant; an absent one means the empty string.
+                // @see gophertunnel minecraft/protocol/scoreboard.go:55-60
+                const auto objectiveName = serializer::CommonTypes::readOptional(in, [](encoding::ByteBufferReader &reader) { return serializer::CommonTypes::getString(reader); });
+                entry.objectiveName = objectiveName.value_or("");
+                break;
             }
+            case types::ScorePacketEntry::TYPE_PLAYER:
+            case types::ScorePacketEntry::TYPE_ENTITY:
+                entry.objectiveName = serializer::CommonTypes::getString(in);
+                entry.score = encoding::LE::readSignedInt(in);
+                entry.actorUniqueId = serializer::CommonTypes::getActorUniqueId(in);
+                break;
+            case types::ScorePacketEntry::TYPE_FAKE_PLAYER:
+                entry.objectiveName = serializer::CommonTypes::getString(in);
+                entry.score = encoding::LE::readSignedInt(in);
+                entry.customName = serializer::CommonTypes::getString(in);
+                break;
+            default:
+                throw PacketDecodeException("Unknown entry type " + std::to_string(entry.type));
         }
         entries.push_back(std::move(entry));
     }
@@ -62,25 +85,33 @@ void SetScorePacket::decodePayload(encoding::ByteBufferReader &in)
 
 void SetScorePacket::encodePayload(encoding::ByteBufferWriter &out) const
 {
-    encoding::Byte::writeUnsigned(out, type);
     encoding::VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(entries.size()));
     for (const auto &entry : entries) {
+        if (entry.type >= std::size(VARIANT_NAMES)) {
+            throw std::invalid_argument("Unknown entry type " + std::to_string(entry.type));
+        }
+        encoding::VarInt::writeUnsignedInt(out, entry.type);
+        serializer::CommonTypes::putString(out, std::string(VARIANT_NAMES[entry.type]));
         encoding::VarInt::writeSignedLong(out, entry.scoreboardId);
-        serializer::CommonTypes::putString(out, entry.objectiveName);
-        encoding::LE::writeSignedInt(out, entry.score);
-        if (type != TYPE_REMOVE) {
-            encoding::Byte::writeUnsigned(out, entry.type);
-            switch (entry.type) {
-                case types::ScorePacketEntry::TYPE_PLAYER:
-                case types::ScorePacketEntry::TYPE_ENTITY:
-                    serializer::CommonTypes::putActorUniqueId(out, *entry.actorUniqueId);
-                    break;
-                case types::ScorePacketEntry::TYPE_FAKE_PLAYER:
-                    serializer::CommonTypes::putString(out, *entry.customName);
-                    break;
-                default:
-                    throw std::invalid_argument("Unknown entry type " + std::to_string(entry.type));
+        switch (entry.type) {
+            case types::ScorePacketEntry::TYPE_REMOVE: {
+                const auto objectiveName = entry.objectiveName.empty() ? std::optional<std::string>() : std::optional<std::string>(entry.objectiveName);
+                serializer::CommonTypes::writeOptional(out, objectiveName, [](encoding::ByteBufferWriter &writer, const std::string &value) { serializer::CommonTypes::putString(writer, value); });
+                break;
             }
+            case types::ScorePacketEntry::TYPE_PLAYER:
+            case types::ScorePacketEntry::TYPE_ENTITY:
+                serializer::CommonTypes::putString(out, entry.objectiveName);
+                encoding::LE::writeSignedInt(out, entry.score);
+                serializer::CommonTypes::putActorUniqueId(out, *entry.actorUniqueId);
+                break;
+            case types::ScorePacketEntry::TYPE_FAKE_PLAYER:
+                serializer::CommonTypes::putString(out, entry.objectiveName);
+                encoding::LE::writeSignedInt(out, entry.score);
+                serializer::CommonTypes::putString(out, *entry.customName);
+                break;
+            default:
+                throw std::invalid_argument("Unknown entry type " + std::to_string(entry.type));
         }
     }
 

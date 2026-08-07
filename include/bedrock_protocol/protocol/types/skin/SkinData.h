@@ -11,11 +11,13 @@
 
 #pragma once
 
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
 
+#include "bedrock_protocol/color/Color.h"
 #include "bedrock_protocol/protocol/ProtocolInfo.h"
 #include "bedrock_protocol/protocol/types/skin/PersonaPieceTintColor.h"
 #include "bedrock_protocol/protocol/types/skin/PersonaSkinPiece.h"
@@ -26,8 +28,9 @@ namespace bedrock_protocol::types::skin {
 
 class SkinData {
 public:
-    static constexpr std::string_view ARM_SIZE_SLIM = "slim";
-    static constexpr std::string_view ARM_SIZE_WIDE = "wide";
+    //arm size is a byte enum on the wire as of protocol 2168 (gophertunnel minecraft/protocol/skin.go:11-14,101)
+    static constexpr std::uint8_t ARM_SIZE_SLIM = 0;
+    static constexpr std::uint8_t ARM_SIZE_WIDE = 1;
 
     /**
      * @param animations
@@ -39,10 +42,11 @@ public:
              std::string geometryData = "",
              std::string geometryDataEngineVersion = std::string(ProtocolInfo::MINECRAFT_VERSION_NETWORK),
              std::string animationData = "", std::string capeId = "",
-             std::optional<std::string> fullSkinId = std::nullopt, std::string armSize = std::string(ARM_SIZE_WIDE),
-             std::string skinColor = "", std::vector<PersonaSkinPiece> personaPieces = {},
+             std::optional<std::string> fullSkinId = std::nullopt, std::uint8_t armSize = ARM_SIZE_WIDE,
+             color::Color skinColor = color::Color(0, 0, 0, 0), std::vector<PersonaSkinPiece> personaPieces = {},
              std::vector<PersonaPieceTintColor> pieceTintColors = {}, bool isVerified = true, bool premium = false,
-             bool persona = false, bool personaCapeOnClassic = false, bool isPrimaryUser = true, bool override = true);
+             bool persona = false, bool personaCapeOnClassic = false, bool isPrimaryUser = true, bool override = true,
+             std::string profileHash = "");
 
     [[nodiscard]] const std::string &getSkinId() const { return skinId; }
 
@@ -66,9 +70,9 @@ public:
 
     [[nodiscard]] const std::string &getFullSkinId() const { return fullSkinId; }
 
-    [[nodiscard]] const std::string &getArmSize() const { return armSize; }
+    [[nodiscard]] std::uint8_t getArmSize() const { return armSize; }
 
-    [[nodiscard]] const std::string &getSkinColor() const { return skinColor; }
+    [[nodiscard]] const color::Color &getSkinColor() const { return skinColor; }
 
     [[nodiscard]] const std::vector<PersonaSkinPiece> &getPersonaPieces() const { return personaPieces; }
 
@@ -85,6 +89,8 @@ public:
     [[nodiscard]] bool isOverride() const { return override_; }
 
     [[nodiscard]] bool isVerified() const { return isVerified_; }
+
+    [[nodiscard]] const std::string &getProfileHash() const { return profileHash; }
 
     /**
      * @internal
@@ -103,8 +109,8 @@ private:
     std::string animationData;
     std::string capeId;
     std::string fullSkinId;
-    std::string armSize;
-    std::string skinColor;
+    std::uint8_t armSize;
+    color::Color skinColor;
     std::vector<PersonaSkinPiece> personaPieces;
     std::vector<PersonaPieceTintColor> pieceTintColors;
     /** PHP field name `isVerified`, renamed to avoid colliding with the getter of the same name. */
@@ -116,6 +122,7 @@ private:
     bool isPrimaryUser_;
     /** PHP field name `override`, renamed because `override` is a contextual keyword in C++. */
     bool override_;
+    std::string profileHash;
 };
 
 }  // namespace bedrock_protocol::types::skin

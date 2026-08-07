@@ -62,6 +62,12 @@ public:
     static constexpr std::int32_t SOUND_POINTED_DRIPSTONE_FALL = 1064;
     static constexpr std::int32_t SOUND_DYE_USED = 1065;
     static constexpr std::int32_t SOUND_INK_SAC_USED = 1066;
+    static constexpr std::int32_t SOUND_AMETHYST_RESONATE = 1067;
+
+    static constexpr std::int32_t QUEUE_CUSTOM_MUSIC = 1900;
+    static constexpr std::int32_t PLAY_CUSTOM_MUSIC = 1901;
+    static constexpr std::int32_t STOP_CUSTOM_MUSIC = 1902;
+    static constexpr std::int32_t SET_MUSIC_VOLUME = 1903;
 
     static constexpr std::int32_t PARTICLE_SHOOT = 2000;
     static constexpr std::int32_t PARTICLE_DESTROY = 2001; //sound + particles
@@ -100,6 +106,9 @@ public:
     static constexpr std::int32_t PARTICLE_TURTLE_EGG_GROW = 2034;
     static constexpr std::int32_t PARTICLE_SCULK_SHRIEK = 2035;
     static constexpr std::int32_t PARTICLE_SCULK_CATALYST_BLOOM = 2036;
+    static constexpr std::int32_t SCULK_CHARGE = 2037;
+    static constexpr std::int32_t SCULK_CHARGE_POP = 2038;
+    static constexpr std::int32_t SONIC_EXPLOSION = 2039;
 
     static constexpr std::int32_t PARTICLE_DUST_PLUME = 2040;
 
@@ -143,6 +152,8 @@ public:
     static constexpr std::int32_t PARTICLE_TRIAL_SPAWNER_SPAWNING = 3612;
     static constexpr std::int32_t PARTICLE_TRIAL_SPAWNER_EJECTING = 3613;
     static constexpr std::int32_t PARTICLE_WIND_EXPLOSION = 3614;
+    static constexpr std::int32_t PARTICLE_TRIAL_SPAWNER_DETECTION_CHARGED = 3615;
+    static constexpr std::int32_t PARTICLE_TRIAL_SPAWNER_BECOME_CHARGED = 3616;
 
     static constexpr std::int32_t SET_DATA = 4000;
 
@@ -153,6 +164,9 @@ public:
     static constexpr std::int32_t ANIMATION_VAULT_ACTIVATE = 9811;
     static constexpr std::int32_t ANIMATION_VAULT_DEACTIVATE = 9812;
     static constexpr std::int32_t ANIMATION_VAULT_EJECT_ITEM = 9813;
+    static constexpr std::int32_t ANIMATION_SPAWN_COBWEB = 9814;
+    static constexpr std::int32_t PARTICLE_SMASH_ATTACK_GROUND_DUST = 9815;
+    static constexpr std::int32_t PARTICLE_CREAKING_HEART_TRAIL = 9816;
 
     static constexpr std::int32_t ADD_PARTICLE_MASK = 0x4000;
 };

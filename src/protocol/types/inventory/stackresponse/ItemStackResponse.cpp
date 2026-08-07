@@ -11,8 +11,6 @@
 
 #include "bedrock_protocol/protocol/types/inventory/stackresponse/ItemStackResponse.h"
 
-#include <stdexcept>
-
 #include "bedrock_protocol/encoding/Byte.h"
 #include "bedrock_protocol/encoding/VarInt.h"
 #include "bedrock_protocol/protocol/serializer/CommonTypes.h"
@@ -27,17 +25,16 @@ ItemStackResponse::ItemStackResponse(const std::uint8_t result, const std::int32
                                      std::vector<ItemStackResponseContainerInfo> containerInfos)
     : result(result), requestId(requestId), containerInfos(std::move(containerInfos))
 {
-    if (this->result != RESULT_OK && this->containerInfos.size() != 0) {
-        throw std::invalid_argument("Container infos must be empty if rejecting the request");
-    }
 }
 
 ItemStackResponse ItemStackResponse::read(encoding::ByteBufferReader &in)
 {
     const auto result = Byte::readUnsigned(in);
     const auto requestId = CommonTypes::readItemStackRequestId(in);
+    //gophertunnel minecraft/protocol/item_stack.go:231-244 - the container list is a double optional whose
+    //presence is driven by emptiness rather than by the status.
     std::vector<ItemStackResponseContainerInfo> containerInfos;
-    if (result == RESULT_OK) {
+    if (CommonTypes::getBool(in) && CommonTypes::getBool(in)) {
         for (std::uint32_t i = 0, len = VarInt::readUnsignedInt(in); i < len; ++i) {
             containerInfos.push_back(ItemStackResponseContainerInfo::read(in));
         }
@@ -49,7 +46,11 @@ void ItemStackResponse::write(encoding::ByteBufferWriter &out) const
 {
     Byte::writeUnsigned(out, result);
     CommonTypes::writeItemStackRequestId(out, requestId);
-    if (result == RESULT_OK) {
+    //The outer bool of a double optional is always written as true.
+    CommonTypes::putBool(out, true);
+    const auto present = !containerInfos.empty();
+    CommonTypes::putBool(out, present);
+    if (present) {
         VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(containerInfos.size()));
         for (const auto &containerInfo : containerInfos) {
             containerInfo.write(out);

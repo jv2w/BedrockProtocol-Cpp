@@ -12,6 +12,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -25,7 +26,7 @@ namespace bedrock_protocol::types {
 class ItemInteractionData final {
 public:
     ItemInteractionData(std::int32_t requestId,
-                        std::vector<inventory::InventoryTransactionChangedSlotsHack> requestChangedSlots,
+                        std::optional<std::vector<inventory::InventoryTransactionChangedSlotsHack>> requestChangedSlots,
                         inventory::UseItemTransactionData transactionData)
         : requestId(requestId), requestChangedSlots(std::move(requestChangedSlots)),
           transactionData(std::move(transactionData))
@@ -34,7 +35,8 @@ public:
 
     [[nodiscard]] std::int32_t getRequestId() const { return requestId; }
 
-    [[nodiscard]] const std::vector<inventory::InventoryTransactionChangedSlotsHack> &getRequestChangedSlots() const
+    [[nodiscard]] const std::optional<std::vector<inventory::InventoryTransactionChangedSlotsHack>> &
+    getRequestChangedSlots() const
     {
         return requestChangedSlots;
     }
@@ -51,7 +53,7 @@ public:
 
 private:
     std::int32_t requestId;
-    std::vector<inventory::InventoryTransactionChangedSlotsHack> requestChangedSlots;
+    std::optional<std::vector<inventory::InventoryTransactionChangedSlotsHack>> requestChangedSlots;
     inventory::UseItemTransactionData transactionData;
 };
 

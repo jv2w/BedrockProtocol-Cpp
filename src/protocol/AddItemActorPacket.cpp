@@ -41,7 +41,7 @@ void AddItemActorPacket::decodePayload(encoding::ByteBufferReader &in)
 {
     actorUniqueId = serializer::CommonTypes::getActorUniqueId(in);
     actorRuntimeId = serializer::CommonTypes::getActorRuntimeId(in);
-    item = serializer::CommonTypes::getItemStackWrapper(in);
+    item = serializer::CommonTypes::getNetworkItemStackDescriptor(in);
     position = serializer::CommonTypes::getVector3(in);
     motion = serializer::CommonTypes::getVector3(in);
     metadata = serializer::CommonTypes::getEntityMetadata(in);
@@ -55,7 +55,7 @@ void AddItemActorPacket::encodePayload(encoding::ByteBufferWriter &out) const
     serializer::CommonTypes::putActorRuntimeId(out, actorRuntimeId);
     //PHP throws Error when encoding a packet whose typed $item was never initialised; dereferencing an
     //empty optional would instead be undefined behaviour, so use value() to keep the PHP failure mode.
-    serializer::CommonTypes::putItemStackWrapper(out, item.value());
+    serializer::CommonTypes::putNetworkItemStackDescriptor(out, item.value());
     serializer::CommonTypes::putVector3(out, position);
     serializer::CommonTypes::putVector3Nullable(out, motion);
     serializer::CommonTypes::putEntityMetadata(out, metadata);

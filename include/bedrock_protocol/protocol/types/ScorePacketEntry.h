@@ -19,6 +19,7 @@ namespace bedrock_protocol::types {
 
 class ScorePacketEntry {
 public:
+    static constexpr std::uint8_t TYPE_REMOVE = 0;
     static constexpr std::uint8_t TYPE_PLAYER = 1;
     static constexpr std::uint8_t TYPE_ENTITY = 2;
     static constexpr std::uint8_t TYPE_FAKE_PLAYER = 3;

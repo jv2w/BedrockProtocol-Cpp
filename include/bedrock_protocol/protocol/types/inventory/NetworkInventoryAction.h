@@ -71,19 +71,8 @@ public:
      * @throws DataDecodeException
      * @throws PacketDecodeException
      */
-    NetworkInventoryAction &readAuthInput(encoding::ByteBufferReader &in);
-
-    void writeAuthInput(encoding::ByteBufferWriter &out) const;
-
-    /**
-     * @throws DataDecodeException
-     * @throws PacketDecodeException
-     */
     NetworkInventoryAction &readTransaction(encoding::ByteBufferReader &in);
 
-    /**
-     * @throws std::invalid_argument
-     */
     void writeTransaction(encoding::ByteBufferWriter &out) const;
 };
 

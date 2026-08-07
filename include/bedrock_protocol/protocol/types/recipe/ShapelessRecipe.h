@@ -12,7 +12,7 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -22,18 +22,18 @@
 #include "bedrock_protocol/protocol/types/inventory/ItemStack.h"
 #include "bedrock_protocol/protocol/types/recipe/RecipeIngredient.h"
 #include "bedrock_protocol/protocol/types/recipe/RecipeUnlockingRequirement.h"
-#include "bedrock_protocol/protocol/types/recipe/RecipeWithTypeId.h"
 #include "bedrock_protocol/uuid/Uuid.h"
 
 namespace bedrock_protocol::types::recipe {
 
-class ShapelessRecipe final : public RecipeWithTypeId {
+class ShapelessRecipe final {
 public:
-    ShapelessRecipe(std::int32_t typeId, std::string recipeId, std::vector<RecipeIngredient> inputs,
+    ShapelessRecipe(std::string recipeId, std::vector<RecipeIngredient> inputs,
                     std::vector<inventory::ItemStack> outputs, uuid::Uuid uuid, std::string blockName,
-                    std::int32_t priority, RecipeUnlockingRequirement unlockingRequirement, std::uint32_t recipeNetId)
-        : RecipeWithTypeId(typeId), recipeId(std::move(recipeId)), inputs(std::move(inputs)),
-          outputs(std::move(outputs)), uuid(uuid), blockName(std::move(blockName)), priority(priority),
+                    std::int32_t priority, std::optional<RecipeUnlockingRequirement> unlockingRequirement,
+                    std::uint32_t recipeNetId)
+        : recipeId(std::move(recipeId)), inputs(std::move(inputs)), outputs(std::move(outputs)), uuid(uuid),
+          blockName(std::move(blockName)), priority(priority),
           unlockingRequirement(std::move(unlockingRequirement)), recipeNetId(recipeNetId)
     {
     }
@@ -50,19 +50,17 @@ public:
 
     [[nodiscard]] std::int32_t getPriority() const { return priority; }
 
-    [[nodiscard]] const RecipeUnlockingRequirement &getUnlockingRequirement() const { return unlockingRequirement; }
+    [[nodiscard]] const std::optional<RecipeUnlockingRequirement> &getUnlockingRequirement() const
+    {
+        return unlockingRequirement;
+    }
 
     [[nodiscard]] std::uint32_t getRecipeNetId() const { return recipeNetId; }
 
     /** @throws DataDecodeException */
-    static ShapelessRecipe decode(std::int32_t recipeType, encoding::ByteBufferReader &in);
+    static ShapelessRecipe decode(encoding::ByteBufferReader &in);
 
-    void encode(encoding::ByteBufferWriter &out) const override;
-
-    [[nodiscard]] std::unique_ptr<RecipeWithTypeId> clone() const override
-    {
-        return std::make_unique<ShapelessRecipe>(*this);
-    }
+    void encode(encoding::ByteBufferWriter &out) const;
 
 private:
     std::string recipeId;
@@ -71,7 +69,7 @@ private:
     uuid::Uuid uuid;
     std::string blockName;
     std::int32_t priority;
-    RecipeUnlockingRequirement unlockingRequirement;
+    std::optional<RecipeUnlockingRequirement> unlockingRequirement;
     std::uint32_t recipeNetId;
 };
 

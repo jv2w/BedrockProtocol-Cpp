@@ -128,7 +128,13 @@ public:
     std::string PlatformUserId = "";  //xbox-only, apparently
 
     /** @required */
+    std::string PlayFabId;
+
+    /** @required */
     bool PremiumSkin = false;
+
+    /** @required */
+    std::string ProfileHash;
 
     /** @required */
     std::string SelfSignedId;
@@ -165,6 +171,8 @@ public:
 
     /** @required */
     std::string ThirdPartyName;
+
+    std::optional<bool> ThirdPartyNameOnly;
 
     /** @required */
     bool TrustedSkin = false;

@@ -12,6 +12,7 @@
 #include "bedrock_protocol/protocol/PlayerUpdateEntityOverridesPacket.h"
 
 #include <stdexcept>
+#include <string>
 #include <utility>
 
 #include "bedrock_protocol/encoding/BE.h"
@@ -24,10 +25,10 @@
 
 namespace bedrock_protocol {
 
-PlayerUpdateEntityOverridesPacket PlayerUpdateEntityOverridesPacket::create(std::uint64_t actorRuntimeId, std::uint32_t propertyIndex, types::OverrideUpdateType updateType, std::optional<std::int32_t> intOverrideValue, std::optional<float> floatOverrideValue)
+PlayerUpdateEntityOverridesPacket PlayerUpdateEntityOverridesPacket::create(std::int64_t actorUniqueId, std::uint32_t propertyIndex, types::OverrideUpdateType updateType, std::optional<std::int32_t> intOverrideValue, std::optional<float> floatOverrideValue)
 {
     PlayerUpdateEntityOverridesPacket result;
-    result.actorRuntimeId = actorRuntimeId;
+    result.actorUniqueId = actorUniqueId;
     result.propertyIndex = propertyIndex;
     result.updateType = std::move(updateType);
     result.intOverrideValue = std::move(intOverrideValue);
@@ -35,31 +36,39 @@ PlayerUpdateEntityOverridesPacket PlayerUpdateEntityOverridesPacket::create(std:
     return result;
 }
 
-PlayerUpdateEntityOverridesPacket PlayerUpdateEntityOverridesPacket::createIntOverride(std::uint64_t actorRuntimeId, std::uint32_t propertyIndex, std::int32_t value)
+PlayerUpdateEntityOverridesPacket PlayerUpdateEntityOverridesPacket::createIntOverride(std::int64_t actorUniqueId, std::uint32_t propertyIndex, std::int32_t value)
 {
-    return create(actorRuntimeId, propertyIndex, types::OverrideUpdateType::SET_INT_OVERRIDE, value, std::nullopt);
+    return create(actorUniqueId, propertyIndex, types::OverrideUpdateType::SET_INT_OVERRIDE, value, std::nullopt);
 }
 
-PlayerUpdateEntityOverridesPacket PlayerUpdateEntityOverridesPacket::createFloatOverride(std::uint64_t actorRuntimeId, std::uint32_t propertyIndex, float value)
+PlayerUpdateEntityOverridesPacket PlayerUpdateEntityOverridesPacket::createFloatOverride(std::int64_t actorUniqueId, std::uint32_t propertyIndex, float value)
 {
-    return create(actorRuntimeId, propertyIndex, types::OverrideUpdateType::SET_FLOAT_OVERRIDE, std::nullopt, value);
+    return create(actorUniqueId, propertyIndex, types::OverrideUpdateType::SET_FLOAT_OVERRIDE, std::nullopt, value);
 }
 
-PlayerUpdateEntityOverridesPacket PlayerUpdateEntityOverridesPacket::createClearOverrides(std::uint64_t actorRuntimeId, std::uint32_t propertyIndex)
+PlayerUpdateEntityOverridesPacket PlayerUpdateEntityOverridesPacket::createClearOverrides(std::int64_t actorUniqueId, std::uint32_t propertyIndex)
 {
-    return create(actorRuntimeId, propertyIndex, types::OverrideUpdateType::CLEAR_OVERRIDES, std::nullopt, std::nullopt);
+    return create(actorUniqueId, propertyIndex, types::OverrideUpdateType::CLEAR_OVERRIDES, std::nullopt, std::nullopt);
 }
 
-PlayerUpdateEntityOverridesPacket PlayerUpdateEntityOverridesPacket::createRemoveOverride(std::uint64_t actorRuntimeId, std::uint32_t propertyIndex)
+PlayerUpdateEntityOverridesPacket PlayerUpdateEntityOverridesPacket::createRemoveOverride(std::int64_t actorUniqueId, std::uint32_t propertyIndex)
 {
-    return create(actorRuntimeId, propertyIndex, types::OverrideUpdateType::REMOVE_OVERRIDE, std::nullopt, std::nullopt);
+    return create(actorUniqueId, propertyIndex, types::OverrideUpdateType::REMOVE_OVERRIDE, std::nullopt, std::nullopt);
 }
 
 void PlayerUpdateEntityOverridesPacket::decodePayload(encoding::ByteBufferReader &in)
 {
-    actorRuntimeId = serializer::CommonTypes::getActorRuntimeId(in);
+    // player_update_entity_overrides.go:38-46 - the type is sent twice: once as a varuint32 variant,
+    // once as the byte itself, and the two must agree.
+    actorUniqueId = serializer::CommonTypes::getActorUniqueId(in);
     propertyIndex = encoding::VarInt::readUnsignedInt(in);
-    updateType = types::OverrideUpdateTypeFromPacket(encoding::Byte::readUnsigned(in));
+    const auto variant = encoding::VarInt::readUnsignedInt(in);
+    const auto rawUpdateType = encoding::Byte::readUnsigned(in);
+    if (variant != rawUpdateType) {
+        throw PacketDecodeException("Entity override type " + std::to_string(rawUpdateType) +
+                                    " does not match the variant it was sent under");
+    }
+    updateType = types::OverrideUpdateTypeFromPacket(rawUpdateType);
     if (updateType == types::OverrideUpdateType::SET_INT_OVERRIDE) {
         intOverrideValue = encoding::LE::readSignedInt(in);
     }
@@ -71,8 +80,9 @@ void PlayerUpdateEntityOverridesPacket::decodePayload(encoding::ByteBufferReader
 
 void PlayerUpdateEntityOverridesPacket::encodePayload(encoding::ByteBufferWriter &out) const
 {
-    serializer::CommonTypes::putActorRuntimeId(out, actorRuntimeId);
+    serializer::CommonTypes::putActorUniqueId(out, actorUniqueId);
     encoding::VarInt::writeUnsignedInt(out, propertyIndex);
+    encoding::VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(updateType));
     encoding::Byte::writeUnsigned(out, static_cast<std::uint8_t>(updateType));
     if (updateType == types::OverrideUpdateType::SET_INT_OVERRIDE) {
         if (!intOverrideValue.has_value()) { // this should never be the case

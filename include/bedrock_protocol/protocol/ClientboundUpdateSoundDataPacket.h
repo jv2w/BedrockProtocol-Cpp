@@ -22,6 +22,7 @@
 #include "bedrock_protocol/protocol/DataPacket.h"
 #include "bedrock_protocol/protocol/ProtocolInfo.h"
 #include "bedrock_protocol/protocol/ServerboundPacket.h"
+#include "bedrock_protocol/protocol/types/SoundDataUpdate.h"
 
 namespace bedrock_protocol {
 
@@ -33,12 +34,23 @@ public:
 
 
     std::uint64_t serverSoundHandle = 0;
-    std::string soundEvent;
+    /**
+     * Seven independent union slots, each of which may hold ANY SoundDataUpdate variant - the slot
+     * name does not constrain the variant on the wire.
+     * gophertunnel v1.58.0 minecraft/protocol/packet/clientbound_update_sound_data.go:11-17.
+     */
+    std::optional<types::SoundDataUpdate> stop = std::nullopt;
+    std::optional<types::SoundDataUpdate> setVolume = std::nullopt;
+    std::optional<types::SoundDataUpdate> setPitch = std::nullopt;
+    std::optional<types::SoundDataUpdate> fade = std::nullopt;
+    std::optional<types::SoundDataUpdate> seekTo = std::nullopt;
+    std::optional<types::SoundDataUpdate> pause = std::nullopt;
+    std::optional<types::SoundDataUpdate> resume = std::nullopt;
 
     /**
      * @generate-create-func
      */
-    static ClientboundUpdateSoundDataPacket create(std::uint64_t serverSoundHandle, std::string soundEvent);
+    static ClientboundUpdateSoundDataPacket create(std::uint64_t serverSoundHandle, std::optional<types::SoundDataUpdate> stop, std::optional<types::SoundDataUpdate> setVolume, std::optional<types::SoundDataUpdate> setPitch, std::optional<types::SoundDataUpdate> fade, std::optional<types::SoundDataUpdate> seekTo, std::optional<types::SoundDataUpdate> pause, std::optional<types::SoundDataUpdate> resume);
 
     [[nodiscard]] std::uint32_t networkId() const override { return NETWORK_ID; }
     [[nodiscard]] std::string_view getName() const override { return "ClientboundUpdateSoundDataPacket"; }

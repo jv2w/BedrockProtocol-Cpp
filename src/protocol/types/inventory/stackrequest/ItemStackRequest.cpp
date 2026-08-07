@@ -30,6 +30,7 @@
 #include "bedrock_protocol/protocol/types/inventory/stackrequest/DestroyStackRequestAction.h"
 #include "bedrock_protocol/protocol/types/inventory/stackrequest/DropStackRequestAction.h"
 #include "bedrock_protocol/protocol/types/inventory/stackrequest/GrindstoneStackRequestAction.h"
+#include "bedrock_protocol/protocol/types/inventory/stackrequest/ItemStackRequestActionType.h"
 #include "bedrock_protocol/protocol/types/inventory/stackrequest/LabTableCombineStackRequestAction.h"
 #include "bedrock_protocol/protocol/types/inventory/stackrequest/LoomStackRequestAction.h"
 #include "bedrock_protocol/protocol/types/inventory/stackrequest/MineBlockStackRequestAction.h"
@@ -96,6 +97,10 @@ ItemStackRequest ItemStackRequest::read(encoding::ByteBufferReader &in) {
     const auto requestId = CommonTypes::readItemStackRequestId(in);
     std::vector<std::unique_ptr<ItemStackRequestAction>> actions;
     for (std::uint32_t i = 0, len = VarInt::readUnsignedInt(in); i < len; ++i) {
+        //gophertunnel minecraft/protocol/writer.go:394-403 and item_stack.go:47-52 - each action is now
+        //prefixed by a variant, which is the action ID with the two never-sent container actions squeezed
+        //out. It carries no information the following byte does not, so it is read and discarded.
+        VarInt::readUnsignedInt(in);
         const auto typeId = Byte::readUnsigned(in);
         actions.push_back(readAction(in, typeId));
     }
@@ -111,7 +116,11 @@ void ItemStackRequest::write(encoding::ByteBufferWriter &out) const {
     CommonTypes::writeItemStackRequestId(out, requestId);
     VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(actions.size()));
     for (const auto &action : actions) {
-        Byte::writeUnsigned(out, static_cast<std::uint8_t>(action->getTypeId()));
+        const auto typeId = action->getTypeId();
+        VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(
+                                          typeId > ItemStackRequestActionType::TAKE_OUT_CONTAINER ? typeId - 2
+                                                                                                  : typeId));
+        Byte::writeUnsigned(out, static_cast<std::uint8_t>(typeId));
         action->write(out);
     }
     VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(filterStrings.size()));

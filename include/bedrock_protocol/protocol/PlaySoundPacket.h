@@ -39,12 +39,13 @@ public:
     float z = 0.0F;
     float volume = 0.0F;
     float pitch = 0.0F;
+    std::int32_t loopCount = 0;
     std::optional<std::uint64_t> serverSoundHandle = std::nullopt;
 
     /**
      * @generate-create-func
      */
-    static PlaySoundPacket create(std::string soundName, float x, float y, float z, float volume, float pitch, std::optional<std::uint64_t> serverSoundHandle);
+    static PlaySoundPacket create(std::string soundName, float x, float y, float z, float volume, float pitch, std::int32_t loopCount, std::optional<std::uint64_t> serverSoundHandle);
 
     [[nodiscard]] std::uint32_t networkId() const override { return NETWORK_ID; }
     [[nodiscard]] std::string_view getName() const override { return "PlaySoundPacket"; }

@@ -17,7 +17,7 @@ namespace bedrock_protocol::types::recipe {
 
 using serializer::CommonTypes;
 
-SmithingTrimRecipe SmithingTrimRecipe::decode(std::int32_t typeId, encoding::ByteBufferReader &in)
+SmithingTrimRecipe SmithingTrimRecipe::decode(encoding::ByteBufferReader &in)
 {
     auto recipeId = CommonTypes::getString(in);
     auto template_ = CommonTypes::getRecipeIngredient(in);
@@ -26,7 +26,7 @@ SmithingTrimRecipe SmithingTrimRecipe::decode(std::int32_t typeId, encoding::Byt
     auto blockName = CommonTypes::getString(in);
     const auto recipeNetId = CommonTypes::readRecipeNetId(in);
 
-    return SmithingTrimRecipe(typeId, std::move(recipeId), std::move(template_), std::move(input),
+    return SmithingTrimRecipe(std::move(recipeId), std::move(template_), std::move(input),
                               std::move(addition), std::move(blockName), recipeNetId);
 }
 

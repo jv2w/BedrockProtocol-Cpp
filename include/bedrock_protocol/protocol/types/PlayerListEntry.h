@@ -24,6 +24,14 @@ namespace bedrock_protocol::types {
 
 class PlayerListEntry {
 public:
+    static constexpr std::uint8_t ACTION_ADD = 0;
+    static constexpr std::uint8_t ACTION_REMOVE = 1;
+
+    /**
+     * The action is per entry as of 1.26.40 - the packet-level action byte is gone
+     * (packet/player_list.go:23-25, player.go:96-97).
+     */
+    std::uint8_t actionType = ACTION_ADD;
     uuid::Uuid uuid;
     std::int64_t actorUniqueId = 0;
     std::string username;

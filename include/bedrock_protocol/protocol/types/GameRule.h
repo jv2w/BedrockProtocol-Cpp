@@ -28,7 +28,7 @@ public:
 
     [[nodiscard]] virtual std::int32_t getTypeId() const = 0;
 
-    virtual void encode(encoding::ByteBufferWriter &out, bool isStartGame) const = 0;
+    virtual void encode(encoding::ByteBufferWriter &out) const = 0;
 
     /** Not present in the PHP original; needed to preserve value semantics for polymorphic members. */
     [[nodiscard]] virtual std::unique_ptr<GameRule> clone() const = 0;

@@ -17,12 +17,11 @@ namespace bedrock_protocol::types {
 
 /**
  * These flags are used in PlayerAuthInputPacket's inputFlags field.
- * The flags should be written as
- * `flags |= (1 << flag)`
- * and read as
- * `(flags & (1 << flag)) !== 0`
+ * As of 1.26.40 they are not a packed bitset: the ordinals below are the IDs sent in the flag list
+ * (minecraft/protocol/input_flags.go:78-104), so use PlayerAuthInputFlagList::set/get with them.
  *
  * @see PlayerAuthInputPacket
+ * @see PlayerAuthInputFlagList
  */
 class PlayerAuthInputFlags final {
     PlayerAuthInputFlags() = delete;
@@ -120,8 +119,9 @@ public:
     static constexpr std::int32_t SNEAK_RELEASED_RAW = 62;
     static constexpr std::int32_t SNEAK_PRESSED_RAW = 63;
     static constexpr std::int32_t SNEAK_CURRENT_RAW = 64;
+    static constexpr std::int32_t INTERNAL_UPDATE = 65;
 
-    static constexpr std::int32_t NUMBER_OF_FLAGS = 65;
+    static constexpr std::int32_t NUMBER_OF_FLAGS = 66;
 };
 
 }  // namespace bedrock_protocol::types

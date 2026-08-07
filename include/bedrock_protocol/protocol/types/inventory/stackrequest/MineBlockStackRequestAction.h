@@ -16,8 +16,8 @@
 
 #include "bedrock_protocol/encoding/ByteBufferReader.h"
 #include "bedrock_protocol/encoding/ByteBufferWriter.h"
+#include "bedrock_protocol/encoding/LE.h"
 #include "bedrock_protocol/encoding/VarInt.h"
-#include "bedrock_protocol/protocol/serializer/CommonTypes.h"
 #include "bedrock_protocol/protocol/types/inventory/stackrequest/ItemStackRequestAction.h"
 #include "bedrock_protocol/protocol/types/inventory/stackrequest/ItemStackRequestActionType.h"
 
@@ -41,14 +41,15 @@ public:
     static MineBlockStackRequestAction read(encoding::ByteBufferReader &in) {
         const auto hotbarSlot = encoding::VarInt::readSignedInt(in);
         const auto predictedDurability = encoding::VarInt::readSignedInt(in);
-        const auto stackId = serializer::CommonTypes::readItemStackNetIdVariant(in);
+        //gophertunnel minecraft/protocol/item_stack.go:469-473 - a fixed little-endian int32.
+        const auto stackId = encoding::LE::readSignedInt(in);
         return MineBlockStackRequestAction(hotbarSlot, predictedDurability, stackId);
     }
 
     void write(encoding::ByteBufferWriter &out) const override {
         encoding::VarInt::writeSignedInt(out, hotbarSlot);
         encoding::VarInt::writeSignedInt(out, predictedDurability);
-        serializer::CommonTypes::writeItemStackNetIdVariant(out, stackId);
+        encoding::LE::writeSignedInt(out, stackId);
     }
 
     [[nodiscard]] std::unique_ptr<ItemStackRequestAction> clone() const override {

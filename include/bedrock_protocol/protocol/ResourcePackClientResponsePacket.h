@@ -31,19 +31,23 @@ class ResourcePackClientResponsePacket final : public DataPacket, public Serverb
 public:
     static constexpr std::uint32_t NETWORK_ID = ProtocolInfo::RESOURCE_PACK_CLIENT_RESPONSE_PACKET;
 
-    static constexpr std::int32_t STATUS_REFUSED = 1;
-    static constexpr std::int32_t STATUS_SEND_PACKS = 2;
-    static constexpr std::int32_t STATUS_HAVE_ALL_PACKS = 3;
-    static constexpr std::int32_t STATUS_COMPLETED = 4;
+    /**
+     * gophertunnel v1.58.0 minecraft/protocol/packet/resource_pack_client_response.go:7-12 rebased this
+     * table from `iota + 1` to `iota`, so every value dropped by one.
+     */
+    static constexpr std::uint32_t STATUS_REFUSED = 0;
+    static constexpr std::uint32_t STATUS_SEND_PACKS = 1;
+    static constexpr std::uint32_t STATUS_HAVE_ALL_PACKS = 2;
+    static constexpr std::uint32_t STATUS_COMPLETED = 3;
 
-    std::uint8_t status = 0;
+    std::uint32_t status = 0;
     /** @var string[] */
     std::vector<std::string> packIds;
 
     /**
      * @generate-create-func
      */
-    static ResourcePackClientResponsePacket create(std::uint8_t status, std::vector<std::string> packIds);
+    static ResourcePackClientResponsePacket create(std::uint32_t status, std::vector<std::string> packIds);
 
     [[nodiscard]] std::uint32_t networkId() const override { return NETWORK_ID; }
     [[nodiscard]] std::string_view getName() const override { return "ResourcePackClientResponsePacket"; }

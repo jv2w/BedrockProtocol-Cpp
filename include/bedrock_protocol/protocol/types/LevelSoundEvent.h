@@ -594,6 +594,10 @@ public:
     static constexpr std::string_view BUCKET_EMPTY_LAND_ANIMAL = "bucket.empty.land_animal";
     static constexpr std::string_view GEYSER_CONTINUOUS_ERUPTION_START = "geyser_continuous_eruption_start";
     static constexpr std::string_view GEYSER_CONTINUOUS_ERUPTION_ACTIVE = "geyser_continuous_eruption_active";
+    static constexpr std::string_view MOUNT = "mount";
+    static constexpr std::string_view DISMOUNT = "dismount";
+    static constexpr std::string_view STRAW_BED_BREAK_LEAVE = "straw_bed.break_leave";
+    static constexpr std::string_view UNDEFINED = "undefined";
 };
 
 }  // namespace bedrock_protocol::types

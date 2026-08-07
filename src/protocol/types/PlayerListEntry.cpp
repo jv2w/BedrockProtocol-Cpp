@@ -16,6 +16,7 @@ namespace bedrock_protocol::types {
 PlayerListEntry PlayerListEntry::createRemovalEntry(const uuid::Uuid &uuid)
 {
     PlayerListEntry entry;
+    entry.actionType = ACTION_REMOVE;
     entry.uuid = uuid;
 
     return entry;
@@ -30,6 +31,7 @@ PlayerListEntry PlayerListEntry::createAdditionEntry(const uuid::Uuid &uuid, con
                                                      const std::optional<color::Color> &color)
 {
     PlayerListEntry entry;
+    entry.actionType = ACTION_ADD;
     entry.uuid = uuid;
     entry.actorUniqueId = actorUniqueId;
     entry.username = username;

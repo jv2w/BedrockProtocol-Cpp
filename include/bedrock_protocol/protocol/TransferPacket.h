@@ -22,6 +22,7 @@
 #include "bedrock_protocol/protocol/DataPacket.h"
 #include "bedrock_protocol/protocol/ProtocolInfo.h"
 #include "bedrock_protocol/protocol/ServerboundPacket.h"
+#include "bedrock_protocol/protocol/types/GatheringJoinInfo.h"
 
 namespace bedrock_protocol {
 
@@ -35,11 +36,12 @@ public:
     std::string address;
     std::uint16_t port = 19132;
     bool reloadWorld = false;
+    std::optional<types::GatheringJoinInfo> gatheringJoinInfo = std::nullopt;
 
     /**
      * @generate-create-func
      */
-    static TransferPacket create(std::string address, std::uint16_t port, bool reloadWorld);
+    static TransferPacket create(std::string address, std::uint16_t port, bool reloadWorld, std::optional<types::GatheringJoinInfo> gatheringJoinInfo);
 
     [[nodiscard]] std::uint32_t networkId() const override { return NETWORK_ID; }
     [[nodiscard]] std::string_view getName() const override { return "TransferPacket"; }

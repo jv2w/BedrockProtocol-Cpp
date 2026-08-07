@@ -17,11 +17,11 @@ namespace bedrock_protocol::types::recipe {
 
 using serializer::CommonTypes;
 
-MultiRecipe MultiRecipe::decode(std::int32_t typeId, encoding::ByteBufferReader &in)
+MultiRecipe MultiRecipe::decode(encoding::ByteBufferReader &in)
 {
     const auto uuid = CommonTypes::getUUID(in);
     const auto recipeNetId = CommonTypes::readRecipeNetId(in);
-    return MultiRecipe(typeId, uuid, recipeNetId);
+    return MultiRecipe(uuid, recipeNetId);
 }
 
 void MultiRecipe::encode(encoding::ByteBufferWriter &out) const

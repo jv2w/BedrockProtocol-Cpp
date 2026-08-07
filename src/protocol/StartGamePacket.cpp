@@ -24,7 +24,7 @@
 
 namespace bedrock_protocol {
 
-StartGamePacket StartGamePacket::create(std::int64_t actorUniqueId, std::uint64_t actorRuntimeId, std::int32_t playerGamemode, math::Vector3 playerPosition, float pitch, float yaw, types::CacheableNbt<nbt::tag::CompoundTag> playerActorProperties, types::LevelSettings levelSettings, std::string levelId, std::string worldName, std::string premiumWorldTemplateId, bool isTrial, types::PlayerMovementSettings playerMovementSettings, std::uint64_t currentTick, std::int32_t enchantmentSeed, std::string multiplayerCorrelationId, bool enableNewInventorySystem, std::string serverSoftwareVersion, uuid::Uuid worldTemplateId, bool enableClientSideChunkGeneration, bool blockNetworkIdsAreHashes, types::NetworkPermissions networkPermissions, bool isLoggingChat, std::optional<types::ServerJoinInformation> serverJoinInformation, types::ServerTelemetryData serverTelemetryData, std::vector<types::BlockPaletteEntry> blockPalette, std::uint64_t blockPaletteChecksum)
+StartGamePacket StartGamePacket::create(std::int64_t actorUniqueId, std::uint64_t actorRuntimeId, std::int32_t playerGamemode, math::Vector3 playerPosition, float pitch, float yaw, types::CacheableNbt<nbt::tag::CompoundTag> playerActorProperties, types::LevelSettings levelSettings, std::string levelId, std::string worldName, std::string premiumWorldTemplateId, bool isTrial, types::PlayerMovementSettings playerMovementSettings, std::uint64_t currentTick, std::int32_t enchantmentSeed, std::string multiplayerCorrelationId, bool enableNewInventorySystem, std::string serverSoftwareVersion, uuid::Uuid worldTemplateId, bool enableClientSideChunkGeneration, bool blockNetworkIdsAreHashes, types::NetworkPermissions networkPermissions, std::optional<types::ServerJoinInformation> serverJoinInformation, types::ServerTelemetryData serverTelemetryData, std::vector<types::BlockPaletteEntry> blockPalette, std::uint64_t blockPaletteChecksum)
 {
     StartGamePacket result;
     result.actorUniqueId = actorUniqueId;
@@ -49,7 +49,6 @@ StartGamePacket StartGamePacket::create(std::int64_t actorUniqueId, std::uint64_
     result.enableClientSideChunkGeneration = enableClientSideChunkGeneration;
     result.blockNetworkIdsAreHashes = blockNetworkIdsAreHashes;
     result.networkPermissions = std::move(networkPermissions);
-    result.isLoggingChat = isLoggingChat;
     result.serverJoinInformation = std::move(serverJoinInformation);
     result.serverTelemetryData = std::move(serverTelemetryData);
     result.blockPalette = std::move(blockPalette);
@@ -95,7 +94,6 @@ void StartGamePacket::decodePayload(encoding::ByteBufferReader &in)
     enableClientSideChunkGeneration = serializer::CommonTypes::getBool(in);
     blockNetworkIdsAreHashes = serializer::CommonTypes::getBool(in);
     networkPermissions = types::NetworkPermissions::decode(in);
-    isLoggingChat = serializer::CommonTypes::getBool(in);
     serverJoinInformation = serializer::CommonTypes::readOptional(in, [](encoding::ByteBufferReader &reader) { return types::ServerJoinInformation::read(reader); });
     serverTelemetryData = types::ServerTelemetryData::read(in);
 
@@ -138,7 +136,6 @@ void StartGamePacket::encodePayload(encoding::ByteBufferWriter &out) const
     serializer::CommonTypes::putBool(out, enableClientSideChunkGeneration);
     serializer::CommonTypes::putBool(out, blockNetworkIdsAreHashes);
     networkPermissions->encode(out);
-    serializer::CommonTypes::putBool(out, isLoggingChat);
     serializer::CommonTypes::writeOptional(out, serverJoinInformation, [](encoding::ByteBufferWriter &writer, const types::ServerJoinInformation &info) { info.write(writer); });
     serverTelemetryData->write(out);
 

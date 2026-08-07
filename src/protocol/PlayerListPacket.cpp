@@ -12,6 +12,7 @@
 #include "bedrock_protocol/protocol/PlayerListPacket.h"
 
 #include <stdexcept>
+#include <string>
 #include <utility>
 
 #include "bedrock_protocol/encoding/BE.h"
@@ -24,33 +25,47 @@
 
 namespace bedrock_protocol {
 
-PlayerListPacket PlayerListPacket::create(std::uint8_t type, std::vector<types::PlayerListEntry> entries)
+PlayerListPacket PlayerListPacket::create(std::vector<types::PlayerListEntry> entries)
 {
     PlayerListPacket result;
-    result.type = type;
     result.entries = std::move(entries);
     return result;
 }
 
 PlayerListPacket PlayerListPacket::add(std::vector<types::PlayerListEntry> entries)
 {
-    return create(TYPE_ADD, std::move(entries));
+    for (auto &entry : entries) {
+        entry.actionType = types::PlayerListEntry::ACTION_ADD;
+    }
+    return create(std::move(entries));
 }
 
 PlayerListPacket PlayerListPacket::remove(std::vector<types::PlayerListEntry> entries)
 {
-    return create(TYPE_REMOVE, std::move(entries));
+    for (auto &entry : entries) {
+        entry.actionType = types::PlayerListEntry::ACTION_REMOVE;
+    }
+    return create(std::move(entries));
 }
 
 void PlayerListPacket::decodePayload(encoding::ByteBufferReader &in)
 {
-    type = encoding::Byte::readUnsigned(in);
     const auto count = encoding::VarInt::readUnsignedInt(in);
     for (std::uint32_t i = 0; i < count; ++i) {
         types::PlayerListEntry entry;
 
-        if (type == TYPE_ADD) {
-            entry.uuid = serializer::CommonTypes::getUUID(in);
+        // player.go:115-130 - the action is per entry: a varuint32 variant (1 = Add, 0 = Remove)
+        // decides it, followed by the legacy action byte, which is ignored.
+        const auto variant = encoding::VarInt::readUnsignedInt(in);
+        if (variant > 1) {
+            throw PacketDecodeException("Unknown player list entry variant " + std::to_string(variant));
+        }
+        encoding::Byte::readUnsigned(in);
+        entry.actionType =
+            variant == 1 ? types::PlayerListEntry::ACTION_ADD : types::PlayerListEntry::ACTION_REMOVE;
+
+        entry.uuid = serializer::CommonTypes::getUUID(in);
+        if (entry.actionType == types::PlayerListEntry::ACTION_ADD) {
             entry.actorUniqueId = serializer::CommonTypes::getActorUniqueId(in);
             entry.username = serializer::CommonTypes::getString(in);
             entry.xboxUserId = serializer::CommonTypes::getString(in);
@@ -62,27 +77,26 @@ void PlayerListPacket::decodePayload(encoding::ByteBufferReader &in)
             entry.isSubClient = serializer::CommonTypes::getBool(in);
             entry.color = color::Color::fromARGB(encoding::LE::readUnsignedInt(in));
         }
-        else {
-            entry.uuid = serializer::CommonTypes::getUUID(in);
-        }
+        // player.go:99-101 - a removal entry ends after its UUID.
 
         entries.push_back(std::move(entry));
     }
-    if (type == TYPE_ADD) {
-        for (std::uint32_t i = 0; i < count; ++i) {
-            entries[i].skinData.value().setVerified(serializer::CommonTypes::getBool(in));
-        }
-    }
+    // The trusted flag is no longer a trailing loop of its own: it lives inside the skin body
+    // (player_list.go:23-25).
 
 }
 
 void PlayerListPacket::encodePayload(encoding::ByteBufferWriter &out) const
 {
-    encoding::Byte::writeUnsigned(out, type);
     encoding::VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(entries.size()));
     for (const auto &entry : entries) {
-        if (type == TYPE_ADD) {
-            serializer::CommonTypes::putUUID(out, entry.uuid);
+        // player.go:115-123 - the variant is 1 for Add and 0 for Remove, followed by the legacy
+        // action byte.
+        encoding::VarInt::writeUnsignedInt(out, entry.actionType == types::PlayerListEntry::ACTION_ADD ? 1 : 0);
+        encoding::Byte::writeUnsigned(out, entry.actionType);
+
+        serializer::CommonTypes::putUUID(out, entry.uuid);
+        if (entry.actionType == types::PlayerListEntry::ACTION_ADD) {
             serializer::CommonTypes::putActorUniqueId(out, entry.actorUniqueId);
             serializer::CommonTypes::putString(out, entry.username);
             serializer::CommonTypes::putString(out, entry.xboxUserId);
@@ -94,14 +108,7 @@ void PlayerListPacket::encodePayload(encoding::ByteBufferWriter &out) const
             serializer::CommonTypes::putBool(out, entry.isSubClient);
             encoding::LE::writeUnsignedInt(out, (entry.color.has_value() ? entry.color.value() : color::Color(255, 255, 255)).toARGB());
         }
-        else {
-            serializer::CommonTypes::putUUID(out, entry.uuid);
-        }
-    }
-    if (type == TYPE_ADD) {
-        for (const auto &entry : entries) {
-            serializer::CommonTypes::putBool(out, entry.skinData.value().isVerified());
-        }
+        // player.go:99-101 - a removal entry ends after its UUID.
     }
 
 }

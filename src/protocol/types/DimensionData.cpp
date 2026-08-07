@@ -12,10 +12,12 @@
 #include "bedrock_protocol/protocol/types/DimensionData.h"
 
 #include "bedrock_protocol/encoding/VarInt.h"
+#include "bedrock_protocol/protocol/serializer/CommonTypes.h"
 
 namespace bedrock_protocol::types {
 
 using encoding::VarInt;
+using serializer::CommonTypes;
 
 DimensionData DimensionData::read(encoding::ByteBufferReader &in)
 {
@@ -23,8 +25,9 @@ DimensionData DimensionData::read(encoding::ByteBufferReader &in)
     const auto minHeight = VarInt::readSignedInt(in);
     const auto generator = VarInt::readSignedInt(in);
     const auto dimensionType = VarInt::readSignedInt(in);
+    const auto packId = CommonTypes::getUUID(in);
 
-    return DimensionData(maxHeight, minHeight, generator, dimensionType);
+    return DimensionData(maxHeight, minHeight, generator, dimensionType, packId);
 }
 
 void DimensionData::write(encoding::ByteBufferWriter &out) const
@@ -33,6 +36,7 @@ void DimensionData::write(encoding::ByteBufferWriter &out) const
     VarInt::writeSignedInt(out, minHeight);
     VarInt::writeSignedInt(out, generator);
     VarInt::writeSignedInt(out, dimensionType);
+    CommonTypes::putUUID(out, packId);
 }
 
 }  // namespace bedrock_protocol::types

@@ -23,6 +23,7 @@
 #include "bedrock_protocol/protocol/ProtocolInfo.h"
 #include "bedrock_protocol/protocol/ServerboundPacket.h"
 #include "bedrock_protocol/math/Vector3.h"
+#include "bedrock_protocol/protocol/types/TeleportData.h"
 
 namespace bedrock_protocol {
 
@@ -45,14 +46,14 @@ public:
     std::uint8_t mode = MODE_NORMAL;
     bool onGround = false;  //TODO
     std::uint64_t ridingActorRuntimeId = 0;
-    std::int32_t teleportCause = 0;
-    std::int32_t teleportItem = 0;
+    /** Its presence bool is always written, independent of `mode` (packet/move_player.go:68). */
+    std::optional<types::TeleportData> teleportData = std::nullopt;
     std::uint64_t tick = 0;
 
     /**
      * @generate-create-func
      */
-    static MovePlayerPacket create(std::uint64_t actorRuntimeId, math::Vector3 position, float pitch, float yaw, float headYaw, std::uint8_t mode, bool onGround, std::uint64_t ridingActorRuntimeId, std::int32_t teleportCause, std::int32_t teleportItem, std::uint64_t tick);
+    static MovePlayerPacket create(std::uint64_t actorRuntimeId, math::Vector3 position, float pitch, float yaw, float headYaw, std::uint8_t mode, bool onGround, std::uint64_t ridingActorRuntimeId, std::optional<types::TeleportData> teleportData, std::uint64_t tick);
 
     static MovePlayerPacket simple(std::uint64_t actorRuntimeId, math::Vector3 position, float pitch, float yaw, float headYaw, std::uint8_t mode, bool onGround, std::uint64_t ridingActorRuntimeId, std::uint64_t tick);
 

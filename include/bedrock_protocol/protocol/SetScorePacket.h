@@ -32,17 +32,13 @@ class SetScorePacket final : public DataPacket, public ClientboundPacket {
 public:
     static constexpr std::uint32_t NETWORK_ID = ProtocolInfo::SET_SCORE_PACKET;
 
-    static constexpr std::int32_t TYPE_CHANGE = 0;
-    static constexpr std::uint8_t TYPE_REMOVE = 1;
-
-    std::uint8_t type = 0;
     /** @var ScorePacketEntry[] */
     std::vector<types::ScorePacketEntry> entries;
 
     /**
      * @generate-create-func
      */
-    static SetScorePacket create(std::uint8_t type, std::vector<types::ScorePacketEntry> entries);
+    static SetScorePacket create(std::vector<types::ScorePacketEntry> entries);
 
     [[nodiscard]] std::uint32_t networkId() const override { return NETWORK_ID; }
     [[nodiscard]] std::string_view getName() const override { return "SetScorePacket"; }

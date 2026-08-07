@@ -11,8 +11,6 @@
 
 #include "bedrock_protocol/protocol/types/recipe/ItemDescriptor.h"
 
-#include "bedrock_protocol/protocol/types/recipe/ComplexAliasItemDescriptor.h"
-#include "bedrock_protocol/protocol/types/recipe/IntIdMetaItemDescriptor.h"
 #include "bedrock_protocol/protocol/types/recipe/ItemDescriptorType.h"
 #include "bedrock_protocol/protocol/types/recipe/MolangItemDescriptor.h"
 #include "bedrock_protocol/protocol/types/recipe/StringIdMetaItemDescriptor.h"
@@ -23,16 +21,12 @@ namespace bedrock_protocol::types::recipe {
 std::unique_ptr<ItemDescriptor> ItemDescriptor::read(encoding::ByteBufferReader &in, std::uint8_t descriptorType)
 {
     switch (descriptorType) {
-    case ItemDescriptorType::INT_ID_META:
-        return std::make_unique<IntIdMetaItemDescriptor>(IntIdMetaItemDescriptor::read(in));
     case ItemDescriptorType::STRING_ID_META:
         return std::make_unique<StringIdMetaItemDescriptor>(StringIdMetaItemDescriptor::read(in));
     case ItemDescriptorType::TAG:
         return std::make_unique<TagItemDescriptor>(TagItemDescriptor::read(in));
     case ItemDescriptorType::MOLANG:
         return std::make_unique<MolangItemDescriptor>(MolangItemDescriptor::read(in));
-    case ItemDescriptorType::COMPLEX_ALIAS:
-        return std::make_unique<ComplexAliasItemDescriptor>(ComplexAliasItemDescriptor::read(in));
     default:
         return nullptr;
     }

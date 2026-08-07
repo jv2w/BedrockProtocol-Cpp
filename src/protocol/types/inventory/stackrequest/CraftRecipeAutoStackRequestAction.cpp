@@ -12,31 +12,33 @@
 #include "bedrock_protocol/protocol/types/inventory/stackrequest/CraftRecipeAutoStackRequestAction.h"
 
 #include "bedrock_protocol/encoding/Byte.h"
+#include "bedrock_protocol/encoding/VarInt.h"
 #include "bedrock_protocol/protocol/serializer/CommonTypes.h"
 
 namespace bedrock_protocol::types::inventory::stackrequest {
 
 using encoding::Byte;
+using encoding::VarInt;
 using serializer::CommonTypes;
 
 CraftRecipeAutoStackRequestAction CraftRecipeAutoStackRequestAction::read(encoding::ByteBufferReader &in) {
+    //gophertunnel minecraft/protocol/item_stack.go:510-514 - the duplicate repetition byte is gone, the
+    //ingredient count is a varuint32, and the ingredients use the tagless stack-request descriptor framing.
     const auto recipeId = CommonTypes::readRecipeNetId(in);
     const auto repetitions = Byte::readUnsigned(in);
-    const auto repetitions2 = Byte::readUnsigned(in); //repetitions property is sent twice, mojang...
     std::vector<recipe::RecipeIngredient> ingredients;
-    for (std::uint8_t i = 0, count = Byte::readUnsigned(in); i < count; ++i) {
-        ingredients.push_back(CommonTypes::getRecipeIngredient(in));
+    for (std::uint32_t i = 0, count = VarInt::readUnsignedInt(in); i < count; ++i) {
+        ingredients.push_back(CommonTypes::getStackRequestRecipeIngredient(in));
     }
-    return CraftRecipeAutoStackRequestAction(recipeId, repetitions, repetitions2, std::move(ingredients));
+    return CraftRecipeAutoStackRequestAction(recipeId, repetitions, std::move(ingredients));
 }
 
 void CraftRecipeAutoStackRequestAction::write(encoding::ByteBufferWriter &out) const {
     CommonTypes::writeRecipeNetId(out, recipeId);
     Byte::writeUnsigned(out, repetitions);
-    Byte::writeUnsigned(out, repetitions2);
-    Byte::writeUnsigned(out, static_cast<std::uint8_t>(ingredients.size()));
+    VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(ingredients.size()));
     for (const auto &ingredient : ingredients) {
-        CommonTypes::putRecipeIngredient(out, ingredient);
+        CommonTypes::putStackRequestRecipeIngredient(out, ingredient);
     }
 }
 

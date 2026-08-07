@@ -38,9 +38,7 @@ void SetScoreboardIdentityPacket::decodePayload(encoding::ByteBufferReader &in)
     for (std::uint32_t i = 0, count = encoding::VarInt::readUnsignedInt(in); i < count; ++i) {
         auto entry = types::ScoreboardIdentityPacketEntry();
         entry.scoreboardId = encoding::VarInt::readSignedLong(in);
-        if (type == TYPE_REGISTER_IDENTITY) {
-            entry.actorUniqueId = serializer::CommonTypes::getActorUniqueId(in);
-        }
+        entry.actorUniqueId = serializer::CommonTypes::readOptional(in, [](encoding::ByteBufferReader &reader) { return serializer::CommonTypes::getActorUniqueId(reader); });
 
         entries.push_back(std::move(entry));
     }
@@ -53,9 +51,7 @@ void SetScoreboardIdentityPacket::encodePayload(encoding::ByteBufferWriter &out)
     encoding::VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(entries.size()));
     for (const auto &entry : entries) {
         encoding::VarInt::writeSignedLong(out, entry.scoreboardId);
-        if (type == TYPE_REGISTER_IDENTITY) {
-            serializer::CommonTypes::putActorUniqueId(out, *entry.actorUniqueId);
-        }
+        serializer::CommonTypes::writeOptional(out, entry.actorUniqueId, [](encoding::ByteBufferWriter &writer, const std::int64_t &value) { serializer::CommonTypes::putActorUniqueId(writer, value); });
     }
 
 }

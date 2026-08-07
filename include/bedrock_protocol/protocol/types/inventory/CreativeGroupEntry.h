@@ -23,12 +23,12 @@ namespace bedrock_protocol::types::inventory {
 
 class CreativeGroupEntry final {
 public:
-    CreativeGroupEntry(std::int32_t categoryId, std::string categoryName, ItemStack icon)
+    CreativeGroupEntry(std::uint8_t categoryId, std::string categoryName, ItemStack icon)
         : categoryId(categoryId), categoryName(std::move(categoryName)), icon(std::move(icon))
     {
     }
 
-    [[nodiscard]] std::int32_t getCategoryId() const { return categoryId; }
+    [[nodiscard]] std::uint8_t getCategoryId() const { return categoryId; }
 
     [[nodiscard]] const std::string &getCategoryName() const { return categoryName; }
 
@@ -39,7 +39,7 @@ public:
     void write(encoding::ByteBufferWriter &out) const;
 
 private:
-    std::int32_t categoryId;
+    std::uint8_t categoryId;
     std::string categoryName;
     ItemStack icon;
 };

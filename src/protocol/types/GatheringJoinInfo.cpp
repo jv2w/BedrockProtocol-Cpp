@@ -11,6 +11,9 @@
 
 #include "bedrock_protocol/protocol/types/GatheringJoinInfo.h"
 
+#include <string>
+#include <utility>
+
 #include "bedrock_protocol/protocol/serializer/CommonTypes.h"
 
 namespace bedrock_protocol::types {
@@ -21,20 +24,27 @@ GatheringJoinInfo GatheringJoinInfo::read(encoding::ByteBufferReader &in)
 {
     const auto experienceId = CommonTypes::getUUID(in);
     auto experienceName = CommonTypes::getString(in);
-    const auto experienceWorldId = CommonTypes::getUUID(in);
-    auto experienceWorldName = CommonTypes::getString(in);
+    // gophertunnel v1.58.0 minecraft/protocol/server_join_information.go:29-34 -- these five gained a
+    // presence byte each in 1.26.40.
+    auto experienceWorldId =
+        CommonTypes::readOptional(in, [](encoding::ByteBufferReader &r) { return CommonTypes::getUUID(r); });
+    auto experienceWorldName =
+        CommonTypes::readOptional(in, [](encoding::ByteBufferReader &r) { return CommonTypes::getString(r); });
     auto creatorId = CommonTypes::getString(in);
-    const auto targetId = CommonTypes::getUUID(in);
-    auto scenarioId = CommonTypes::getString(in);
-    auto serverId = CommonTypes::getString(in);
+    auto targetId =
+        CommonTypes::readOptional(in, [](encoding::ByteBufferReader &r) { return CommonTypes::getUUID(r); });
+    auto scenarioId =
+        CommonTypes::readOptional(in, [](encoding::ByteBufferReader &r) { return CommonTypes::getString(r); });
+    auto serverId =
+        CommonTypes::readOptional(in, [](encoding::ByteBufferReader &r) { return CommonTypes::getString(r); });
 
     return GatheringJoinInfo(
         experienceId,
         std::move(experienceName),
-        experienceWorldId,
+        std::move(experienceWorldId),
         std::move(experienceWorldName),
         std::move(creatorId),
-        targetId,
+        std::move(targetId),
         std::move(scenarioId),
         std::move(serverId)
     );
@@ -44,12 +54,18 @@ void GatheringJoinInfo::write(encoding::ByteBufferWriter &out) const
 {
     CommonTypes::putUUID(out, experienceId);
     CommonTypes::putString(out, experienceName);
-    CommonTypes::putUUID(out, experienceWorldId);
-    CommonTypes::putString(out, experienceWorldName);
+    CommonTypes::writeOptional(out, experienceWorldId,
+                               [](encoding::ByteBufferWriter &w, const uuid::Uuid &v) { CommonTypes::putUUID(w, v); });
+    CommonTypes::writeOptional(
+        out, experienceWorldName,
+        [](encoding::ByteBufferWriter &w, const std::string &v) { CommonTypes::putString(w, v); });
     CommonTypes::putString(out, creatorId);
-    CommonTypes::putUUID(out, targetId);
-    CommonTypes::putString(out, scenarioId);
-    CommonTypes::putString(out, serverId);
+    CommonTypes::writeOptional(out, targetId,
+                               [](encoding::ByteBufferWriter &w, const uuid::Uuid &v) { CommonTypes::putUUID(w, v); });
+    CommonTypes::writeOptional(
+        out, scenarioId, [](encoding::ByteBufferWriter &w, const std::string &v) { CommonTypes::putString(w, v); });
+    CommonTypes::writeOptional(
+        out, serverId, [](encoding::ByteBufferWriter &w, const std::string &v) { CommonTypes::putString(w, v); });
 }
 
 }  // namespace bedrock_protocol::types

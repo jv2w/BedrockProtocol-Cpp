@@ -24,6 +24,7 @@
 #include "bedrock_protocol/protocol/ServerboundPacket.h"
 #include "bedrock_protocol/protocol/types/EntityDiagnosticTimingInfo.h"
 #include "bedrock_protocol/protocol/types/MemoryCategoryCounter.h"
+#include "bedrock_protocol/protocol/types/SystemCategory.h"
 #include "bedrock_protocol/protocol/types/SystemDiagnosticTimingInfo.h"
 #include "bedrock_protocol/protocol/types/WhiskerScopeDataSummary.h"
 
@@ -56,12 +57,15 @@ public:
     std::vector<types::SystemDiagnosticTimingInfo> systemDiagnostics;
     /**
      */
+    std::vector<types::SystemCategory> systemCategories;
+    /**
+     */
     std::vector<types::WhiskerScopeDataSummary> whiskerScopes;
 
     /**
      * @generate-create-func
      */
-    static ServerboundDiagnosticsPacket create(float avgFps, float avgServerSimTickTimeMS, float avgClientSimTickTimeMS, float avgBeginFrameTimeMS, float avgInputTimeMS, float avgRenderTimeMS, float avgEndFrameTimeMS, float avgRemainderTimePercent, float avgUnaccountedTimePercent, std::vector<types::MemoryCategoryCounter> memoryCategoryValues, std::vector<types::EntityDiagnosticTimingInfo> entityDiagnostics, std::vector<types::SystemDiagnosticTimingInfo> systemDiagnostics, std::vector<types::WhiskerScopeDataSummary> whiskerScopes);
+    static ServerboundDiagnosticsPacket create(float avgFps, float avgServerSimTickTimeMS, float avgClientSimTickTimeMS, float avgBeginFrameTimeMS, float avgInputTimeMS, float avgRenderTimeMS, float avgEndFrameTimeMS, float avgRemainderTimePercent, float avgUnaccountedTimePercent, std::vector<types::MemoryCategoryCounter> memoryCategoryValues, std::vector<types::EntityDiagnosticTimingInfo> entityDiagnostics, std::vector<types::SystemDiagnosticTimingInfo> systemDiagnostics, std::vector<types::SystemCategory> systemCategories, std::vector<types::WhiskerScopeDataSummary> whiskerScopes);
 
     [[nodiscard]] std::uint32_t networkId() const override { return NETWORK_ID; }
     [[nodiscard]] std::string_view getName() const override { return "ServerboundDiagnosticsPacket"; }

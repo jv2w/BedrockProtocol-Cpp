@@ -24,59 +24,72 @@
 
 namespace bedrock_protocol {
 
-float MoveActorDeltaPacket::maybeReadCoord(std::int32_t flag, encoding::ByteBufferReader &in) const
+namespace {
+
+std::optional<float> readOptionalCoord(encoding::ByteBufferReader &in)
 {
-    if ((flags & flag) != 0) {
-        return encoding::LE::readFloat(in);
+    if (!serializer::CommonTypes::getBool(in)) {
+        return std::nullopt;
     }
-    return 0;
+    return encoding::LE::readFloat(in);
 }
 
-float MoveActorDeltaPacket::maybeReadRotation(std::int32_t flag, encoding::ByteBufferReader &in) const
+std::optional<float> readOptionalRotation(encoding::ByteBufferReader &in)
 {
-    if ((flags & flag) != 0) {
-        return serializer::CommonTypes::getRotationByte(in);
+    if (!serializer::CommonTypes::getBool(in)) {
+        return std::nullopt;
     }
-    return 0.0;
+    return serializer::CommonTypes::getRotationByte(in);
 }
+
+void writeOptionalCoord(encoding::ByteBufferWriter &out, const std::optional<float> &value)
+{
+    serializer::CommonTypes::putBool(out, value.has_value());
+    if (value.has_value()) {
+        encoding::LE::writeFloat(out, *value);
+    }
+}
+
+void writeOptionalRotation(encoding::ByteBufferWriter &out, const std::optional<float> &value)
+{
+    serializer::CommonTypes::putBool(out, value.has_value());
+    if (value.has_value()) {
+        serializer::CommonTypes::putRotationByte(out, *value);
+    }
+}
+
+}  // namespace
 
 void MoveActorDeltaPacket::decodePayload(encoding::ByteBufferReader &in)
 {
+    // move_actor_delta.go:41-51
     actorRuntimeId = serializer::CommonTypes::getActorRuntimeId(in);
-    flags = encoding::LE::readUnsignedShort(in);
-    xPos = maybeReadCoord(FLAG_HAS_X, in);
-    yPos = maybeReadCoord(FLAG_HAS_Y, in);
-    zPos = maybeReadCoord(FLAG_HAS_Z, in);
-    pitch = maybeReadRotation(FLAG_HAS_PITCH, in);
-    yaw = maybeReadRotation(FLAG_HAS_YAW, in);
-    headYaw = maybeReadRotation(FLAG_HAS_HEAD_YAW, in);
+    xPos = readOptionalCoord(in);
+    yPos = readOptionalCoord(in);
+    zPos = readOptionalCoord(in);
+    pitch = readOptionalRotation(in);
+    yaw = readOptionalRotation(in);
+    headYaw = readOptionalRotation(in);
+    onGround = serializer::CommonTypes::getBool(in);
+    forceMove = serializer::CommonTypes::getBool(in);
+    forceMoveLocalEntity = serializer::CommonTypes::getBool(in);
+    forceCompletion = serializer::CommonTypes::getBool(in);
 
-}
-
-void MoveActorDeltaPacket::maybeWriteCoord(std::int32_t flag, float val, encoding::ByteBufferWriter &out) const
-{
-    if ((flags & flag) != 0) {
-        encoding::LE::writeFloat(out, val);
-    }
-}
-
-void MoveActorDeltaPacket::maybeWriteRotation(std::int32_t flag, float val, encoding::ByteBufferWriter &out) const
-{
-    if ((flags & flag) != 0) {
-        serializer::CommonTypes::putRotationByte(out, val);
-    }
 }
 
 void MoveActorDeltaPacket::encodePayload(encoding::ByteBufferWriter &out) const
 {
     serializer::CommonTypes::putActorRuntimeId(out, actorRuntimeId);
-    encoding::LE::writeUnsignedShort(out, flags);
-    maybeWriteCoord(FLAG_HAS_X, xPos, out);
-    maybeWriteCoord(FLAG_HAS_Y, yPos, out);
-    maybeWriteCoord(FLAG_HAS_Z, zPos, out);
-    maybeWriteRotation(FLAG_HAS_PITCH, pitch, out);
-    maybeWriteRotation(FLAG_HAS_YAW, yaw, out);
-    maybeWriteRotation(FLAG_HAS_HEAD_YAW, headYaw, out);
+    writeOptionalCoord(out, xPos);
+    writeOptionalCoord(out, yPos);
+    writeOptionalCoord(out, zPos);
+    writeOptionalRotation(out, pitch);
+    writeOptionalRotation(out, yaw);
+    writeOptionalRotation(out, headYaw);
+    serializer::CommonTypes::putBool(out, onGround);
+    serializer::CommonTypes::putBool(out, forceMove);
+    serializer::CommonTypes::putBool(out, forceMoveLocalEntity);
+    serializer::CommonTypes::putBool(out, forceCompletion);
 
 }
 

@@ -12,22 +12,20 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
 #include <string>
 #include <utility>
 
 #include "bedrock_protocol/encoding/ByteBufferReader.h"
 #include "bedrock_protocol/encoding/ByteBufferWriter.h"
 #include "bedrock_protocol/protocol/types/recipe/RecipeIngredient.h"
-#include "bedrock_protocol/protocol/types/recipe/RecipeWithTypeId.h"
 
 namespace bedrock_protocol::types::recipe {
 
-class SmithingTrimRecipe final : public RecipeWithTypeId {
+class SmithingTrimRecipe final {
 public:
-    SmithingTrimRecipe(std::int32_t typeId, std::string recipeId, RecipeIngredient template_, RecipeIngredient input,
+    SmithingTrimRecipe(std::string recipeId, RecipeIngredient template_, RecipeIngredient input,
                        RecipeIngredient addition, std::string blockName, std::uint32_t recipeNetId)
-        : RecipeWithTypeId(typeId), recipeId(std::move(recipeId)), template_(std::move(template_)),
+        : recipeId(std::move(recipeId)), template_(std::move(template_)),
           input(std::move(input)), addition(std::move(addition)), blockName(std::move(blockName)),
           recipeNetId(recipeNetId)
     {
@@ -47,14 +45,9 @@ public:
     [[nodiscard]] std::uint32_t getRecipeNetId() const { return recipeNetId; }
 
     /** @throws DataDecodeException */
-    static SmithingTrimRecipe decode(std::int32_t typeId, encoding::ByteBufferReader &in);
+    static SmithingTrimRecipe decode(encoding::ByteBufferReader &in);
 
-    void encode(encoding::ByteBufferWriter &out) const override;
-
-    [[nodiscard]] std::unique_ptr<RecipeWithTypeId> clone() const override
-    {
-        return std::make_unique<SmithingTrimRecipe>(*this);
-    }
+    void encode(encoding::ByteBufferWriter &out) const;
 
 private:
     std::string recipeId;

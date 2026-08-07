@@ -11,18 +11,19 @@
 
 #include "bedrock_protocol/protocol/types/recipe/MolangItemDescriptor.h"
 
-#include "bedrock_protocol/encoding/Byte.h"
+#include "bedrock_protocol/encoding/LE.h"
 #include "bedrock_protocol/protocol/serializer/CommonTypes.h"
 
 namespace bedrock_protocol::types::recipe {
 
-using encoding::Byte;
+using encoding::LE;
 using serializer::CommonTypes;
 
 MolangItemDescriptor MolangItemDescriptor::read(encoding::ByteBufferReader &in)
 {
     auto expression = CommonTypes::getString(in);
-    const auto version = Byte::readUnsigned(in);
+    //gophertunnel minecraft/protocol/item_descriptor.go:58-61 - the version widened to a fixed int16.
+    const auto version = LE::readSignedShort(in);
 
     return MolangItemDescriptor(std::move(expression), version);
 }
@@ -30,7 +31,7 @@ MolangItemDescriptor MolangItemDescriptor::read(encoding::ByteBufferReader &in)
 void MolangItemDescriptor::write(encoding::ByteBufferWriter &out) const
 {
     CommonTypes::putString(out, molangExpression);
-    Byte::writeUnsigned(out, molangVersion);
+    LE::writeSignedShort(out, molangVersion);
 }
 
 }  // namespace bedrock_protocol::types::recipe

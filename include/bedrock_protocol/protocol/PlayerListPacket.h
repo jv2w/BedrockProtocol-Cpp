@@ -32,17 +32,13 @@ class PlayerListPacket final : public DataPacket, public ClientboundPacket {
 public:
     static constexpr std::uint32_t NETWORK_ID = ProtocolInfo::PLAYER_LIST_PACKET;
 
-    static constexpr std::uint8_t TYPE_ADD = 0;
-    static constexpr std::uint8_t TYPE_REMOVE = 1;
-
-    std::uint8_t type = 0;
     /** @var PlayerListEntry[] */
     std::vector<types::PlayerListEntry> entries;
 
     /**
      * @generate-create-func
      */
-    static PlayerListPacket create(std::uint8_t type, std::vector<types::PlayerListEntry> entries);
+    static PlayerListPacket create(std::vector<types::PlayerListEntry> entries);
 
     static PlayerListPacket add(std::vector<types::PlayerListEntry> entries);
 

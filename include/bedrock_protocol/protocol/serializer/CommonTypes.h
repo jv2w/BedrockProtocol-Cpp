@@ -39,6 +39,7 @@
 #include "bedrock_protocol/protocol/types/entity/MetadataProperty.h"
 #include "bedrock_protocol/protocol/types/inventory/ItemStack.h"
 #include "bedrock_protocol/protocol/types/inventory/ItemStackWrapper.h"
+#include "bedrock_protocol/protocol/types/inventory/StackRequestItem.h"
 #include "bedrock_protocol/protocol/types/recipe/RecipeIngredient.h"
 #include "bedrock_protocol/protocol/types/skin/SkinData.h"
 #include "bedrock_protocol/uuid/Uuid.h"
@@ -102,18 +103,33 @@ public:
     static void putItemStackWithoutStackId(encoding::ByteBufferWriter &out, const types::inventory::ItemStack &itemStack);
 
     /** @throws DataDecodeException */
-    static types::inventory::ItemStackWrapper getItemStackWrapper(encoding::ByteBufferReader &in);
-    static void putItemStackWrapper(encoding::ByteBufferWriter &out,
-                                    const types::inventory::ItemStackWrapper &itemStackWrapper);
-
-    /** @throws DataDecodeException */
     static types::inventory::ItemStackWrapper getNetworkItemStackDescriptor(encoding::ByteBufferReader &in);
     static void putNetworkItemStackDescriptor(encoding::ByteBufferWriter &out,
                                               const types::inventory::ItemStackWrapper &itemStackWrapper);
 
-    /** @throws DataDecodeException */
+    /**
+     * The name-based item format used by the deprecated craft-result stack request action.
+     * @throws DataDecodeException
+     * @throws PacketDecodeException
+     */
+    static types::inventory::StackRequestItem getStackRequestItem(encoding::ByteBufferReader &in);
+    static void putStackRequestItem(encoding::ByteBufferWriter &out, const types::inventory::StackRequestItem &item);
+
+    /**
+     * @throws DataDecodeException
+     * @throws PacketDecodeException
+     */
     static types::recipe::RecipeIngredient getRecipeIngredient(encoding::ByteBufferReader &in);
     static void putRecipeIngredient(encoding::ByteBufferWriter &out, const types::recipe::RecipeIngredient &ingredient);
+
+    /**
+     * The tagless descriptor framing used by the auto-craft stack request action.
+     * @throws DataDecodeException
+     * @throws PacketDecodeException
+     */
+    static types::recipe::RecipeIngredient getStackRequestRecipeIngredient(encoding::ByteBufferReader &in);
+    static void putStackRequestRecipeIngredient(encoding::ByteBufferWriter &out,
+                                                const types::recipe::RecipeIngredient &ingredient);
 
     /** @throws DataDecodeException */
     static EntityMetadata getEntityMetadata(encoding::ByteBufferReader &in);
@@ -234,8 +250,8 @@ public:
     }
 
     /** @throws DataDecodeException */
-    static GameRules getGameRules(encoding::ByteBufferReader &in, bool isStartGame);
-    static void putGameRules(encoding::ByteBufferWriter &out, const GameRules &rules, bool isStartGame);
+    static GameRules getGameRules(encoding::ByteBufferReader &in);
+    static void putGameRules(encoding::ByteBufferWriter &out, const GameRules &rules);
 
     /** @throws DataDecodeException */
     static types::entity::EntityLink getEntityLink(encoding::ByteBufferReader &in);
@@ -280,33 +296,6 @@ public:
     static void writeCreativeItemNetId(encoding::ByteBufferWriter &out, std::uint32_t id)
     {
         encoding::VarInt::writeUnsignedInt(out, id);
-    }
-
-    /**
-     * This is a union of ItemStackRequestId, LegacyItemStackRequestId, and ServerItemStackId, used in serverbound
-     * packets to allow the client to refer to server known items, or items which may have been modified by a previous
-     * as-yet unacknowledged request from the client.
-     *
-     * - Server itemstack ID is positive
-     * - InventoryTransaction "legacy" request ID is negative and even
-     * - ItemStackRequest request ID is negative and odd
-     * - 0 refers to an empty itemstack (air)
-     *
-     * @throws DataDecodeException
-     */
-    static std::int32_t readItemStackNetIdVariant(encoding::ByteBufferReader &in)
-    {
-        return encoding::VarInt::readSignedInt(in);
-    }
-
-    /**
-     * This is a union of ItemStackRequestId, LegacyItemStackRequestId, and ServerItemStackId, used in serverbound
-     * packets to allow the client to refer to server known items, or items which may have been modified by a previous
-     * as-yet unacknowledged request from the client.
-     */
-    static void writeItemStackNetIdVariant(encoding::ByteBufferWriter &out, std::int32_t id)
-    {
-        encoding::VarInt::writeSignedInt(out, id);
     }
 
     /** @throws DataDecodeException */

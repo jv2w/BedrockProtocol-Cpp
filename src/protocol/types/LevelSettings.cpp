@@ -46,7 +46,8 @@ void LevelSettings::internalRead(encoding::ByteBufferReader &in)
     createdInEditorMode = CommonTypes::getBool(in);
     exportedFromEditorMode = CommonTypes::getBool(in);
     time = VarInt::readSignedInt(in);
-    eduEditionOffer = VarInt::readSignedInt(in);
+    // gophertunnel v1.58.0 minecraft/protocol/packet/start_game.go:302 -- Varint32 became Varuint32.
+    eduEditionOffer = static_cast<std::int32_t>(VarInt::readUnsignedInt(in));
     hasEduFeaturesEnabled = CommonTypes::getBool(in);
     eduProductUUID = CommonTypes::getString(in);
     rainLevel = LE::readFloat(in);
@@ -58,11 +59,12 @@ void LevelSettings::internalRead(encoding::ByteBufferReader &in)
     platformBroadcastMode = VarInt::readSignedInt(in);
     commandsEnabled = CommonTypes::getBool(in);
     isTexturePacksRequired = CommonTypes::getBool(in);
-    gameRules = CommonTypes::getGameRules(in, true);
+    gameRules = CommonTypes::getGameRules(in);
     experiments = Experiments::read(in);
     hasBonusChestEnabled = CommonTypes::getBool(in);
     hasStartWithMapEnabled = CommonTypes::getBool(in);
-    defaultPlayerPermission = VarInt::readSignedInt(in);
+    // gophertunnel v1.58.0 minecraft/protocol/packet/start_game.go:319 -- Varint32 became Uint8.
+    defaultPlayerPermission = Byte::readUnsigned(in);
     serverChunkTickRadius = LE::readSignedInt(in); //doesn't make sense for this to be signed, but that's what the spec says
     hasLockedBehaviorPack = CommonTypes::getBool(in);
     hasLockedResourcePack = CommonTypes::getBool(in);
@@ -101,7 +103,7 @@ void LevelSettings::write(encoding::ByteBufferWriter &out) const
     CommonTypes::putBool(out, createdInEditorMode);
     CommonTypes::putBool(out, exportedFromEditorMode);
     VarInt::writeSignedInt(out, time);
-    VarInt::writeSignedInt(out, eduEditionOffer);
+    VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(eduEditionOffer));
     CommonTypes::putBool(out, hasEduFeaturesEnabled);
     CommonTypes::putString(out, eduProductUUID);
     LE::writeFloat(out, rainLevel);
@@ -113,11 +115,11 @@ void LevelSettings::write(encoding::ByteBufferWriter &out) const
     VarInt::writeSignedInt(out, platformBroadcastMode);
     CommonTypes::putBool(out, commandsEnabled);
     CommonTypes::putBool(out, isTexturePacksRequired);
-    CommonTypes::putGameRules(out, gameRules, true);
+    CommonTypes::putGameRules(out, gameRules);
     experiments.write(out);
     CommonTypes::putBool(out, hasBonusChestEnabled);
     CommonTypes::putBool(out, hasStartWithMapEnabled);
-    VarInt::writeSignedInt(out, defaultPlayerPermission);
+    Byte::writeUnsigned(out, static_cast<std::uint8_t>(defaultPlayerPermission));
     LE::writeSignedInt(out, serverChunkTickRadius); //doesn't make sense for this to be signed, but that's what the spec says
     CommonTypes::putBool(out, hasLockedBehaviorPack);
     CommonTypes::putBool(out, hasLockedResourcePack);

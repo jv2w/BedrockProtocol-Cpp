@@ -12,6 +12,7 @@
 #include "bedrock_protocol/protocol/types/ItemInteractionData.h"
 
 #include "bedrock_protocol/encoding/VarInt.h"
+#include "bedrock_protocol/protocol/serializer/CommonTypes.h"
 
 namespace bedrock_protocol::types {
 
@@ -20,13 +21,16 @@ using encoding::VarInt;
 ItemInteractionData ItemInteractionData::read(encoding::ByteBufferReader &in)
 {
     const auto requestId = VarInt::readSignedInt(in);
-    std::vector<inventory::InventoryTransactionChangedSlotsHack> requestChangedSlots;
-    if (requestId != 0) {
-        const auto len = VarInt::readUnsignedInt(in);
+    // reader.go:244-247 - the changed slot list carries its own presence bool; it is not keyed off
+    // requestId the way the pre-2168 format was.
+    auto requestChangedSlots = serializer::CommonTypes::readOptional(in, [](encoding::ByteBufferReader &r) {
+        std::vector<inventory::InventoryTransactionChangedSlotsHack> slots;
+        const auto len = VarInt::readUnsignedInt(r);
         for (std::uint32_t i = 0; i < len; ++i) {
-            requestChangedSlots.push_back(inventory::InventoryTransactionChangedSlotsHack::read(in));
+            slots.push_back(inventory::InventoryTransactionChangedSlotsHack::read(r));
         }
-    }
+        return slots;
+    });
     inventory::UseItemTransactionData transactionData;
     transactionData.decodeAuthInput(in);
     return ItemInteractionData(requestId, std::move(requestChangedSlots), std::move(transactionData));
@@ -35,12 +39,16 @@ ItemInteractionData ItemInteractionData::read(encoding::ByteBufferReader &in)
 void ItemInteractionData::write(encoding::ByteBufferWriter &out) const
 {
     VarInt::writeSignedInt(out, requestId);
-    if (requestId != 0) {
-        VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(requestChangedSlots.size()));
-        for (const auto &changedSlot : requestChangedSlots) {
-            changedSlot.write(out);
-        }
-    }
+    // writer.go:182-184 - presence bool, then the slice when it is there.
+    serializer::CommonTypes::writeOptional(
+        out, requestChangedSlots,
+        [](encoding::ByteBufferWriter &w,
+           const std::vector<inventory::InventoryTransactionChangedSlotsHack> &slots) {
+            VarInt::writeUnsignedInt(w, static_cast<std::uint32_t>(slots.size()));
+            for (const auto &changedSlot : slots) {
+                changedSlot.write(w);
+            }
+        });
     transactionData.encodeAuthInput(out);
 }
 

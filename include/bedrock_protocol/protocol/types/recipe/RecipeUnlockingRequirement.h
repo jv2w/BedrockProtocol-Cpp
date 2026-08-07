@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <optional>
 #include <utility>
 #include <vector>
@@ -23,12 +24,21 @@ namespace bedrock_protocol::types::recipe {
 
 class RecipeUnlockingRequirement final {
 public:
-    explicit RecipeUnlockingRequirement(std::optional<std::vector<RecipeIngredient>> unlockingIngredients)
-        : unlockingIngredients(std::move(unlockingIngredients))
+    //gophertunnel minecraft/protocol/recipe.go:59-64
+    static constexpr std::int32_t CONTEXT_NONE = 0;
+    static constexpr std::int32_t CONTEXT_ALWAYS_UNLOCKED = 1;
+    static constexpr std::int32_t CONTEXT_PLAYER_IN_WATER = 2;
+    static constexpr std::int32_t CONTEXT_PLAYER_HAS_MANY_ITEMS = 3;
+
+    RecipeUnlockingRequirement(std::int32_t context, std::vector<RecipeIngredient> unlockingIngredients)
+        : context(context), unlockingIngredients(std::move(unlockingIngredients))
     {
     }
 
-    [[nodiscard]] const std::optional<std::vector<RecipeIngredient>> &getUnlockingIngredients() const
+    [[nodiscard]] std::int32_t getContext() const { return context; }
+
+    /** Only meaningful when the context is CONTEXT_NONE; nothing else is sent over the wire. */
+    [[nodiscard]] const std::vector<RecipeIngredient> &getUnlockingIngredients() const
     {
         return unlockingIngredients;
     }
@@ -39,7 +49,8 @@ public:
     void write(encoding::ByteBufferWriter &out) const;
 
 private:
-    std::optional<std::vector<RecipeIngredient>> unlockingIngredients;
+    std::int32_t context;
+    std::vector<RecipeIngredient> unlockingIngredients;
 };
 
 }  // namespace bedrock_protocol::types::recipe

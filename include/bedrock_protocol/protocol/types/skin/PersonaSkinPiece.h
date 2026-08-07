@@ -11,35 +11,58 @@
 
 #pragma once
 
+#include <cstdint>
 #include <string>
-#include <string_view>
 #include <utility>
+
+#include "bedrock_protocol/uuid/Uuid.h"
 
 namespace bedrock_protocol::types::skin {
 
 class PersonaSkinPiece final {
 public:
-    static constexpr std::string_view PIECE_TYPE_PERSONA_BODY = "persona_body";
-    static constexpr std::string_view PIECE_TYPE_PERSONA_BOTTOM = "persona_bottom";
-    static constexpr std::string_view PIECE_TYPE_PERSONA_EYES = "persona_eyes";
-    static constexpr std::string_view PIECE_TYPE_PERSONA_FACIAL_HAIR = "persona_facial_hair";
-    static constexpr std::string_view PIECE_TYPE_PERSONA_FEET = "persona_feet";
-    static constexpr std::string_view PIECE_TYPE_PERSONA_HAIR = "persona_hair";
-    static constexpr std::string_view PIECE_TYPE_PERSONA_MOUTH = "persona_mouth";
-    static constexpr std::string_view PIECE_TYPE_PERSONA_SKELETON = "persona_skeleton";
-    static constexpr std::string_view PIECE_TYPE_PERSONA_SKIN = "persona_skin";
-    static constexpr std::string_view PIECE_TYPE_PERSONA_TOP = "persona_top";
+    //piece type is a uint32 enum on the wire as of protocol 2168
+    //(gophertunnel minecraft/protocol/skin.go:183-213,234)
+    static constexpr std::uint32_t PIECE_TYPE_UNKNOWN = 0;
+    static constexpr std::uint32_t PIECE_TYPE_SKELETON = 1;
+    static constexpr std::uint32_t PIECE_TYPE_BODY = 2;
+    static constexpr std::uint32_t PIECE_TYPE_SKIN = 3;
+    static constexpr std::uint32_t PIECE_TYPE_BOTTOM = 4;
+    static constexpr std::uint32_t PIECE_TYPE_FEET = 5;
+    static constexpr std::uint32_t PIECE_TYPE_DRESS = 6;
+    static constexpr std::uint32_t PIECE_TYPE_TOP = 7;
+    static constexpr std::uint32_t PIECE_TYPE_HIGH_PANTS = 8;
+    static constexpr std::uint32_t PIECE_TYPE_HANDS = 9;
+    static constexpr std::uint32_t PIECE_TYPE_OUTERWEAR = 10;
+    static constexpr std::uint32_t PIECE_TYPE_FACIAL_HAIR = 11;
+    static constexpr std::uint32_t PIECE_TYPE_MOUTH = 12;
+    static constexpr std::uint32_t PIECE_TYPE_EYES = 13;
+    static constexpr std::uint32_t PIECE_TYPE_HAIR = 14;
+    static constexpr std::uint32_t PIECE_TYPE_HOOD = 15;
+    static constexpr std::uint32_t PIECE_TYPE_BACK = 16;
+    static constexpr std::uint32_t PIECE_TYPE_FACE_ACCESSORY = 17;
+    static constexpr std::uint32_t PIECE_TYPE_HEAD = 18;
+    static constexpr std::uint32_t PIECE_TYPE_LEGS = 19;
+    static constexpr std::uint32_t PIECE_TYPE_LEFT_LEG = 20;
+    static constexpr std::uint32_t PIECE_TYPE_RIGHT_LEG = 21;
+    static constexpr std::uint32_t PIECE_TYPE_ARMS = 22;
+    static constexpr std::uint32_t PIECE_TYPE_LEFT_ARM = 23;
+    static constexpr std::uint32_t PIECE_TYPE_RIGHT_ARM = 24;
+    static constexpr std::uint32_t PIECE_TYPE_CAPES = 25;
+    static constexpr std::uint32_t PIECE_TYPE_CLASSIC_SKIN = 26;
+    static constexpr std::uint32_t PIECE_TYPE_EMOTE = 27;
+    static constexpr std::uint32_t PIECE_TYPE_UNSUPPORTED = 28;
 
-    PersonaSkinPiece(std::string pieceId, std::string pieceType, std::string packId, bool isDefaultPiece,
+    PersonaSkinPiece(std::string pieceId, std::uint32_t pieceType, uuid::Uuid packId, bool isDefaultPiece,
                      std::string productId)
-        : pieceId(std::move(pieceId)), pieceType(std::move(pieceType)), packId(std::move(packId)),
-          isDefaultPiece_(isDefaultPiece), productId(std::move(productId)) {}
+        : pieceId(std::move(pieceId)), pieceType(pieceType), packId(packId), isDefaultPiece_(isDefaultPiece),
+          productId(std::move(productId)) {}
 
     [[nodiscard]] const std::string &getPieceId() const { return pieceId; }
 
-    [[nodiscard]] const std::string &getPieceType() const { return pieceType; }
+    [[nodiscard]] std::uint32_t getPieceType() const { return pieceType; }
 
-    [[nodiscard]] const std::string &getPackId() const { return packId; }
+    [[nodiscard]] const uuid::Uuid &getPackId() const { return packId; }
 
     [[nodiscard]] bool isDefaultPiece() const { return isDefaultPiece_; }
 
@@ -47,8 +70,8 @@ public:
 
 private:
     std::string pieceId;
-    std::string pieceType;
-    std::string packId;
+    std::uint32_t pieceType;
+    uuid::Uuid packId;
     /** PHP field name `isDefaultPiece`, renamed to avoid colliding with the getter of the same name. */
     bool isDefaultPiece_;
     std::string productId;

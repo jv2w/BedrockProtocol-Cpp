@@ -18,6 +18,7 @@
 #include <string_view>
 #include <vector>
 
+#include "bedrock_protocol/color/Color.h"
 #include "bedrock_protocol/protocol/ClientboundPacket.h"
 #include "bedrock_protocol/protocol/DataPacket.h"
 #include "bedrock_protocol/protocol/ProtocolInfo.h"
@@ -25,7 +26,6 @@
 #include "bedrock_protocol/protocol/types/BlockPosition.h"
 #include "bedrock_protocol/protocol/types/DimensionIds.h"
 #include "bedrock_protocol/protocol/types/MapDecoration.h"
-#include "bedrock_protocol/protocol/types/MapImage.h"
 #include "bedrock_protocol/protocol/types/MapTrackedObject.h"
 
 namespace bedrock_protocol {
@@ -36,25 +36,25 @@ class ClientboundMapItemDataPacket final : public DataPacket, public Clientbound
 public:
     static constexpr std::uint32_t NETWORK_ID = ProtocolInfo::CLIENTBOUND_MAP_ITEM_DATA_PACKET;
 
-    static constexpr std::uint32_t BITFLAG_TEXTURE_UPDATE = 0x02;
-    static constexpr std::uint32_t BITFLAG_DECORATION_UPDATE = 0x04;
-    static constexpr std::uint32_t BITFLAG_MAP_CREATION = 0x08;
-
     std::int64_t mapId = 0;
-    std::uint32_t type = 0;
     std::uint8_t dimensionId = types::DimensionIds::OVERWORLD;
     bool isLocked = false;
     types::BlockPosition origin;
-    /** @var int[] */
-    std::vector<std::int64_t> parentMapIds;
-    std::uint8_t scale = 0;
-    /** @var MapTrackedObject[] */
-    std::vector<types::MapTrackedObject> trackedEntities;
-    /** @var MapDecoration[] */
-    std::vector<types::MapDecoration> decorations;
-    std::int32_t xOffset = 0;
-    std::int32_t yOffset = 0;
-    std::optional<types::MapImage> colors = std::nullopt;
+    /**
+     * Every field from here down is an independent optional with its own presence byte. The
+     * UpdateFlags bitmask that used to gate them is gone.
+     * gophertunnel v1.58.0 minecraft/protocol/packet/client_bound_map_item_data.go:61-83.
+     */
+    std::optional<std::vector<std::int64_t>> parentMapIds = std::nullopt;
+    std::optional<std::uint8_t> scale = std::nullopt;
+    std::optional<std::vector<types::MapTrackedObject>> trackedEntities = std::nullopt;
+    std::optional<std::vector<types::MapDecoration>> decorations = std::nullopt;
+    std::optional<std::int32_t> width = std::nullopt;
+    std::optional<std::int32_t> height = std::nullopt;
+    std::optional<std::int32_t> xOffset = std::nullopt;
+    std::optional<std::int32_t> yOffset = std::nullopt;
+    /** A flat, self-counting pixel list - its length is no longer tied to width * height. */
+    std::optional<std::vector<color::Color>> colors = std::nullopt;
 
     [[nodiscard]] std::uint32_t networkId() const override { return NETWORK_ID; }
     [[nodiscard]] std::string_view getName() const override { return "ClientboundMapItemDataPacket"; }

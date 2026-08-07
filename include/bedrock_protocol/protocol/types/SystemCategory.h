@@ -1,6 +1,6 @@
 /*
  * This file is part of BedrockProtocol-Cpp.
- * C++ port of the PHP original: src/types/SubChunkPacketEntryWithCache.php
+ * C++ port of the PHP original: src/types/SystemCategory.php
  * Copyright (C) 2014-2022 PocketMine Team <https://github.com/pmmp/BedrockProtocol>
  *
  * BedrockProtocol is free software: you can redistribute it and/or modify
@@ -12,32 +12,32 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 #include <utility>
 
 #include "bedrock_protocol/encoding/ByteBufferReader.h"
 #include "bedrock_protocol/encoding/ByteBufferWriter.h"
-#include "bedrock_protocol/protocol/types/SubChunkPacketEntryCommon.h"
 
 namespace bedrock_protocol::types {
 
-class SubChunkPacketEntryWithCache final {
+class SystemCategory final {
 public:
-    SubChunkPacketEntryWithCache(SubChunkPacketEntryCommon base, std::uint64_t usedBlobHash)
-        : base(std::move(base)), usedBlobHash(usedBlobHash)
+    SystemCategory(std::string categoryName, std::uint64_t systemIndex)
+        : categoryName(std::move(categoryName)), systemIndex(systemIndex)
     {
     }
 
-    [[nodiscard]] const SubChunkPacketEntryCommon &getBase() const { return base; }
+    [[nodiscard]] const std::string &getCategoryName() const { return categoryName; }
 
-    [[nodiscard]] std::uint64_t getUsedBlobHash() const { return usedBlobHash; }
+    [[nodiscard]] std::uint64_t getSystemIndex() const { return systemIndex; }
 
-    static SubChunkPacketEntryWithCache read(encoding::ByteBufferReader &in);
+    static SystemCategory read(encoding::ByteBufferReader &in);
 
     void write(encoding::ByteBufferWriter &out) const;
 
 private:
-    SubChunkPacketEntryCommon base;
-    std::uint64_t usedBlobHash;
+    std::string categoryName;
+    std::uint64_t systemIndex;
 };
 
 }  // namespace bedrock_protocol::types

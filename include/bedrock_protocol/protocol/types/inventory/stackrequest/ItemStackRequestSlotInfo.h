@@ -17,7 +17,7 @@
 #include "bedrock_protocol/encoding/Byte.h"
 #include "bedrock_protocol/encoding/ByteBufferReader.h"
 #include "bedrock_protocol/encoding/ByteBufferWriter.h"
-#include "bedrock_protocol/protocol/serializer/CommonTypes.h"
+#include "bedrock_protocol/encoding/LE.h"
 #include "bedrock_protocol/protocol/types/inventory/FullContainerName.h"
 
 namespace bedrock_protocol::types::inventory::stackrequest {
@@ -36,14 +36,15 @@ public:
     static ItemStackRequestSlotInfo read(encoding::ByteBufferReader &in) {
         auto containerName = inventory::FullContainerName::read(in);
         const auto slotId = encoding::Byte::readUnsigned(in);
-        const auto stackId = serializer::CommonTypes::readItemStackNetIdVariant(in);
+        //gophertunnel minecraft/protocol/item_stack.go:622-626 - a fixed little-endian int32, not a varint.
+        const auto stackId = encoding::LE::readSignedInt(in);
         return ItemStackRequestSlotInfo(std::move(containerName), slotId, stackId);
     }
 
     void write(encoding::ByteBufferWriter &out) const {
         containerName.write(out);
         encoding::Byte::writeUnsigned(out, slotId);
-        serializer::CommonTypes::writeItemStackNetIdVariant(out, stackId);
+        encoding::LE::writeSignedInt(out, stackId);
     }
 
 private:

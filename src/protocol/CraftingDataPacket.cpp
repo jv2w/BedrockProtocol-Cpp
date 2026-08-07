@@ -11,26 +11,50 @@
 
 #include "bedrock_protocol/protocol/CraftingDataPacket.h"
 
-#include <memory>
-#include <stdexcept>
-#include <string>
 #include <vector>
 #include <utility>
 
-#include "bedrock_protocol/encoding/BE.h"
-#include "bedrock_protocol/encoding/Byte.h"
-#include "bedrock_protocol/encoding/LE.h"
 #include "bedrock_protocol/encoding/VarInt.h"
-#include "bedrock_protocol/protocol/PacketDecodeException.h"
 #include "bedrock_protocol/protocol/PacketHandlerInterface.h"
 #include "bedrock_protocol/protocol/serializer/CommonTypes.h"
 
 namespace bedrock_protocol {
 
-CraftingDataPacket CraftingDataPacket::create(std::vector<std::unique_ptr<types::recipe::RecipeWithTypeId>> recipesWithTypeIds, std::vector<types::recipe::PotionTypeRecipe> potionTypeRecipes, std::vector<types::recipe::PotionContainerChangeRecipe> potionContainerRecipes, std::vector<types::recipe::MaterialReducerRecipe> materialReducerRecipes, bool cleanRecipes)
+namespace {
+
+/** Reads a varuint32-counted vector of recipes, each of which decodes itself. */
+template <typename Recipe>
+std::vector<Recipe> decodeRecipeList(encoding::ByteBufferReader &in)
+{
+    std::vector<Recipe> recipes;
+    for (std::uint32_t i = 0, count = encoding::VarInt::readUnsignedInt(in); i < count; ++i) {
+        recipes.push_back(Recipe::decode(in));
+    }
+    return recipes;
+}
+
+template <typename Recipe>
+void encodeRecipeList(encoding::ByteBufferWriter &out, const std::vector<Recipe> &recipes)
+{
+    encoding::VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(recipes.size()));
+    for (const auto &recipe : recipes) {
+        recipe.encode(out);
+    }
+}
+
+}  // namespace
+
+CraftingDataPacket CraftingDataPacket::create(std::vector<types::recipe::ShapedRecipe> shapedRecipes, std::vector<types::recipe::ShapelessRecipe> shapelessRecipes, std::vector<types::recipe::MultiRecipe> multiRecipes, std::vector<types::recipe::ShapelessRecipe> shulkerBoxRecipes, std::vector<types::recipe::ShapelessRecipe> shapelessChemistryRecipes, std::vector<types::recipe::ShapedRecipe> shapedChemistryRecipes, std::vector<types::recipe::SmithingTransformRecipe> smithingTransformRecipes, std::vector<types::recipe::SmithingTrimRecipe> smithingTrimRecipes, std::vector<types::recipe::PotionTypeRecipe> potionTypeRecipes, std::vector<types::recipe::PotionContainerChangeRecipe> potionContainerRecipes, std::vector<types::recipe::MaterialReducerRecipe> materialReducerRecipes, bool cleanRecipes)
 {
     CraftingDataPacket result;
-    result.recipesWithTypeIds = std::move(recipesWithTypeIds);
+    result.shapedRecipes = std::move(shapedRecipes);
+    result.shapelessRecipes = std::move(shapelessRecipes);
+    result.multiRecipes = std::move(multiRecipes);
+    result.shulkerBoxRecipes = std::move(shulkerBoxRecipes);
+    result.shapelessChemistryRecipes = std::move(shapelessChemistryRecipes);
+    result.shapedChemistryRecipes = std::move(shapedChemistryRecipes);
+    result.smithingTransformRecipes = std::move(smithingTransformRecipes);
+    result.smithingTrimRecipes = std::move(smithingTrimRecipes);
     result.potionTypeRecipes = std::move(potionTypeRecipes);
     result.potionContainerRecipes = std::move(potionContainerRecipes);
     result.materialReducerRecipes = std::move(materialReducerRecipes);
@@ -40,41 +64,16 @@ CraftingDataPacket CraftingDataPacket::create(std::vector<std::unique_ptr<types:
 
 void CraftingDataPacket::decodePayload(encoding::ByteBufferReader &in)
 {
-    const auto recipeCount = encoding::VarInt::readUnsignedInt(in);
-    std::string previousType = "none";
-    for (std::uint32_t i = 0; i < recipeCount; ++i) {
-        const auto recipeType = encoding::VarInt::readSignedInt(in);
-
-        switch (recipeType) {
-        case ENTRY_SHAPELESS:
-        case ENTRY_USER_DATA_SHAPELESS:
-        case ENTRY_SHAPELESS_CHEMISTRY:
-            recipesWithTypeIds.push_back(
-                std::make_unique<types::recipe::ShapelessRecipe>(types::recipe::ShapelessRecipe::decode(recipeType, in)));
-            break;
-        case ENTRY_SHAPED:
-        case ENTRY_SHAPED_CHEMISTRY:
-            recipesWithTypeIds.push_back(
-                std::make_unique<types::recipe::ShapedRecipe>(types::recipe::ShapedRecipe::decode(recipeType, in)));
-            break;
-        case ENTRY_MULTI:
-            recipesWithTypeIds.push_back(
-                std::make_unique<types::recipe::MultiRecipe>(types::recipe::MultiRecipe::decode(recipeType, in)));
-            break;
-        case ENTRY_SMITHING_TRANSFORM:
-            recipesWithTypeIds.push_back(std::make_unique<types::recipe::SmithingTransformRecipe>(
-                types::recipe::SmithingTransformRecipe::decode(recipeType, in)));
-            break;
-        case ENTRY_SMITHING_TRIM:
-            recipesWithTypeIds.push_back(std::make_unique<types::recipe::SmithingTrimRecipe>(
-                types::recipe::SmithingTrimRecipe::decode(recipeType, in)));
-            break;
-        default:
-            throw PacketDecodeException("Unhandled recipe type " + std::to_string(recipeType) + " (previous was " +
-                                        previousType + ")");
-        }
-        previousType = std::to_string(recipeType);
-    }
+    //gophertunnel minecraft/protocol/packet/crafting_data.go:38-51 - ten separately-typed recipe vectors in
+    //this exact order, then the material reducers and the clear flag.
+    shapedRecipes = decodeRecipeList<types::recipe::ShapedRecipe>(in);
+    shapelessRecipes = decodeRecipeList<types::recipe::ShapelessRecipe>(in);
+    multiRecipes = decodeRecipeList<types::recipe::MultiRecipe>(in);
+    shulkerBoxRecipes = decodeRecipeList<types::recipe::ShapelessRecipe>(in);
+    shapelessChemistryRecipes = decodeRecipeList<types::recipe::ShapelessRecipe>(in);
+    shapedChemistryRecipes = decodeRecipeList<types::recipe::ShapedRecipe>(in);
+    smithingTransformRecipes = decodeRecipeList<types::recipe::SmithingTransformRecipe>(in);
+    smithingTrimRecipes = decodeRecipeList<types::recipe::SmithingTrimRecipe>(in);
     for (std::uint32_t i = 0, count = encoding::VarInt::readUnsignedInt(in); i < count; ++i) {
         const auto inputId = encoding::VarInt::readSignedInt(in);
         const auto inputMeta = encoding::VarInt::readSignedInt(in);
@@ -108,11 +107,14 @@ void CraftingDataPacket::decodePayload(encoding::ByteBufferReader &in)
 
 void CraftingDataPacket::encodePayload(encoding::ByteBufferWriter &out) const
 {
-    encoding::VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(recipesWithTypeIds.size()));
-    for (const auto &d : recipesWithTypeIds) {
-        encoding::VarInt::writeSignedInt(out, d->getTypeId());
-        d->encode(out);
-    }
+    encodeRecipeList(out, shapedRecipes);
+    encodeRecipeList(out, shapelessRecipes);
+    encodeRecipeList(out, multiRecipes);
+    encodeRecipeList(out, shulkerBoxRecipes);
+    encodeRecipeList(out, shapelessChemistryRecipes);
+    encodeRecipeList(out, shapedChemistryRecipes);
+    encodeRecipeList(out, smithingTransformRecipes);
+    encodeRecipeList(out, smithingTrimRecipes);
     encoding::VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(potionTypeRecipes.size()));
     for (const auto &recipe : potionTypeRecipes) {
         encoding::VarInt::writeSignedInt(out, recipe.getInputItemId());

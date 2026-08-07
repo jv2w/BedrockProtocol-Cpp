@@ -12,6 +12,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 
 #include "bedrock_protocol/protocol/types/BlockPosition.h"
 
@@ -19,16 +20,18 @@ namespace bedrock_protocol::types {
 
 class MapTrackedObject {
 public:
-    static constexpr std::uint32_t TYPE_ENTITY = 0;
-    static constexpr std::uint32_t TYPE_BLOCK = 1;
+    static constexpr std::int32_t TYPE_ENTITY = 0;
+    static constexpr std::int32_t TYPE_BLOCK = 1;
 
-    std::uint32_t type = 0;
+    std::int32_t type = 0;
 
-    /** @note Only set if is TYPE_ENTITY */
-    std::int64_t actorUniqueId = 0;
+    /**
+     * Both members are optionals with their own presence byte, and BOTH are always written -
+     * independently of `type`. gophertunnel v1.58.0 minecraft/protocol/map.go:51-58.
+     */
+    std::optional<std::int64_t> actorUniqueId = std::nullopt;
 
-    /** Only set if is TYPE_BLOCK */
-    BlockPosition blockPosition;
+    std::optional<BlockPosition> blockPosition = std::nullopt;
 };
 
 }  // namespace bedrock_protocol::types

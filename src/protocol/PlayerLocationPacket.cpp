@@ -45,8 +45,11 @@ PlayerLocationPacket PlayerLocationPacket::createHide(std::int64_t actorUniqueId
 
 void PlayerLocationPacket::decodePayload(encoding::ByteBufferReader &in)
 {
-    type = types::PlayerLocationTypeFromPacket(static_cast<std::int32_t>(encoding::LE::readUnsignedInt(in)));
+    // player_location.go:33-37 - the unique ID comes first, then the type as a varuint32, then a
+    // reserved varint32 that is always 0.
     actorUniqueId = serializer::CommonTypes::getActorUniqueId(in);
+    type = types::PlayerLocationTypeFromPacket(static_cast<std::int32_t>(encoding::VarInt::readUnsignedInt(in)));
+    encoding::VarInt::readSignedInt(in);
 
     if (type == types::PlayerLocationType::PLAYER_LOCATION_COORDINATES) {
         position = serializer::CommonTypes::getVector3(in);
@@ -56,8 +59,9 @@ void PlayerLocationPacket::decodePayload(encoding::ByteBufferReader &in)
 
 void PlayerLocationPacket::encodePayload(encoding::ByteBufferWriter &out) const
 {
-    encoding::LE::writeUnsignedInt(out, static_cast<std::uint32_t>(type));
     serializer::CommonTypes::putActorUniqueId(out, actorUniqueId);
+    encoding::VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(type));
+    encoding::VarInt::writeSignedInt(out, 0);
 
     if (type == types::PlayerLocationType::PLAYER_LOCATION_COORDINATES) {
         if (!position.has_value()) { // this should never be the case

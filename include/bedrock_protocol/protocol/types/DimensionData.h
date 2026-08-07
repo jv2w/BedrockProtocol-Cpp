@@ -15,13 +15,16 @@
 
 #include "bedrock_protocol/encoding/ByteBufferReader.h"
 #include "bedrock_protocol/encoding/ByteBufferWriter.h"
+#include "bedrock_protocol/uuid/Uuid.h"
 
 namespace bedrock_protocol::types {
 
 class DimensionData final {
 public:
-    DimensionData(std::int32_t maxHeight, std::int32_t minHeight, std::int32_t generator, std::int32_t dimensionType)
-        : maxHeight(maxHeight), minHeight(minHeight), generator(generator), dimensionType(dimensionType)
+    DimensionData(std::int32_t maxHeight, std::int32_t minHeight, std::int32_t generator, std::int32_t dimensionType,
+                  const uuid::Uuid &packId)
+        : maxHeight(maxHeight), minHeight(minHeight), generator(generator), dimensionType(dimensionType),
+          packId(packId)
     {
     }
 
@@ -33,6 +36,8 @@ public:
 
     [[nodiscard]] std::int32_t getDimensionType() const { return dimensionType; }
 
+    [[nodiscard]] const uuid::Uuid &getPackId() const { return packId; }
+
     /** @throws DataDecodeException */
     static DimensionData read(encoding::ByteBufferReader &in);
 
@@ -43,6 +48,7 @@ private:
     std::int32_t minHeight;
     std::int32_t generator;
     std::int32_t dimensionType;
+    uuid::Uuid packId;
 };
 
 }  // namespace bedrock_protocol::types

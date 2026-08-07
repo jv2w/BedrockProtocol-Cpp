@@ -20,10 +20,10 @@ namespace bedrock_protocol::types::skin {
 SkinData::SkinData(std::string skinId, std::string playFabId, std::string resourcePatch, SkinImage skinImage,
                    std::vector<SkinAnimation> animations, std::optional<SkinImage> capeImage, std::string geometryData,
                    std::string geometryDataEngineVersion, std::string animationData, std::string capeId,
-                   std::optional<std::string> fullSkinId, std::string armSize, std::string skinColor,
+                   std::optional<std::string> fullSkinId, std::uint8_t armSize, color::Color skinColor,
                    std::vector<PersonaSkinPiece> personaPieces, std::vector<PersonaPieceTintColor> pieceTintColors,
                    bool isVerified, bool premium, bool persona, bool personaCapeOnClassic, bool isPrimaryUser,
-                   bool override)
+                   bool override, std::string profileHash)
     : skinId(std::move(skinId)), playFabId(std::move(playFabId)), resourcePatch(std::move(resourcePatch)),
       skinImage(std::move(skinImage)), animations(std::move(animations)),
       capeImage(capeImage.has_value() ? std::move(*capeImage) : SkinImage(0, 0, "")),
@@ -31,8 +31,9 @@ SkinData::SkinData(std::string skinId, std::string playFabId, std::string resour
       animationData(std::move(animationData)), capeId(std::move(capeId)),
       //this has to be unique or the client will do stupid things
       fullSkinId(fullSkinId.has_value() ? std::move(*fullSkinId) : uuid::Uuid::uuid4().toString()),
-      armSize(std::move(armSize)), skinColor(std::move(skinColor)), personaPieces(std::move(personaPieces)),
+      armSize(armSize), skinColor(skinColor), personaPieces(std::move(personaPieces)),
       pieceTintColors(std::move(pieceTintColors)), isVerified_(isVerified), premium(premium), persona(persona),
-      personaCapeOnClassic(personaCapeOnClassic), isPrimaryUser_(isPrimaryUser), override_(override) {}
+      personaCapeOnClassic(personaCapeOnClassic), isPrimaryUser_(isPrimaryUser), override_(override),
+      profileHash(std::move(profileHash)) {}
 
 }  // namespace bedrock_protocol::types::skin

@@ -17,7 +17,7 @@ namespace bedrock_protocol::types {
 
 using serializer::CommonTypes;
 
-void BoolGameRule::encode(encoding::ByteBufferWriter &out, bool /* isStartGame */) const
+void BoolGameRule::encode(encoding::ByteBufferWriter &out) const
 {
     CommonTypes::putBool(out, value);
 }

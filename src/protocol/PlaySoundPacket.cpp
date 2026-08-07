@@ -24,7 +24,7 @@
 
 namespace bedrock_protocol {
 
-PlaySoundPacket PlaySoundPacket::create(std::string soundName, float x, float y, float z, float volume, float pitch, std::optional<std::uint64_t> serverSoundHandle)
+PlaySoundPacket PlaySoundPacket::create(std::string soundName, float x, float y, float z, float volume, float pitch, std::int32_t loopCount, std::optional<std::uint64_t> serverSoundHandle)
 {
     PlaySoundPacket result;
     result.soundName = std::move(soundName);
@@ -33,6 +33,7 @@ PlaySoundPacket PlaySoundPacket::create(std::string soundName, float x, float y,
     result.z = z;
     result.volume = volume;
     result.pitch = pitch;
+    result.loopCount = loopCount;
     result.serverSoundHandle = std::move(serverSoundHandle);
     return result;
 }
@@ -49,6 +50,7 @@ void PlaySoundPacket::decodePayload(encoding::ByteBufferReader &in)
     z = blockPosition.getZ() / 8.0F;
     volume = encoding::LE::readFloat(in);
     pitch = encoding::LE::readFloat(in);
+    loopCount = encoding::VarInt::readSignedInt(in);
     serverSoundHandle = serializer::CommonTypes::readOptional(in, [](encoding::ByteBufferReader &reader) { return encoding::LE::readUnsignedLong(reader); });
 
 }
@@ -59,6 +61,7 @@ void PlaySoundPacket::encodePayload(encoding::ByteBufferWriter &out) const
     serializer::CommonTypes::putBlockPosition(out, types::BlockPosition((int) (x * 8), (int) (y * 8), (int) (z * 8)));
     encoding::LE::writeFloat(out, volume);
     encoding::LE::writeFloat(out, pitch);
+    encoding::VarInt::writeSignedInt(out, loopCount);
     serializer::CommonTypes::writeOptional(out, serverSoundHandle, [](encoding::ByteBufferWriter &writer, const auto &value) { encoding::LE::writeUnsignedLong(writer, value); });
 
 }

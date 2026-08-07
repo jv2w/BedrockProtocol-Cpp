@@ -58,7 +58,7 @@ void AddPlayerPacket::decodePayload(encoding::ByteBufferReader &in)
     pitch = encoding::LE::readFloat(in);
     yaw = encoding::LE::readFloat(in);
     headYaw = encoding::LE::readFloat(in);
-    item = serializer::CommonTypes::getItemStackWrapper(in);
+    item = serializer::CommonTypes::getNetworkItemStackDescriptor(in);
     gameMode = encoding::VarInt::readSignedInt(in);
     metadata = serializer::CommonTypes::getEntityMetadata(in);
     syncedProperties = types::entity::PropertySyncData::read(in);
@@ -87,7 +87,7 @@ void AddPlayerPacket::encodePayload(encoding::ByteBufferWriter &out) const
     encoding::LE::writeFloat(out, pitch);
     encoding::LE::writeFloat(out, yaw);
     encoding::LE::writeFloat(out, headYaw);
-    serializer::CommonTypes::putItemStackWrapper(out, item);
+    serializer::CommonTypes::putNetworkItemStackDescriptor(out, item);
     encoding::VarInt::writeSignedInt(out, gameMode);
     serializer::CommonTypes::putEntityMetadata(out, metadata);
     syncedProperties.write(out);

@@ -40,8 +40,6 @@ void PlayerSkinPacket::decodePayload(encoding::ByteBufferReader &in)
     skin = serializer::CommonTypes::getSkin(in);
     newSkinName = serializer::CommonTypes::getString(in);
     oldSkinName = serializer::CommonTypes::getString(in);
-    skin->setVerified(serializer::CommonTypes::getBool(in));
-
 }
 
 void PlayerSkinPacket::encodePayload(encoding::ByteBufferWriter &out) const
@@ -52,8 +50,6 @@ void PlayerSkinPacket::encodePayload(encoding::ByteBufferWriter &out) const
     serializer::CommonTypes::putSkin(out, skin.value());
     serializer::CommonTypes::putString(out, newSkinName);
     serializer::CommonTypes::putString(out, oldSkinName);
-    serializer::CommonTypes::putBool(out, skin.value().isVerified());
-
 }
 
 bool PlayerSkinPacket::handle(PacketHandlerInterface &handler)

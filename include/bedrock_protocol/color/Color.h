@@ -20,6 +20,15 @@ class Color {
 public:
     Color(std::uint8_t r, std::uint8_t g, std::uint8_t b, std::uint8_t a = 0xff) : a_(a), r_(r), g_(g), b_(b) {}
 
+    /**
+     * Fully transparent black.
+     *
+     * Needed because 1.26.40 made PersonaPieceTintColor hold a fixed std::array of four colours
+     * (gophertunnel v1.58.0 minecraft/protocol/skin.go:246), and an array member has to be default
+     * constructible before its elements can be filled in.
+     */
+    Color() : Color(0, 0, 0, 0) {}
+
     /** Returns the alpha (opacity) value of this colour. */
     [[nodiscard]] std::uint8_t getA() const { return a_; }
     /** Retuns the red value of this colour. */

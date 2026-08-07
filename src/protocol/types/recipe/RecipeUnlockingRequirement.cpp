@@ -23,26 +23,28 @@ using serializer::CommonTypes;
 
 RecipeUnlockingRequirement RecipeUnlockingRequirement::read(encoding::ByteBufferReader &in)
 {
-    //I don't know what the point of this structure is. It could easily have been a list<RecipeIngredient> instead.
-    //It's basically just an optional list, which could have been done by an empty list wherever it's not needed.
-    const auto unlockingContext = CommonTypes::getBool(in);
-    std::optional<std::vector<RecipeIngredient>> unlockingIngredients;
-    if (!unlockingContext) {
-        unlockingIngredients.emplace();
+    //gophertunnel minecraft/protocol/recipe.go:76-83 - the context leads, and the ingredient list is only
+    //present when the context is CONTEXT_NONE.
+    const auto context = VarInt::readSignedInt(in);
+    const auto present = CommonTypes::getBool(in);
+    std::vector<RecipeIngredient> unlockingIngredients;
+    if (present) {
         for (std::uint32_t i = 0, count = VarInt::readUnsignedInt(in); i < count; i++) {
-            unlockingIngredients->push_back(CommonTypes::getRecipeIngredient(in));
+            unlockingIngredients.push_back(CommonTypes::getRecipeIngredient(in));
         }
     }
 
-    return RecipeUnlockingRequirement(std::move(unlockingIngredients));
+    return RecipeUnlockingRequirement(context, std::move(unlockingIngredients));
 }
 
 void RecipeUnlockingRequirement::write(encoding::ByteBufferWriter &out) const
 {
-    CommonTypes::putBool(out, !unlockingIngredients.has_value());
-    if (unlockingIngredients.has_value()) {
-        VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(unlockingIngredients->size()));
-        for (const auto &ingredient : *unlockingIngredients) {
+    VarInt::writeSignedInt(out, context);
+    const auto present = context == CONTEXT_NONE;
+    CommonTypes::putBool(out, present);
+    if (present) {
+        VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(unlockingIngredients.size()));
+        for (const auto &ingredient : unlockingIngredients) {
             CommonTypes::putRecipeIngredient(out, ingredient);
         }
     }

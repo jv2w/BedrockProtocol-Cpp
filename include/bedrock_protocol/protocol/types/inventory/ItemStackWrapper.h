@@ -20,8 +20,7 @@ namespace bedrock_protocol::types::inventory {
 
 class ItemStackWrapper final {
 public:
-    ItemStackWrapper(std::int32_t stackId, ItemStack itemStack, std::uint32_t stackIdVariant = 0)
-        : stackId(stackId), itemStack(std::move(itemStack)), stackIdVariant(stackIdVariant)
+    ItemStackWrapper(std::int32_t stackId, ItemStack itemStack) : stackId(stackId), itemStack(std::move(itemStack))
     {
     }
 
@@ -33,14 +32,11 @@ public:
 
     [[nodiscard]] std::int32_t getStackId() const { return stackId; }
 
-    [[nodiscard]] std::uint32_t getStackIdVariant() const { return stackIdVariant; }
-
     [[nodiscard]] const ItemStack &getItemStack() const { return itemStack; }
 
 private:
     std::int32_t stackId;
     ItemStack itemStack;
-    std::uint32_t stackIdVariant;
 };
 
 }  // namespace bedrock_protocol::types::inventory

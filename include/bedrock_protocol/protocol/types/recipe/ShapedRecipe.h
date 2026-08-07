@@ -12,7 +12,7 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -21,19 +21,18 @@
 #include "bedrock_protocol/protocol/types/inventory/ItemStack.h"
 #include "bedrock_protocol/protocol/types/recipe/RecipeIngredient.h"
 #include "bedrock_protocol/protocol/types/recipe/RecipeUnlockingRequirement.h"
-#include "bedrock_protocol/protocol/types/recipe/RecipeWithTypeId.h"
 #include "bedrock_protocol/uuid/Uuid.h"
 
 namespace bedrock_protocol::types::recipe {
 
-class ShapedRecipe final : public RecipeWithTypeId {
+class ShapedRecipe final {
 public:
     /** @throws std::invalid_argument */
-    ShapedRecipe(std::int32_t typeId, std::string recipeId, std::vector<std::vector<RecipeIngredient>> input,
+    ShapedRecipe(std::string recipeId, std::vector<std::vector<RecipeIngredient>> input,
                  std::vector<inventory::ItemStack> output, uuid::Uuid uuid,
                  std::string blockType,  //TODO: rename this
-                 std::int32_t priority, bool symmetric, RecipeUnlockingRequirement unlockingRequirement,
-                 std::uint32_t recipeNetId);
+                 std::int32_t priority, bool symmetric,
+                 std::optional<RecipeUnlockingRequirement> unlockingRequirement, std::uint32_t recipeNetId);
 
     [[nodiscard]] const std::string &getRecipeId() const { return recipeId; }
 
@@ -53,19 +52,20 @@ public:
 
     [[nodiscard]] bool isSymmetric() const { return symmetric; }
 
-    [[nodiscard]] const RecipeUnlockingRequirement &getUnlockingRequirement() const { return unlockingRequirement; }
+    [[nodiscard]] const std::optional<RecipeUnlockingRequirement> &getUnlockingRequirement() const
+    {
+        return unlockingRequirement;
+    }
 
     [[nodiscard]] std::uint32_t getRecipeNetId() const { return recipeNetId; }
 
-    /** @throws DataDecodeException */
-    static ShapedRecipe decode(std::int32_t recipeType, encoding::ByteBufferReader &in);
+    /**
+     * @throws DataDecodeException
+     * @throws PacketDecodeException
+     */
+    static ShapedRecipe decode(encoding::ByteBufferReader &in);
 
-    void encode(encoding::ByteBufferWriter &out) const override;
-
-    [[nodiscard]] std::unique_ptr<RecipeWithTypeId> clone() const override
-    {
-        return std::make_unique<ShapedRecipe>(*this);
-    }
+    void encode(encoding::ByteBufferWriter &out) const;
 
 private:
     std::string blockName;
@@ -76,7 +76,7 @@ private:
     uuid::Uuid uuid;
     std::int32_t priority;
     bool symmetric;
-    RecipeUnlockingRequirement unlockingRequirement;
+    std::optional<RecipeUnlockingRequirement> unlockingRequirement;
     std::uint32_t recipeNetId;
 };
 
