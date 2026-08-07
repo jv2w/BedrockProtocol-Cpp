@@ -535,7 +535,14 @@ CommonTypes::EntityMetadata CommonTypes::getEntityMetadata(encoding::ByteBufferR
     EntityMetadata data;
     for (std::uint32_t i = 0; i < count; ++i) {
         const auto key = VarInt::readUnsignedInt(in);
+        //gophertunnel minecraft/protocol/reader.go:298-306 - since 1.26.40 the property type is written
+        //twice: a varuint32 followed by the same value as a byte. They must agree.
         const auto type = VarInt::readUnsignedInt(in);
+        const auto legacyType = Byte::readUnsigned(in);
+        if (type != legacyType) {
+            throw PacketDecodeException("Entity metadata type " + std::to_string(legacyType) +
+                                        " does not match cereal selector " + std::to_string(type));
+        }
 
         assignKeyed(data, key, types::entity::MetadataProperty::read(in, static_cast<std::int32_t>(type)));
     }
@@ -548,7 +555,11 @@ void CommonTypes::putEntityMetadata(encoding::ByteBufferWriter &out, const Entit
     VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(metadata.size()));
     for (const auto &[key, d] : metadata) {
         VarInt::writeUnsignedInt(out, key);
-        VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(d->getTypeId()));
+        //gophertunnel minecraft/protocol/writer.go:246-250 - the type goes out as a varuint32 and then
+        //again as its low byte.
+        const auto type = static_cast<std::uint32_t>(d->getTypeId());
+        VarInt::writeUnsignedInt(out, type);
+        Byte::writeUnsigned(out, static_cast<std::uint8_t>(type));
         d->write(out);
     }
 }
