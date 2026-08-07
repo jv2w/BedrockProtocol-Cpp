@@ -62,6 +62,16 @@ protected:
     virtual void encodeData(encoding::ByteBufferWriter &out) const = 0;
 
     std::vector<NetworkInventoryAction> actions;
+    /**
+     * Whether the action list was present when this was decoded from a PlayerAuthInput.
+     *
+     * gophertunnel v1.58.0 minecraft/protocol/writer.go:184-186 wraps the list in a DoubleOptional, so
+     * "absent" and "present but empty" are different on the wire. Re-encoding an absent list as an empty
+     * one would hand the server a shape the client never sent, which matters because a plugin that calls
+     * mutate() on a PlayerAuthInput feeds this straight back to the server. Defaults to true so a
+     * plugin-built transaction still writes its list.
+     */
+    bool actionsPresent = true;
 };
 
 }  // namespace bedrock_protocol::types::inventory

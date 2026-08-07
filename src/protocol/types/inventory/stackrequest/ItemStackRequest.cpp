@@ -45,6 +45,19 @@ using encoding::LE;
 using encoding::VarInt;
 using serializer::CommonTypes;
 
+namespace {
+
+/**
+ * The largest variant a client can send.
+ *
+ * gophertunnel minecraft/protocol/reader.go:483 bounds this by the variant of the highest action,
+ * CRAFTING_RESULTS_DEPRECATED, which loses two to the squeezed-out container actions.
+ */
+constexpr std::uint32_t MAX_ACTION_VARIANT =
+    ItemStackRequestActionType::CRAFTING_RESULTS_DEPRECATED_ASK_TY_LAING - 2;
+
+}  // namespace
+
 std::unique_ptr<ItemStackRequestAction> ItemStackRequest::readAction(encoding::ByteBufferReader &in,
                                                                     std::int32_t typeId) {
     switch (typeId) {
@@ -97,11 +110,19 @@ ItemStackRequest ItemStackRequest::read(encoding::ByteBufferReader &in) {
     const auto requestId = CommonTypes::readItemStackRequestId(in);
     std::vector<std::unique_ptr<ItemStackRequestAction>> actions;
     for (std::uint32_t i = 0, len = VarInt::readUnsignedInt(in); i < len; ++i) {
-        //gophertunnel minecraft/protocol/writer.go:394-403 and item_stack.go:47-52 - each action is now
-        //prefixed by a variant, which is the action ID with the two never-sent container actions squeezed
-        //out. It carries no information the following byte does not, so it is read and discarded.
-        VarInt::readUnsignedInt(in);
-        const auto typeId = Byte::readUnsigned(in);
+        //gophertunnel minecraft/protocol/reader.go:480-497 - the action type comes from the VARIANT; the
+        //legacy type byte that follows it is read and discarded. The variant is the action ID with the two
+        //never-sent container actions squeezed out, so a variant at or above PLACE_IN_CONTAINER maps back
+        //to an ID two higher.
+        const auto variant = VarInt::readUnsignedInt(in);
+        Byte::readUnsigned(in);
+        if (variant > MAX_ACTION_VARIANT) {
+            throw PacketDecodeException("Unhandled item stack request action variant " + std::to_string(variant));
+        }
+        auto typeId = static_cast<std::int32_t>(variant);
+        if (typeId >= ItemStackRequestActionType::PLACE_IN_CONTAINER) {
+            typeId += 2;
+        }
         actions.push_back(readAction(in, typeId));
     }
     std::vector<std::string> filterStrings;
