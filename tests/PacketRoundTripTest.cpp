@@ -55,7 +55,6 @@ const std::map<std::string_view, std::string_view> EXPECTED_INCOMPLETE = {
     {"InventoryContentPacket", "requires a container name"},
     {"ServerboundDataStorePacket", "requires a payload"},
     {"PlayerLocationPacket", "PLAYER_LOCATION_COORDINATES requires a position, as in PHP"},
-    {"PlayerAuthInputPacket", "inputFlags must be a BitSet of FLAG_LENGTH bits"},
     {"ClientMovementPredictionSyncPacket", "flags must be a BitSet of FLAG_LENGTH bits"},
     // These two used to pass here, but only because encodePayload dereferenced a disengaged
     // std::optional with operator*, which is undefined behaviour that happened to write something.
