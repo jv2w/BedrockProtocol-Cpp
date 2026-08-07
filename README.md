@@ -21,7 +21,7 @@ forward**, and will keep following new Minecraft versions.
 
 Class, field, and constant names match the original, so its documentation and examples still apply.
 
-- Targets Minecraft **1.26.30** (protocol 1001)
+- Targets Minecraft **1.26.40** (protocol 2168)
 - LGPL-3.0, as a derivative work of the PocketMine Team's original
 
 ## Getting started
@@ -66,24 +66,40 @@ you are not changing anything.
 The port follows the original everywhere except two places where the original cannot read back what
 it writes. Both are documented at the point of change, with a reproduction.
 
-- `BitSet::write` sign-extends once bit 63 of a part is set, which corrupts the following part. Bit
-  63 is the sneak flag in `PlayerAuthInputPacket`.
+- `BitSet::write` sign-extends once bit 63 of a part is set, which corrupts the following part. This
+  no longer affects `PlayerAuthInputPacket`, whose input flags stopped being a bitset in 1.26.40, but
+  the fix stands for the packets that still use one.
 - `EducationSettingsExternalLinkSettings::read` passes its two strings to the constructor in the
   opposite order to the one it read them in, transposing them on every decode.
 
 ## Verification
 
-`tools/` holds the gates. The one that matters most feeds this port's own encoded packets to the PHP
-original and requires PHP to reproduce them byte for byte:
+`tools/` holds the gates.
 
-- **24,976 packet round-trips through the PHP original** — 223 packets × 112 value seeds, byte-identical
-- **24,274 hostile decodes** — all 229 packets against truncated and corrupted input, no crashes
-- Source-level parity with the original: 229 packets, 198 value types, 95 serialiser methods
-- Deep round-trip over 794 fields, plus truncation and corruption fuzzing
+- **Deep round-trip over 812 fields** — all 223 packets in the suite, plus truncation and corruption
+  fuzzing (28,676 truncation prefixes, 14,272 corruption passes)
+- **Hostile decodes** — all 229 packets against truncated and corrupted input, no crashes
+- **Byte-level wire assertions for 1.26.40** — expected bytes written out by hand from the
+  gophertunnel reference, covering what a round-trip cannot see
 
 ```
 powershell -File tools\run_deep_roundtrip.ps1
 powershell -File tools\run_malformed_test.ps1
+powershell -File tools\run_wire_format_test.ps1
+```
+
+### The PHP wire-parity gate no longer covers this version
+
+The gate that used to matter most fed this port's encoded packets to the PHP original and required
+PHP to reproduce them byte for byte. PocketMine's BedrockProtocol is archived and stops at an older
+protocol, so for every packet whose format changed in 1.26.40 it can no longer be an authority: a
+disagreement there now means "PHP is older", not "this port is wrong".
+
+`tools/check_php_parity.py` is kept for the packets that did not change, and
+`tests/WireFormat2168Test.cpp` replaces the coverage that was lost, asserting the exact bytes of the
+encodings that did.
+
+```
 python tools\check_php_parity.py --php <path-to-bedrock-protocol/src>
 ```
 
