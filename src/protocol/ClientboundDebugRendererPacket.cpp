@@ -42,16 +42,18 @@ ClientboundDebugRendererPacket ClientboundDebugRendererPacket::addCube(types::De
 
 void ClientboundDebugRendererPacket::decodePayload(encoding::ByteBufferReader &in)
 {
+    // The type string alone decides whether a body follows; there is no presence flag on the wire.
+    // Reading one consumed a byte that belongs to the marker data.
     type = serializer::CommonTypes::getString(in);
-    data = serializer::CommonTypes::readOptional(in, [](encoding::ByteBufferReader &reader) { return types::DebugMarkerData::read(reader); });
-
+    data = type == TYPE_ADD_CUBE ? std::optional(types::DebugMarkerData::read(in)) : std::nullopt;
 }
 
 void ClientboundDebugRendererPacket::encodePayload(encoding::ByteBufferWriter &out) const
 {
     serializer::CommonTypes::putString(out, type);
-    serializer::CommonTypes::writeOptional(out, data, [](encoding::ByteBufferWriter &out, const types::DebugMarkerData &data) { data.write(out); });
-
+    if (type == TYPE_ADD_CUBE && data.has_value()) {
+        data->write(out);
+    }
 }
 
 bool ClientboundDebugRendererPacket::handle(PacketHandlerInterface &handler)

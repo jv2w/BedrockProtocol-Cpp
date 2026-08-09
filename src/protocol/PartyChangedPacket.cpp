@@ -24,7 +24,7 @@
 
 namespace bedrock_protocol {
 
-PartyChangedPacket PartyChangedPacket::create(std::string partyId, bool partyLeader)
+PartyChangedPacket PartyChangedPacket::create(std::optional<std::string> partyId, bool partyLeader)
 {
     PartyChangedPacket result;
     result.partyId = std::move(partyId);
@@ -34,16 +34,21 @@ PartyChangedPacket PartyChangedPacket::create(std::string partyId, bool partyLea
 
 void PartyChangedPacket::decodePayload(encoding::ByteBufferReader &in)
 {
-    partyId = serializer::CommonTypes::getString(in);
-    partyLeader = serializer::CommonTypes::getBool(in);
-
+    partyId.reset();
+    partyLeader = false;
+    if (serializer::CommonTypes::getBool(in)) {
+        partyId = std::string(serializer::CommonTypes::getString(in));
+        partyLeader = serializer::CommonTypes::getBool(in);
+    }
 }
 
 void PartyChangedPacket::encodePayload(encoding::ByteBufferWriter &out) const
 {
-    serializer::CommonTypes::putString(out, partyId);
-    serializer::CommonTypes::putBool(out, partyLeader);
-
+    serializer::CommonTypes::putBool(out, partyId.has_value());
+    if (partyId.has_value()) {
+        serializer::CommonTypes::putString(out, *partyId);
+        serializer::CommonTypes::putBool(out, partyLeader);
+    }
 }
 
 bool PartyChangedPacket::handle(PacketHandlerInterface &handler)

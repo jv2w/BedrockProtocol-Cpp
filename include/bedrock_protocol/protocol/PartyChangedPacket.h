@@ -32,13 +32,19 @@ public:
     static constexpr std::uint32_t NETWORK_ID = ProtocolInfo::PARTY_CHANGED_PACKET;
 
 
-    std::string partyId;
+    /**
+     * Absent when the player is in no party, which is what the leading bool on the wire says.
+     *
+     * This was a plain std::string written unconditionally, so the presence flag was never emitted
+     * and every party packet was a byte short of what the client reads.
+     */
+    std::optional<std::string> partyId;
     bool partyLeader = false;
 
     /**
      * @generate-create-func
      */
-    static PartyChangedPacket create(std::string partyId, bool partyLeader);
+    static PartyChangedPacket create(std::optional<std::string> partyId, bool partyLeader);
 
     [[nodiscard]] std::uint32_t networkId() const override { return NETWORK_ID; }
     [[nodiscard]] std::string_view getName() const override { return "PartyChangedPacket"; }
