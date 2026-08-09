@@ -30,8 +30,8 @@ void LegacyTelemetryEventPacket::decodePayload(encoding::ByteBufferReader &in)
     eventData = encoding::VarInt::readSignedInt(in);
     type = encoding::Byte::readUnsigned(in);
 
-    //TODO: nice confusing mess
-
+    // The per-type body, which nothing here parses; see the field's comment.
+    extraData = std::string(in.readByteArray(in.getUnreadLength()));
 }
 
 void LegacyTelemetryEventPacket::encodePayload(encoding::ByteBufferWriter &out) const
@@ -40,8 +40,7 @@ void LegacyTelemetryEventPacket::encodePayload(encoding::ByteBufferWriter &out) 
     encoding::VarInt::writeSignedInt(out, eventData);
     encoding::Byte::writeUnsigned(out, type);
 
-    //TODO: also nice confusing mess
-
+    out.writeByteArray(extraData);
 }
 
 bool LegacyTelemetryEventPacket::handle(PacketHandlerInterface &handler)

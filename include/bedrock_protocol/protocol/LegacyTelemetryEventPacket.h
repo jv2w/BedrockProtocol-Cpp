@@ -61,6 +61,19 @@ public:
     std::int32_t eventData = 0;
     std::uint8_t type = 0;
 
+    /**
+     * The per-type body, kept verbatim because nothing here knows how to read it.
+     *
+     * PHP stops after `type` with a comment calling the rest a confusing mess, and this port inherited
+     * that. A real 1.26.40 server does send a body: captures carry 7 and 13 further bytes depending on
+     * the event, so decoding stopped early and re-encoding dropped everything after `type`.
+     *
+     * Holding the remainder as opaque bytes makes the round trip lossless without inventing a layout
+     * for the two dozen event types. Anything that needs a field out of this has to parse it against
+     * `type` itself.
+     */
+    std::string extraData;
+
     [[nodiscard]] std::uint32_t networkId() const override { return NETWORK_ID; }
     [[nodiscard]] std::string_view getName() const override { return "LegacyTelemetryEventPacket"; }
     bool handle(PacketHandlerInterface &handler) override;
