@@ -23,7 +23,6 @@
 #include "bedrock_protocol/protocol/ProtocolInfo.h"
 #include "bedrock_protocol/protocol/serializer/BitSet.h"
 #include "bedrock_protocol/protocol/ServerboundPacket.h"
-#include "bedrock_protocol/protocol/types/entity/EntityMetadataFlags.h"
 
 namespace bedrock_protocol {
 
@@ -33,7 +32,22 @@ class ClientMovementPredictionSyncPacket final : public DataPacket, public Serve
 public:
     static constexpr std::uint32_t NETWORK_ID = ProtocolInfo::CLIENT_MOVEMENT_PREDICTION_SYNC_PACKET;
 
-    static constexpr std::int32_t FLAG_LENGTH = types::entity::EntityMetadataFlags::NUMBER_OF_FLAGS;
+    /**
+     * Deliberate divergence from PHP, which uses EntityMetadataFlags::NUMBER_OF_FLAGS (131) here.
+     *
+     * A BitSet is written as a fixed ceil(length / 7) bytes, so the length is visible on the wire.
+     * A 1.26.40 client sends this bitset as 16 bytes, which puts the length between 106 and 112; the
+     * highest bit it was seen to set is 109, which narrows it to 110..112. 131 would be 19 bytes, so
+     * re-encoding a captured packet produced three bytes of padding the client never sent.
+     *
+     * The three surviving candidates are indistinguishable on the wire. 112 is chosen because it is
+     * the largest of them: if the real count is lower, the extra indices are simply never set, while
+     * choosing too low would reject a flag the client does use.
+     *
+     * The maintained PHP fork agrees with upstream on 131, so both references are wrong together
+     * here; only the captured bytes settle it.
+     */
+    static constexpr std::int32_t FLAG_LENGTH = 112;
 
     serializer::BitSet flags;
     float scale = 0.0F;
