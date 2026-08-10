@@ -211,6 +211,41 @@ std::string nestedList(std::size_t depth)
 }
 
 /**
+ * A chain of nested cereal DynamicValue lists, each holding exactly one element.
+ *
+ * The cereal union recurses through DynamicValue::read the same way NBT recurses through its tags,
+ * and it is even cheaper to drive: five bytes per level (a one-byte count of 1 and the four-byte
+ * little-endian type of the single element). A 50 KB packet therefore asks for ten thousand frames.
+ * The generic byte-pattern cases cannot reach this - the type word has to be a valid LIST id at
+ * every level - so the nesting bound needs a case of its own.
+ */
+std::string nestedDynamicValueList(std::size_t depth)
+{
+    constexpr char kList = '\x05';  // cereal::DynamicValueType::LIST
+    std::string s;
+    s.reserve(depth * 5 + 16);
+
+    // The chain is only reached through a well-formed ClientboundDataStorePacket prefix: one CHANGE
+    // entry, its two empty strings, its update count, and the type of the value that follows. The
+    // generic byte patterns cannot produce this, which is why the recursion went unexercised.
+    s += '\x01';  // entry count: unsigned varint 1
+    s += '\x01';  // operation: unsigned varint DataStoreOperationType::CHANGE
+    s += '\x00';  // name: empty string
+    s += '\x00';  // property: empty string
+    s.append(4, '\x00');  // update count: uint32 LE
+    s += kList;           // value type: uint32 LE, low byte first
+    s.append(3, '\x00');
+
+    for (std::size_t i = 0; i < depth; ++i) {
+        s += '\x01';  // element count: unsigned varint 1
+        s += kList;   // element type: uint32 LE, low byte first
+        s.append(3, '\x00');
+    }
+    s += '\x00';  // innermost list: count 0
+    return s;
+}
+
+/**
  * A single tag of the given type, carrying a declared length of INT32_MAX, wrapped in a compound.
  *
  * The wrapper is essential: every protocol entry point demands a TAG_Compound root (getNbtRoot ->
@@ -301,6 +336,8 @@ std::vector<Case> buildCorpus()
         {"nbt_bytearray_max", hugeArrayInCompound('\x07')},
         {"nbt_longarray_max", hugeArrayInCompound('\x0C')},
         {"nbt_string_max", hugeArrayInCompound('\x08')},
+        {"cereal_list_d512", nestedDynamicValueList(512)},
+        {"cereal_list_d100k", nestedDynamicValueList(100000)},
     };
     for (const auto &[name, body] : nbt) {
         for (std::size_t pad : {std::size_t{0}, std::size_t{1}, std::size_t{2}, std::size_t{4}, std::size_t{8}}) {
