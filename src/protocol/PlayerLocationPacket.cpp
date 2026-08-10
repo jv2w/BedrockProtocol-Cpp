@@ -45,8 +45,9 @@ PlayerLocationPacket PlayerLocationPacket::createHide(std::int64_t actorUniqueId
 
 void PlayerLocationPacket::decodePayload(encoding::ByteBufferReader &in)
 {
-    // player_location.go:33-37 - the unique ID comes first, then the type as a varuint32, then a
-    // reserved varint32 that is always 0.
+    // player_location.go:33-35 - the unique ID comes first, then the type as a varuint32, then the
+    // same type again as a varint32. The repeat carries no information, so it is read and discarded
+    // rather than checked, which keeps a client that disagrees with itself readable.
     actorUniqueId = serializer::CommonTypes::getActorUniqueId(in);
     type = types::PlayerLocationTypeFromPacket(static_cast<std::int32_t>(encoding::VarInt::readUnsignedInt(in)));
     encoding::VarInt::readSignedInt(in);
@@ -61,7 +62,10 @@ void PlayerLocationPacket::encodePayload(encoding::ByteBufferWriter &out) const
 {
     serializer::CommonTypes::putActorUniqueId(out, actorUniqueId);
     encoding::VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(type));
-    encoding::VarInt::writeSignedInt(out, 0);
+    //The second varint is the type again, not a reserved zero: gophertunnel v1.58.0
+    //minecraft/protocol/packet/player_location.go:34-35 writes pk.Type through both, and Endstone
+    //r26_u4 gives each case of the switch its own "Packet Type" field constrained to that case.
+    encoding::VarInt::writeSignedInt(out, static_cast<std::int32_t>(type));
 
     if (type == types::PlayerLocationType::PLAYER_LOCATION_COORDINATES) {
         if (!position.has_value()) { // this should never be the case
