@@ -35,7 +35,7 @@ public:
                     std::optional<math::Vector3> location, std::optional<float> scale,
                     std::optional<math::Vector3> rotation, std::optional<float> totalTimeLeft,
                     std::optional<float> maximumRenderDistance, std::optional<color::Color> color,
-                    std::optional<std::int32_t> dimensionId, std::optional<std::uint64_t> attachedToEntityId,
+                    std::optional<std::int32_t> dimensionId, std::optional<std::int64_t> attachedToEntityId,
                     std::unique_ptr<PrimitiveShapePayload> payload);
 
     static PacketShapeData remove(std::uint64_t networkId, std::optional<std::int32_t> dimensionId = std::nullopt);
@@ -44,25 +44,25 @@ public:
                                 const math::Vector3 &lineEndLocation,
                                 const std::optional<color::Color> &color = std::nullopt,
                                 std::optional<std::int32_t> dimensionId = std::nullopt,
-                                std::optional<std::uint64_t> attachedToEntityId = std::nullopt);
+                                std::optional<std::int64_t> attachedToEntityId = std::nullopt);
 
     static PacketShapeData box(std::uint64_t networkId, const math::Vector3 &location, const math::Vector3 &boxBound,
                                std::optional<float> scale = std::nullopt,
                                const std::optional<color::Color> &color = std::nullopt,
                                std::optional<std::int32_t> dimensionId = std::nullopt,
-                               std::optional<std::uint64_t> attachedToEntityId = std::nullopt);
+                               std::optional<std::int64_t> attachedToEntityId = std::nullopt);
 
     static PacketShapeData sphere(std::uint64_t networkId, const math::Vector3 &location, std::uint8_t segments,
                                   std::optional<float> scale = std::nullopt,
                                   const std::optional<color::Color> &color = std::nullopt,
                                   std::optional<std::int32_t> dimensionId = std::nullopt,
-                                  std::optional<std::uint64_t> attachedToEntityId = std::nullopt);
+                                  std::optional<std::int64_t> attachedToEntityId = std::nullopt);
 
     static PacketShapeData circle(std::uint64_t networkId, const math::Vector3 &location, std::uint8_t segments,
                                   std::optional<float> scale = std::nullopt,
                                   const std::optional<color::Color> &color = std::nullopt,
                                   std::optional<std::int32_t> dimensionId = std::nullopt,
-                                  std::optional<std::uint64_t> attachedToEntityId = std::nullopt);
+                                  std::optional<std::int64_t> attachedToEntityId = std::nullopt);
 
     static PacketShapeData text(std::uint64_t networkId, const math::Vector3 &location, std::string text,
                                 bool useRotation = false,
@@ -70,7 +70,7 @@ public:
                                 bool depthTest = true, bool showBackface = true, bool showTextBackface = true,
                                 const std::optional<color::Color> &color = std::nullopt,
                                 std::optional<std::int32_t> dimensionId = std::nullopt,
-                                std::optional<std::uint64_t> attachedToEntityId = std::nullopt);
+                                std::optional<std::int64_t> attachedToEntityId = std::nullopt);
 
     static PacketShapeData arrow(std::uint64_t networkId, const math::Vector3 &location,
                                  const math::Vector3 &lineEndLocation, std::optional<float> scale = std::nullopt,
@@ -79,31 +79,31 @@ public:
                                  std::optional<float> arrowHeadRadius = std::nullopt,
                                  std::optional<std::uint8_t> segments = std::nullopt,
                                  std::optional<std::int32_t> dimensionId = std::nullopt,
-                                 std::optional<std::uint64_t> attachedToEntityId = std::nullopt);
+                                 std::optional<std::int64_t> attachedToEntityId = std::nullopt);
 
     static PacketShapeData cylinder(std::uint64_t networkId, const math::Vector3 &location,
                                     const math::Vector2 &radiusX, const math::Vector2 &radiusZ, float height,
                                     std::uint8_t segments, const std::optional<color::Color> &color = std::nullopt,
                                     std::optional<std::int32_t> dimensionId = std::nullopt,
-                                    std::optional<std::uint64_t> attachedToEntityId = std::nullopt);
+                                    std::optional<std::int64_t> attachedToEntityId = std::nullopt);
 
     static PacketShapeData pyramid(std::uint64_t networkId, const math::Vector3 &location, float width, float height,
                                    std::optional<float> depth = std::nullopt,
                                    const std::optional<color::Color> &color = std::nullopt,
                                    std::optional<std::int32_t> dimensionId = std::nullopt,
-                                   std::optional<std::uint64_t> attachedToEntityId = std::nullopt);
+                                   std::optional<std::int64_t> attachedToEntityId = std::nullopt);
 
     static PacketShapeData ellipsoid(std::uint64_t networkId, const math::Vector3 &location, const math::Vector3 &radii,
                                      std::uint8_t segmentsPerAxis,
                                      const std::optional<color::Color> &color = std::nullopt,
                                      std::optional<std::int32_t> dimensionId = std::nullopt,
-                                     std::optional<std::uint64_t> attachedToEntityId = std::nullopt);
+                                     std::optional<std::int64_t> attachedToEntityId = std::nullopt);
 
     static PacketShapeData cone(std::uint64_t networkId, const math::Vector3 &location, const math::Vector2 &radii,
                                 float height, std::uint8_t segments,
                                 const std::optional<color::Color> &color = std::nullopt,
                                 std::optional<std::int32_t> dimensionId = std::nullopt,
-                                std::optional<std::uint64_t> attachedToEntityId = std::nullopt);
+                                std::optional<std::int64_t> attachedToEntityId = std::nullopt);
 
     [[nodiscard]] std::uint64_t getNetworkId() const { return networkId; }
 
@@ -123,7 +123,7 @@ public:
 
     [[nodiscard]] std::optional<std::int32_t> getDimensionId() const { return dimensionId; }
 
-    [[nodiscard]] std::optional<std::uint64_t> getAttachedToEntityId() const { return attachedToEntityId; }
+    [[nodiscard]] std::optional<std::int64_t> getAttachedToEntityId() const { return attachedToEntityId; }
 
     [[nodiscard]] const PrimitiveShapePayload *getPayload() const { return payload.get(); }
 
@@ -145,7 +145,7 @@ private:
     std::optional<float> maximumRenderDistance;
     std::optional<color::Color> color;
     std::optional<std::int32_t> dimensionId;
-    std::optional<std::uint64_t> attachedToEntityId;
+    std::optional<std::int64_t> attachedToEntityId;
     std::unique_ptr<PrimitiveShapePayload> payload;
 };
 

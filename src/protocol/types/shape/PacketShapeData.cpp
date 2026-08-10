@@ -73,7 +73,7 @@ PacketShapeData::PacketShapeData(const std::uint64_t networkId, const std::optio
                                  std::optional<math::Vector3> rotation, const std::optional<float> totalTimeLeft,
                                  const std::optional<float> maximumRenderDistance, std::optional<::bedrock_protocol::color::Color> color,
                                  const std::optional<std::int32_t> dimensionId,
-                                 const std::optional<std::uint64_t> attachedToEntityId,
+                                 const std::optional<std::int64_t> attachedToEntityId,
                                  std::unique_ptr<PrimitiveShapePayload> payload)
     : networkId(networkId), type(type), location(std::move(location)), scale(scale), rotation(std::move(rotation)),
       totalTimeLeft(totalTimeLeft), maximumRenderDistance(maximumRenderDistance), color(std::move(color)),
@@ -90,7 +90,7 @@ PacketShapeData PacketShapeData::remove(const std::uint64_t networkId, const std
 PacketShapeData PacketShapeData::line(const std::uint64_t networkId, const math::Vector3 &location,
                                       const math::Vector3 &lineEndLocation, const std::optional<::bedrock_protocol::color::Color> &color,
                                       const std::optional<std::int32_t> dimensionId,
-                                      const std::optional<std::uint64_t> attachedToEntityId)
+                                      const std::optional<std::int64_t> attachedToEntityId)
 {
     return PacketShapeData{networkId,
                            PrimitiveShapeType::LINE,
@@ -109,7 +109,7 @@ PacketShapeData PacketShapeData::box(const std::uint64_t networkId, const math::
                                      const math::Vector3 &boxBound, const std::optional<float> scale,
                                      const std::optional<::bedrock_protocol::color::Color> &color,
                                      const std::optional<std::int32_t> dimensionId,
-                                     const std::optional<std::uint64_t> attachedToEntityId)
+                                     const std::optional<std::int64_t> attachedToEntityId)
 {
     return PacketShapeData{networkId,
                            PrimitiveShapeType::BOX,
@@ -128,7 +128,7 @@ PacketShapeData PacketShapeData::sphere(const std::uint64_t networkId, const mat
                                         const std::uint8_t segments, const std::optional<float> scale,
                                         const std::optional<::bedrock_protocol::color::Color> &color,
                                         const std::optional<std::int32_t> dimensionId,
-                                        const std::optional<std::uint64_t> attachedToEntityId)
+                                        const std::optional<std::int64_t> attachedToEntityId)
 {
     return PacketShapeData{networkId,
                            PrimitiveShapeType::SPHERE,
@@ -147,7 +147,7 @@ PacketShapeData PacketShapeData::circle(const std::uint64_t networkId, const mat
                                         const std::uint8_t segments, const std::optional<float> scale,
                                         const std::optional<::bedrock_protocol::color::Color> &color,
                                         const std::optional<std::int32_t> dimensionId,
-                                        const std::optional<std::uint64_t> attachedToEntityId)
+                                        const std::optional<std::int64_t> attachedToEntityId)
 {
     return PacketShapeData{networkId,
                            PrimitiveShapeType::CIRCLE,
@@ -167,7 +167,7 @@ PacketShapeData PacketShapeData::text(const std::uint64_t networkId, const math:
                                       const bool depthTest, const bool showBackface, const bool showTextBackface,
                                       const std::optional<::bedrock_protocol::color::Color> &color,
                                       const std::optional<std::int32_t> dimensionId,
-                                      const std::optional<std::uint64_t> attachedToEntityId)
+                                      const std::optional<std::int64_t> attachedToEntityId)
 {
     return PacketShapeData{networkId,
                            PrimitiveShapeType::TEXT,
@@ -190,7 +190,7 @@ PacketShapeData PacketShapeData::arrow(const std::uint64_t networkId, const math
                                        const std::optional<float> arrowHeadRadius,
                                        const std::optional<std::uint8_t> segments,
                                        const std::optional<std::int32_t> dimensionId,
-                                       const std::optional<std::uint64_t> attachedToEntityId)
+                                       const std::optional<std::int64_t> attachedToEntityId)
 {
     return PacketShapeData{networkId,
                            PrimitiveShapeType::ARROW,
@@ -211,7 +211,7 @@ PacketShapeData PacketShapeData::cylinder(const std::uint64_t networkId, const m
                                           const float height, const std::uint8_t segments,
                                           const std::optional<::bedrock_protocol::color::Color> &color,
                                           const std::optional<std::int32_t> dimensionId,
-                                          const std::optional<std::uint64_t> attachedToEntityId)
+                                          const std::optional<std::int64_t> attachedToEntityId)
 {
     return PacketShapeData{networkId,
                            PrimitiveShapeType::CYLINDER,
@@ -230,7 +230,7 @@ PacketShapeData PacketShapeData::pyramid(const std::uint64_t networkId, const ma
                                          const float width, const float height, const std::optional<float> depth,
                                          const std::optional<::bedrock_protocol::color::Color> &color,
                                          const std::optional<std::int32_t> dimensionId,
-                                         const std::optional<std::uint64_t> attachedToEntityId)
+                                         const std::optional<std::int64_t> attachedToEntityId)
 {
     return PacketShapeData{networkId,
                            PrimitiveShapeType::PYRAMID,
@@ -249,7 +249,7 @@ PacketShapeData PacketShapeData::ellipsoid(const std::uint64_t networkId, const 
                                            const math::Vector3 &radii, const std::uint8_t segmentsPerAxis,
                                            const std::optional<::bedrock_protocol::color::Color> &color,
                                            const std::optional<std::int32_t> dimensionId,
-                                           const std::optional<std::uint64_t> attachedToEntityId)
+                                           const std::optional<std::int64_t> attachedToEntityId)
 {
     return PacketShapeData{networkId,
                            PrimitiveShapeType::ELLIPSOID,
@@ -268,7 +268,7 @@ PacketShapeData PacketShapeData::cone(const std::uint64_t networkId, const math:
                                       const math::Vector2 &radii, const float height, const std::uint8_t segments,
                                       const std::optional<::bedrock_protocol::color::Color> &color,
                                       const std::optional<std::int32_t> dimensionId,
-                                      const std::optional<std::uint64_t> attachedToEntityId)
+                                      const std::optional<std::int64_t> attachedToEntityId)
 {
     return PacketShapeData{networkId,
                            PrimitiveShapeType::CONE,
@@ -310,8 +310,11 @@ PacketShapeData PacketShapeData::read(encoding::ByteBufferReader &in)
     const auto dimensionId = CommonTypes::readOptional(in, [](encoding::ByteBufferReader &in) {
         return VarInt::readSignedInt(in);
     });
+    //A unique ID, not a runtime one, so a signed varint64. Endstone r26_u4 types the field
+    //ActorUniqueID, and gophertunnel v1.58.0 minecraft/protocol/shape.go:265-267 notes that Mojang's
+    //documentation calls it a runtime ID while the client resolves it as a unique ID.
     const auto attachedToEntityId = CommonTypes::readOptional(in, [](encoding::ByteBufferReader &in) {
-        return CommonTypes::getActorRuntimeId(in);
+        return CommonTypes::getActorUniqueId(in);
     });
 
     const auto payloadType = static_cast<std::int32_t>(VarInt::readUnsignedInt(in));
@@ -401,8 +404,8 @@ void PacketShapeData::write(encoding::ByteBufferWriter &out) const
         VarInt::writeSignedInt(out, dimensionId);
     });
     CommonTypes::writeOptional(out, attachedToEntityId,
-                               [](encoding::ByteBufferWriter &out, const std::uint64_t entityId) {
-                                   CommonTypes::putActorRuntimeId(out, entityId);
+                               [](encoding::ByteBufferWriter &out, const std::int64_t entityId) {
+                                   CommonTypes::putActorUniqueId(out, entityId);
                                });
 
     VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(
