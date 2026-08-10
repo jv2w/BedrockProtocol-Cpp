@@ -11,8 +11,10 @@
 
 #include "bedrock_protocol/protocol/PlayerUpdateEntityOverridesPacket.h"
 
+#include <iterator>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <utility>
 
 #include "bedrock_protocol/encoding/BE.h"
@@ -24,6 +26,18 @@
 #include "bedrock_protocol/protocol/serializer/CommonTypes.h"
 
 namespace bedrock_protocol {
+
+namespace {
+
+/**
+ * gophertunnel v1.58.0 minecraft/protocol/packet/player_update_entity_overrides.go:41-47 writes this
+ * name after the numeric type, indexed by the type itself. Endstone r26_u4 shows the same string as
+ * the first field of every case of the update switch.
+ */
+constexpr std::string_view UPDATE_TYPE_NAMES[] = {"clearoverrides", "removeoverride", "setintoverride",
+                                                  "setfloatoverride"};
+
+}  // namespace
 
 PlayerUpdateEntityOverridesPacket PlayerUpdateEntityOverridesPacket::create(std::int64_t actorUniqueId, std::uint32_t propertyIndex, types::OverrideUpdateType updateType, std::optional<std::int32_t> intOverrideValue, std::optional<float> floatOverrideValue)
 {
@@ -58,17 +72,18 @@ PlayerUpdateEntityOverridesPacket PlayerUpdateEntityOverridesPacket::createRemov
 
 void PlayerUpdateEntityOverridesPacket::decodePayload(encoding::ByteBufferReader &in)
 {
-    // player_update_entity_overrides.go:38-46 - the type is sent twice: once as a varuint32 variant,
-    // once as the byte itself, and the two must agree.
+    // player_update_entity_overrides.go:38-47 - the varuint32 type is followed by its name as a
+    // string, not by the type repeated as a byte. Reading a byte there left the rest of the name on
+    // the stream and desynchronised every field after it.
     actorUniqueId = serializer::CommonTypes::getActorUniqueId(in);
     propertyIndex = encoding::VarInt::readUnsignedInt(in);
-    const auto variant = encoding::VarInt::readUnsignedInt(in);
-    const auto rawUpdateType = encoding::Byte::readUnsigned(in);
-    if (variant != rawUpdateType) {
-        throw PacketDecodeException("Entity override type " + std::to_string(rawUpdateType) +
-                                    " does not match the variant it was sent under");
+    const auto rawUpdateType = encoding::VarInt::readUnsignedInt(in);
+    if (rawUpdateType >= std::size(UPDATE_TYPE_NAMES)) {
+        throw PacketDecodeException("Unknown entity override type " + std::to_string(rawUpdateType));
     }
-    updateType = types::OverrideUpdateTypeFromPacket(rawUpdateType);
+    // The name is redundant with the numeric type, so it is read and discarded.
+    serializer::CommonTypes::getString(in);
+    updateType = types::OverrideUpdateTypeFromPacket(static_cast<std::int32_t>(rawUpdateType));
     if (updateType == types::OverrideUpdateType::SET_INT_OVERRIDE) {
         intOverrideValue = encoding::LE::readSignedInt(in);
     }
@@ -82,8 +97,12 @@ void PlayerUpdateEntityOverridesPacket::encodePayload(encoding::ByteBufferWriter
 {
     serializer::CommonTypes::putActorUniqueId(out, actorUniqueId);
     encoding::VarInt::writeUnsignedInt(out, propertyIndex);
-    encoding::VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(updateType));
-    encoding::Byte::writeUnsigned(out, static_cast<std::uint8_t>(updateType));
+    const auto rawUpdateType = static_cast<std::uint32_t>(updateType);
+    if (rawUpdateType >= std::size(UPDATE_TYPE_NAMES)) {
+        throw std::invalid_argument("Unknown entity override type " + std::to_string(rawUpdateType));
+    }
+    encoding::VarInt::writeUnsignedInt(out, rawUpdateType);
+    serializer::CommonTypes::putString(out, std::string(UPDATE_TYPE_NAMES[rawUpdateType]));
     if (updateType == types::OverrideUpdateType::SET_INT_OVERRIDE) {
         if (!intOverrideValue.has_value()) { // this should never be the case
             throw std::logic_error("PlayerUpdateEntityOverridesPacket with type SET_INT_OVERRIDE requires intOverrideValue to be provided");
