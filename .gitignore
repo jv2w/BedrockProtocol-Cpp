@@ -13,3 +13,4 @@ cmake-build-*/
 *.log
 *.rsp
 compile_commands.json
+__pycache__/
