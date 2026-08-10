@@ -90,11 +90,16 @@ it writes. Both are documented at the point of change, with a reproduction.
 - **Hostile decodes** — all 229 packets against truncated and corrupted input, no crashes
 - **Byte-level wire assertions for 1.26.40** — expected bytes written out by hand from the
   gophertunnel reference, covering what a round-trip cannot see
+- **Spec census** — every packet's decode path reduced to its wire primitives and diffed against
+  Mojang's published documentation, which is the only gate that can see a field the port has never
+  questioned. 189 of 229 packets reduce to an identical sequence; `tools/SPEC_CENSUS_2168.md`
+  records the numbers, the six defects the census found, and what it cannot see.
 
 ```
 powershell -File tools\run_deep_roundtrip.ps1
 powershell -File tools\run_malformed_test.ps1
 powershell -File tools\run_wire_format_test.ps1
+python tools\check_spec_census.py
 ```
 
 ### The PHP wire-parity gate no longer covers this version
