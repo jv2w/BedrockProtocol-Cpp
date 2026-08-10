@@ -19,26 +19,18 @@ using serializer::CommonTypes;
 
 PresenceInfo PresenceInfo::read(encoding::ByteBufferReader &in)
 {
-    auto experienceName = CommonTypes::readOptional(in, [](encoding::ByteBufferReader &in) {
+    auto richPresenceId = CommonTypes::readOptional(in, [](encoding::ByteBufferReader &in) {
         return CommonTypes::getString(in);
     });
-    auto worldName = CommonTypes::readOptional(in, [](encoding::ByteBufferReader &in) {
-        return CommonTypes::getString(in);
-    });
-    auto richPresenceId = CommonTypes::getString(in);
 
-    return PresenceInfo(std::move(experienceName), std::move(worldName), std::move(richPresenceId));
+    return PresenceInfo(std::move(richPresenceId));
 }
 
 void PresenceInfo::write(encoding::ByteBufferWriter &out) const
 {
-    CommonTypes::writeOptional(out, experienceName, [](encoding::ByteBufferWriter &out, const std::string &value) {
+    CommonTypes::writeOptional(out, richPresenceId, [](encoding::ByteBufferWriter &out, const std::string &value) {
         CommonTypes::putString(out, value);
     });
-    CommonTypes::writeOptional(out, worldName, [](encoding::ByteBufferWriter &out, const std::string &value) {
-        CommonTypes::putString(out, value);
-    });
-    CommonTypes::putString(out, richPresenceId);
 }
 
 }  // namespace bedrock_protocol::types

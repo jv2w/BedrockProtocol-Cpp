@@ -345,10 +345,8 @@ BP_FILLER(LocatorBarPacket, 1)
 BP_FILLER(ServerPresenceInfoPacket, 1)
 {
     auto &w = ctx.well;
-    const auto experienceName = w.some(w.str("experienceName"));
-    const auto worldName = w.some(w.str("worldName"));
-    const auto richPresenceId = w.str("richPresenceId");
-    const auto presenceConfig = w.some(types::PresenceInfo{experienceName, worldName, richPresenceId});
+    const auto richPresenceId = w.some(w.str("richPresenceId"));
+    const auto presenceConfig = w.some(types::PresenceInfo{richPresenceId});
 
     return std::make_unique<ServerPresenceInfoPacket>(
         ServerPresenceInfoPacket::create(presenceConfig));

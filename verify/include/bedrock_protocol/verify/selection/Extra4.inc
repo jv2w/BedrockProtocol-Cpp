@@ -24,7 +24,7 @@ BP_SELECTED_PACKET(FeatureRegistryPacket, Rare, "T", 1, 1, "1 field; vector<Feat
 BP_SELECTED_PACKET(GraphicsOverrideParameterPacket, Rare, "FT", 7, 1, "7 fields; three engaged optionals plus a validated enum")
 BP_SELECTED_PACKET(LegacyTelemetryEventPacket, Common, "R", 3, 1, "3 fields; runtime id, signed varint and byte")
 BP_SELECTED_PACKET(LocatorBarPacket, Common, "RT", 1, 1, "1 field; waypoints with seven engaged optionals each")
-BP_SELECTED_PACKET(ServerPresenceInfoPacket, Rare, "T", 1, 1, "1 field; optional<PresenceInfo> holding two more optionals")
+BP_SELECTED_PACKET(ServerPresenceInfoPacket, Rare, "T", 1, 1, "1 field; optional<PresenceInfo> holding one more optional")
 BP_SELECTED_PACKET(ServerStoreInfoPacket, Rare, "T", 1, 1, "1 field; optional<ClientStoreEntrypointConfig>")
 BP_SELECTED_PACKET(ServerboundDataStorePacket, Rare, "T", 1, 1, "1 field; DataStoreUpdate with a polymorphic value")
 BP_SELECTED_PACKET(TrimDataPacket, Common, "RT", 2, 1, "2 fields; two vectors of different arity")

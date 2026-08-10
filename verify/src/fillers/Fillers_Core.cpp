@@ -311,11 +311,8 @@ types::ServerJoinInformation makeServerJoinInformation(ValueWell &w)
     auto storeName = w.str("storeEntryName");
     auto storeEntryPointInfo = w.some(types::StoreEntryPointInfo(std::move(storeId), std::move(storeName)));
 
-    auto presenceExperienceName = w.some(w.str("presenceExperienceName"));
-    auto presenceWorldName = w.some(w.str("presenceWorldName"));
-    auto richPresenceId = w.str("richPresenceId");
-    auto presenceInfo = w.some(types::PresenceInfo(std::move(presenceExperienceName), std::move(presenceWorldName),
-                                                   std::move(richPresenceId)));
+    auto richPresenceId = w.some(w.str("richPresenceId"));
+    auto presenceInfo = w.some(types::PresenceInfo(std::move(richPresenceId)));
 
     return {std::move(gatheringJoinInfo), std::move(storeEntryPointInfo), std::move(presenceInfo)};
 }

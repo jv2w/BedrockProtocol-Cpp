@@ -25,27 +25,25 @@ namespace bedrock_protocol::types {
  */
 class PresenceInfo final {
 public:
-    PresenceInfo(std::optional<std::string> experienceName, std::optional<std::string> worldName,
-                 std::string richPresenceId)
-        : experienceName(std::move(experienceName)), worldName(std::move(worldName)),
-          richPresenceId(std::move(richPresenceId))
+    explicit PresenceInfo(std::optional<std::string> richPresenceId)
+        : richPresenceId(std::move(richPresenceId))
     {
     }
 
-    [[nodiscard]] const std::optional<std::string> &getExperienceName() const { return experienceName; }
-
-    [[nodiscard]] const std::optional<std::string> &getWorldName() const { return worldName; }
-
-    [[nodiscard]] const std::string &getRichPresenceId() const { return richPresenceId; }
+    [[nodiscard]] const std::optional<std::string> &getRichPresenceId() const { return richPresenceId; }
 
     static PresenceInfo read(encoding::ByteBufferReader &in);
 
     void write(encoding::ByteBufferWriter &out) const;
 
 private:
-    std::optional<std::string> experienceName;
-    std::optional<std::string> worldName;
-    std::string richPresenceId;
+    /**
+     * The only field this structure carries. Two further optional strings used to be read in front
+     * of it, which desynchronised the stream: Endstone r26_u4 ServerConfiguration::PresenceConfiguration
+     * lists richPresenceId alone, and gophertunnel v1.58.0 minecraft/protocol/server_join_information.go:59-61
+     * writes nothing else. The field is optional on the wire, not a plain string.
+     */
+    std::optional<std::string> richPresenceId;
 };
 
 }  // namespace bedrock_protocol::types
