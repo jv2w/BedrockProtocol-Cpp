@@ -29,13 +29,13 @@ std::unique_ptr<DynamicValue> DynamicValueList::clone() const
     return std::make_unique<DynamicValueList>(std::move(copy));
 }
 
-DynamicValueList DynamicValueList::readValue(encoding::ByteBufferReader &in)
+DynamicValueList DynamicValueList::readValue(encoding::ByteBufferReader &in, const int depth)
 {
     const auto size = VarInt::readUnsignedInt(in);
     std::vector<std::unique_ptr<DynamicValue>> values;
     for (std::uint32_t i = 0; i < size; ++i) {
         const auto type = LE::readUnsignedInt(in);
-        values.push_back(DynamicValue::read(in, type));
+        values.push_back(DynamicValue::read(in, type, depth + 1));
     }
     return DynamicValueList(std::move(values));
 }

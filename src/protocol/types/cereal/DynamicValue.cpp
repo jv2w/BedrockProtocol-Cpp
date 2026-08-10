@@ -24,8 +24,14 @@
 
 namespace bedrock_protocol::types::cereal {
 
-std::unique_ptr<DynamicValue> DynamicValue::read(encoding::ByteBufferReader &in, std::uint32_t type)
+std::unique_ptr<DynamicValue> DynamicValue::read(encoding::ByteBufferReader &in, std::uint32_t type,
+                                                 const int depth)
 {
+    if (depth > MAX_DEPTH) {
+        throw PacketDecodeException("Dynamic value nesting level too deep: reached max depth of " +
+                                    std::to_string(MAX_DEPTH));
+    }
+
     //TODO: I don't like putting this here (cyclic dependency) but I don't know where else to put it for now.
     //Really we need to revamp how unions are handled in general, but that's a job for another time
     switch (type) {
@@ -40,9 +46,9 @@ std::unique_ptr<DynamicValue> DynamicValue::read(encoding::ByteBufferReader &in,
     case DynamicValueString::ID:
         return std::make_unique<DynamicValueString>(DynamicValueString::readValue(in));
     case DynamicValueList::ID:
-        return std::make_unique<DynamicValueList>(DynamicValueList::readValue(in));
+        return std::make_unique<DynamicValueList>(DynamicValueList::readValue(in, depth));
     case DynamicValueMap::ID:
-        return std::make_unique<DynamicValueMap>(DynamicValueMap::readValue(in));
+        return std::make_unique<DynamicValueMap>(DynamicValueMap::readValue(in, depth));
     default:
         throw PacketDecodeException("Unknown dynamic value type " + std::to_string(type));
     }

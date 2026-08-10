@@ -42,7 +42,8 @@ public:
 
     [[nodiscard]] std::unique_ptr<DynamicValue> clone() const override;
 
-    static DynamicValueList readValue(encoding::ByteBufferReader &in);
+    /** @param depth nesting level of the list itself; its elements sit one level deeper. */
+    static DynamicValueList readValue(encoding::ByteBufferReader &in, int depth = 0);
 
 protected:
     void writeValue(encoding::ByteBufferWriter &out) const override;

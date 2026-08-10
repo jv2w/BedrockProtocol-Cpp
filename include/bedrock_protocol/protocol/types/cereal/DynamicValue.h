@@ -31,9 +31,22 @@ public:
     void write(encoding::ByteBufferWriter &out) const { writeValue(out); }
 
     /**
-     * @throws PacketDecodeException
+     * Deepest chain of nested lists and maps this decoder will follow.
+     *
+     * Lists and maps recurse into read(), and each level costs a peer only five bytes on the wire
+     * (a four-byte type plus a one-byte count), so a modest packet can ask for tens of thousands of
+     * frames and overflow the stack - a crash no exception handler can catch. The NBT decoder bounds
+     * its own nesting for the same reason; this is the matching bound for the cereal union, set to
+     * the same 512 as nbt::NBT::MAX_DEPTH.
      */
-    static std::unique_ptr<DynamicValue> read(encoding::ByteBufferReader &in, std::uint32_t type);
+    static constexpr int MAX_DEPTH = 512;
+
+    /**
+     * @param depth nesting level of this value, counting from zero at the top of a packet
+     * @throws PacketDecodeException if the type is unknown or the nesting exceeds MAX_DEPTH
+     */
+    static std::unique_ptr<DynamicValue> read(encoding::ByteBufferReader &in, std::uint32_t type,
+                                              int depth = 0);
 
 protected:
     DynamicValue() = default;

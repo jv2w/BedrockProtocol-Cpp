@@ -31,15 +31,14 @@ std::unique_ptr<DynamicValue> DynamicValueMap::clone() const
     return std::make_unique<DynamicValueMap>(std::move(copy));
 }
 
-DynamicValueMap DynamicValueMap::readValue(encoding::ByteBufferReader &in)
+DynamicValueMap DynamicValueMap::readValue(encoding::ByteBufferReader &in, const int depth)
 {
     std::vector<std::pair<std::string, std::unique_ptr<DynamicValue>>> value;
 
     for (std::uint32_t i = 0, count = VarInt::readUnsignedInt(in); i < count; i++) {
         auto key = std::string(CommonTypes::getString(in));
-        //YIKES! unchecked recursion ?!?!?! thank god this never gets sent by the client...
         const auto type = LE::readUnsignedInt(in);
-        CommonTypes::assignKeyed(value, key, DynamicValue::read(in, type));
+        CommonTypes::assignKeyed(value, key, DynamicValue::read(in, type, depth + 1));
     }
 
     return DynamicValueMap(std::move(value));
