@@ -11,17 +11,20 @@
 
 #include "bedrock_protocol/protocol/types/ArmorSlotAndDamagePair.h"
 
-#include "bedrock_protocol/encoding/Byte.h"
 #include "bedrock_protocol/encoding/LE.h"
+#include "bedrock_protocol/encoding/VarInt.h"
 
 namespace bedrock_protocol::types {
 
-using encoding::Byte;
 using encoding::LE;
+using encoding::VarInt;
 
 ArmorSlotAndDamagePair ArmorSlotAndDamagePair::read(encoding::ByteBufferReader &in)
 {
-    const auto slot = ArmorSlotFromPacket(Byte::readUnsigned(in));
+    //The slot is a signed varint, not a byte: Endstone r26_u4 ArmorSlotAndDamagePair.json gives
+    //varint32, Mojang's json marks it int32 + Compression, and gophertunnel v1.58.0
+    //minecraft/protocol/player.go:175 writes Varint32.
+    const auto slot = ArmorSlotFromPacket(VarInt::readSignedInt(in));
     const auto damage = LE::readUnsignedShort(in);
 
     return ArmorSlotAndDamagePair(slot, damage);
@@ -29,7 +32,7 @@ ArmorSlotAndDamagePair ArmorSlotAndDamagePair::read(encoding::ByteBufferReader &
 
 void ArmorSlotAndDamagePair::write(encoding::ByteBufferWriter &out) const
 {
-    Byte::writeUnsigned(out, static_cast<std::uint8_t>(slot));
+    VarInt::writeSignedInt(out, static_cast<std::int32_t>(slot));
     LE::writeUnsignedShort(out, damage);
 }
 

@@ -37,8 +37,11 @@ MovementEffectPacket MovementEffectPacket::create(std::uint64_t actorRuntimeId, 
 void MovementEffectPacket::decodePayload(encoding::ByteBufferReader &in)
 {
     actorRuntimeId = serializer::CommonTypes::getActorRuntimeId(in);
-    effectType = types::MovementEffectTypeFromPacket(static_cast<std::int32_t>(encoding::VarInt::readUnsignedInt(in)));
-    duration = encoding::VarInt::readUnsignedInt(in);
+    //Both fields are signed varints: Endstone r26_u4 MovementEffectPacket.json gives varint32,
+    //Mojang's json marks them int32 + Compression, and gophertunnel v1.58.0
+    //minecraft/protocol/packet/movement_effect.go:35-36 writes Varint32 for each.
+    effectType = types::MovementEffectTypeFromPacket(encoding::VarInt::readSignedInt(in));
+    duration = static_cast<std::uint32_t>(encoding::VarInt::readSignedInt(in));
     tick = encoding::VarInt::readUnsignedLong(in);
 
 }
@@ -46,8 +49,8 @@ void MovementEffectPacket::decodePayload(encoding::ByteBufferReader &in)
 void MovementEffectPacket::encodePayload(encoding::ByteBufferWriter &out) const
 {
     serializer::CommonTypes::putActorRuntimeId(out, actorRuntimeId);
-    encoding::VarInt::writeUnsignedInt(out, static_cast<std::uint32_t>(effectType));
-    encoding::VarInt::writeUnsignedInt(out, duration);
+    encoding::VarInt::writeSignedInt(out, static_cast<std::int32_t>(effectType));
+    encoding::VarInt::writeSignedInt(out, static_cast<std::int32_t>(duration));
     encoding::VarInt::writeUnsignedLong(out, tick);
 
 }
