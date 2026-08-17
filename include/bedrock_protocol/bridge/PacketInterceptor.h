@@ -26,6 +26,7 @@
 #include <endstone/plugin/plugin.h>
 
 #include "bedrock_protocol/bridge/PacketEvent.h"
+#include "bedrock_protocol/encoding/ProtocolDialect.h"
 #include "bedrock_protocol/protocol/DataPacket.h"
 #include "bedrock_protocol/protocol/PacketHandlerInterface.h"
 
@@ -67,6 +68,14 @@ enum class DecodeFailurePolicy {
  * interceptor with its own subscriptions. Plugins compose through Endstone's event priorities -
  * a lower-priority plugin sees whatever a higher-priority one wrote back, because the modified
  * payload is what the next listener decodes.
+ *
+ * Dialects: protocol 2168 covers two wire layouts (see encoding/ProtocolDialect.h). Both the decode
+ * and the re-encode here use the layout the SERVER writes, resolved once in enable(). That is what
+ * composition demands - a payload does not say which layout it is already in, so N interceptors each
+ * reading and writing the server's layout is the only arrangement that stays correct when they chain.
+ * Rewriting a packet into a RECIPIENT's layout is therefore not done here; it must happen exactly
+ * once per server, in one place that owns the decision. sendPacket() is the one exception, and only
+ * because an injected packet has a single recipient and nothing downstream re-reads it.
  */
 class PacketInterceptor {
 public:
@@ -149,6 +158,20 @@ public:
     /** Number of packets this interceptor has re-encoded, for diagnostics. */
     [[nodiscard]] std::uint64_t getRewriteCount() const { return rewrite_count_; }
 
+    /**
+     * The wire layout this server writes, resolved from its version in enable().
+     *
+     * Exposed because a plugin that rewrites packets for clients on the other side of the 1.26.44
+     * split needs the same answer, and resolving it twice invites the two copies to disagree.
+     */
+    [[nodiscard]] encoding::ProtocolDialect getServerDialect() const { return server_dialect_; }
+
+    /**
+     * False when the server's version could not be parsed and getServerDialect() is only the value
+     * this library was built for. Anything that would rewrite traffic on that answer must not run.
+     */
+    [[nodiscard]] bool isServerDialectKnown() const { return server_dialect_known_; }
+
 private:
     using Callback = std::function<void(PacketEventBase &)>;
 
@@ -201,6 +224,9 @@ private:
 
     endstone::Plugin *plugin_ = nullptr;
     DecodeFailurePolicy decode_failure_policy_ = DecodeFailurePolicy::PassThrough;
+    /** The layout this server writes; resolved once in enable() because it cannot change while it runs. */
+    encoding::ProtocolDialect server_dialect_ = encoding::CURRENT_DIALECT;
+    bool server_dialect_known_ = false;
     SubscriptionId next_subscription_id_ = 1;
     std::uint64_t rewrite_count_ = 0;
 };

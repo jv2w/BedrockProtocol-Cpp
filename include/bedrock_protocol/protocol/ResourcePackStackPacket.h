@@ -37,6 +37,7 @@ public:
     /** @var ResourcePackStackEntry[] */
     std::vector<types::resourcepacks::ResourcePackStackEntry> resourcePackStack;
     bool mustAccept = false;
+    /** @note The default follows the version this LIBRARY targets, not the version the server runs. */
     std::string baseGameVersion{ProtocolInfo::MINECRAFT_VERSION_NETWORK};
     types::Experiments experiments;
     bool useVanillaEditorPacks = false;

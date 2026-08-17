@@ -18,6 +18,7 @@
 
 #include "bedrock_protocol/encoding/ByteBufferReader.h"
 #include "bedrock_protocol/encoding/ByteBufferWriter.h"
+#include "bedrock_protocol/encoding/ProtocolDialect.h"
 #include "bedrock_protocol/protocol/PacketDecodeException.h"
 #include "bedrock_protocol/protocol/PacketPool.h"
 
@@ -69,6 +70,25 @@ void PacketInterceptor::enable(endstone::Plugin &plugin, endstone::EventPriority
     }
     plugin_ = &plugin;
 
+    // Protocol 2168 covers two wire layouts, and the server's own version is what decides which one
+    // every payload crossing this class is written in - see encoding/ProtocolDialect.h. Resolved once,
+    // because it cannot change while the server is up.
+    if (const auto dialect = encoding::dialectFromGameVersion(plugin.getServer().getMinecraftVersion())) {
+        server_dialect_ = *dialect;
+        server_dialect_known_ = true;
+    }
+    else {
+        // A version outside the range this library knows. The compiled-in default stands, because a
+        // packet has to be read as something, but isServerDialectKnown() reports the guess so that
+        // anything which would REWRITE traffic on it can decline instead.
+        server_dialect_ = encoding::CURRENT_DIALECT;
+        server_dialect_known_ = false;
+        plugin.getLogger().warning(
+            "Could not tell which wire layout this server writes from its version string \"{}\"; packets will be read "
+            "as the version this library was built for.",
+            plugin.getServer().getMinecraftVersion());
+    }
+
     plugin.registerEvent<endstone::PacketReceiveEvent>(
         [this](endstone::PacketReceiveEvent &event) { onPacketReceive(event); }, priority);
     plugin.registerEvent<endstone::PacketSendEvent>(
@@ -87,6 +107,10 @@ void PacketInterceptor::disable()
     send_handler_.reset();
     plugin_ = nullptr;
     rewrite_count_ = 0;
+    // Resolved from the plugin's server in enable(); a reload may come up against a different one, and
+    // a stale dialect decodes every packet of the affected type wrong with nothing to show for it.
+    server_dialect_ = encoding::CURRENT_DIALECT;
+    server_dialect_known_ = false;
     // Also process-static, so without this a protocol-drift warning that fired before a reload would
     // never be logged again for the rest of the server's life.
     reportedDecodeFailures().clear();
@@ -167,7 +191,9 @@ void PacketInterceptor::dispatch(Direction direction, std::uint32_t packetId, st
         return;  // not a packet this library knows about
     }
 
-    encoding::ByteBufferReader in(payload);
+    // These bytes were written by the server in its own layout, whatever the far end will read them
+    // as, and the re-encode below matches so that a chain of interceptors stays consistent.
+    encoding::ByteBufferReader in(payload, 0, server_dialect_);
     try {
         packet->decodeBody(in);
     }
@@ -227,7 +253,7 @@ void PacketInterceptor::dispatch(Direction direction, std::uint32_t packetId, st
     // emptied required member, a BitSet resized to the wrong bit length. That is the plugin author's
     // mistake, but the throw would escape this event handler and take the server with it, so it is
     // contained here and the packet passes through unmodified instead.
-    encoding::ByteBufferWriter out(payload.size() + 16);
+    encoding::ByteBufferWriter out(payload.size() + 16, server_dialect_);
     try {
         packet->encodeBody(out);
     }
@@ -277,6 +303,11 @@ void PacketInterceptor::reportDecodeFailure(std::uint32_t packetId, std::string_
 void PacketInterceptor::sendPacket(endstone::Player &player, const DataPacket &packet)
 {
     encoding::ByteBufferWriter out;
+    // These bytes go to exactly one client and nothing downstream re-reads them, so they must be in
+    // the layout THAT client reads, which is not necessarily the one the server writes. Unlike the
+    // dispatch path above there is no second interceptor to collide with, so no flag guards this.
+    // A client that reported a version this library does not know falls back to the server's layout.
+    out.setDialect(encoding::dialectFromGameVersion(player.getGameVersion()).value_or(server_dialect_));
     packet.encodeBody(out);
 
     const InjectionGuard guard;

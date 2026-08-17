@@ -173,7 +173,7 @@ std::unique_ptr<types::recipe::ItemDescriptor> makeItemDescriptor(ValueWell &w);
 types::recipe::MultiRecipe makeRecipe(ValueWell &w);
 
 // ---- scoreboard ------------------------------------------------------------------------------
-types::ScorePacketEntry makeScorePacketEntry(ValueWell &w);
+types::ScorePacketEntry makeScorePacketEntry(ValueWell &w, std::uint8_t type);
 types::ScoreboardIdentityPacketEntry makeScoreboardIdentityPacketEntry(ValueWell &w);
 
 }  // namespace bedrock_protocol::verify

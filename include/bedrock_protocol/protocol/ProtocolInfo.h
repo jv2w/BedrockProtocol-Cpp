@@ -29,12 +29,18 @@ namespace bedrock_protocol {
 struct ProtocolInfo final {
     ProtocolInfo() = delete;
 
-    /** Actual Minecraft: PE protocol version */
+    /**
+     * Actual Minecraft: PE protocol version
+     *
+     * @note This number no longer pins one wire layout. 1.26.44 changed SetScorePacket and left the
+     *       number at 2168, so 1.26.40-1.26.43 and 1.26.44 both report it and speak different bytes.
+     *       encoding::ProtocolDialect is what selects between them.
+     */
     static constexpr std::int32_t CURRENT_PROTOCOL = 2168;
     /** Display version shown in the server logs. This should match the version on the game's home screen. */
-    static constexpr std::string_view MINECRAFT_VERSION_DISPLAY = "v26.40";
+    static constexpr std::string_view MINECRAFT_VERSION_DISPLAY = "v26.44";
     /** Version sent on the network for client side compatibility checks. This may differ from the display version. */
-    static constexpr std::string_view MINECRAFT_VERSION_NETWORK = "1.26.40";
+    static constexpr std::string_view MINECRAFT_VERSION_NETWORK = "1.26.44";
     static constexpr std::uint32_t LOGIN_PACKET = 0x01;
     static constexpr std::uint32_t PLAY_STATUS_PACKET = 0x02;
     static constexpr std::uint32_t SERVER_TO_CLIENT_HANDSHAKE_PACKET = 0x03;

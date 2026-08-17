@@ -301,8 +301,13 @@ BP_FILLER(ModalFormResponsePacket, 3)
 BP_FILLER(SetScorePacket, 1)
 {
     auto &w = ctx.well;
-    const std::vector<types::ScorePacketEntry> entries = {makeScorePacketEntry(w), makeScorePacketEntry(w),
-                                                          makeScorePacketEntry(w)};
+    // One entry per variant. TYPE_REMOVE is the only one whose layout differs between the two dialects
+    // protocol 2168 covers, and until it was listed here no gate had ever decoded it.
+    const std::vector<types::ScorePacketEntry> entries = {
+        makeScorePacketEntry(w, types::ScorePacketEntry::TYPE_PLAYER),
+        makeScorePacketEntry(w, types::ScorePacketEntry::TYPE_ENTITY),
+        makeScorePacketEntry(w, types::ScorePacketEntry::TYPE_FAKE_PLAYER),
+        makeScorePacketEntry(w, types::ScorePacketEntry::TYPE_REMOVE)};
 
     return std::make_unique<SetScorePacket>(SetScorePacket::create(entries));
 }

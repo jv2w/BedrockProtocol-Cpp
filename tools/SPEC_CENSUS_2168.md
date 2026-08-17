@@ -1,4 +1,4 @@
-# Spec census, protocol 2168 (Minecraft 1.26.40)
+# Spec census, protocol 2168 (Minecraft 1.26.40 - 1.26.44)
 
 What `tools/check_spec_census.py` measures, what it found, and what it cannot see. Re-run it after
 any change to a decode path; the numbers below are the baseline to compare against.
@@ -7,11 +7,18 @@ any change to a decode path; the numbers below are the baseline to compare again
 
 | Source | Version | Used for |
 |---|---|---|
-| [EndstoneMC/protocol-docs](https://github.com/EndstoneMC/protocol-docs) `r26_u4` | Minecraft 1.26.40.31, network 2168 | field order, types, endianness, enum values |
+| [EndstoneMC/protocol-docs](https://github.com/EndstoneMC/protocol-docs) `r26_u4` | Minecraft 1.26.44.3, network 2168 | field order, types, endianness, enum values |
 | [Mojang/bedrock-protocol-docs](https://github.com/Mojang/bedrock-protocol-docs) `automated/1.26.40` `json/` only | protocol 2168 | meaning, constraints, cross-check of the above |
-| [gophertunnel](https://github.com/Sandertv/gophertunnel) `master` | `CurrentVersion = "1.26.40"` | tie-breaker; procedural, so it reads like the port does |
+| [gophertunnel](https://github.com/Sandertv/gophertunnel) `master` | `CurrentVersion = "1.26.44"` | tie-breaker; procedural, so it reads like the port does |
 
 Both documentation sets list 229 packets and the two name sets match exactly, as does this port's.
+
+`r26_u4` has no patch-level granularity and is advanced in place: it carried 1.26.40.8, then .42.1,
+then .43.1, then .44.3, all on 2026-08-16. Pin a commit if a run has to be reproducible. The
+1.26.43.1 -> 1.26.44.3 diff is one wire change - `types/RemoveScore.json` gaining a leading
+`{"type":"bool","value":true}` - and twelve files of dump-tooling noise; 1.26.40 through 1.26.43 are
+structurally identical. Which of the two layouts the census sees is therefore whichever the checkout
+is at, and the code side answers with `encoding::CURRENT_DIALECT`. Both are 1.26.44 today.
 
 ## Coverage
 
@@ -20,8 +27,8 @@ Both documentation sets list 229 packets and the two name sets match exactly, as
 | Packets compared | 229 |
 | Reduced token sequence identical to spec | **189 (82.5%)** |
 | Differing | 40 |
-| Spec wire tokens | 2941 |
-| Tokens aligned with the code | **2092 (71.1%)** |
+| Spec wire tokens | 2942 |
+| Tokens aligned with the code | **2093 (71.1%)** |
 | Packet IDs registered, 1:1, no gaps or duplicates | 229 / 229 |
 
 The 40 differences were read by hand against all three sources. Six were real and are fixed; the
@@ -81,5 +88,10 @@ higher; each one makes several packets differ.
   scores measure the tool, not the port. They are covered by `tests/WireFormat2168Test.cpp`.
 - **Opaque payloads** - NBT blobs, chunk payloads, skin and resource-pack binaries - are checked for
   length and boundary only. Their contents are the round-trip suite's job.
+- **Dialects are invisible here.** The census reduces both sides to bare wire primitives, so the
+  1.26.44 bool in `RemoveScore` and the presence byte it wraps both come out as `u8` and their ORDER
+  cannot be checked. It confirms the byte is present and nothing more; `tests/WireFormat2168Test.cpp`
+  is what pins which side of the pair it sits on. Nor can the census see the 1.26.40 branch at all,
+  since the code side is read at `encoding::CURRENT_DIALECT`.
 - **No live client.** Everything above is offline. Nothing here has been confirmed against a real
-  1.26.40 session.
+  1.26.40 or 1.26.44 session.

@@ -21,9 +21,11 @@
 #include "bedrock_protocol/encoding/BE.h"
 #include "bedrock_protocol/encoding/Byte.h"
 #include "bedrock_protocol/encoding/LE.h"
+#include "bedrock_protocol/encoding/ProtocolDialect.h"
 #include "bedrock_protocol/encoding/VarInt.h"
 #include "bedrock_protocol/protocol/PacketDecodeException.h"
 #include "bedrock_protocol/protocol/PacketHandlerInterface.h"
+#include "bedrock_protocol/protocol/ProtocolInfo.h"
 #include "bedrock_protocol/protocol/serializer/CommonTypes.h"
 
 namespace bedrock_protocol {
@@ -35,6 +37,12 @@ namespace {
  * @see gophertunnel minecraft/protocol/scoreboard.go:42
  */
 constexpr std::string_view VARIANT_NAMES[] = {"remove", "changeplayer", "changeentity", "changefakeplayer"};
+
+// The remove entry below carries a branch that exists only because protocol 2168 covers two wire
+// layouts. When the protocol number moves this fires, and whoever moves it has to decide whether the
+// branch survives, is renamed for the next split, or goes. Without it the branch is invisible.
+static_assert(ProtocolInfo::CURRENT_PROTOCOL == 2168,
+              "SetScorePacket carries a 2168-only dialect branch; re-check it against the new protocol");
 
 }  // namespace
 
@@ -60,6 +68,19 @@ void SetScorePacket::decodePayload(encoding::ByteBufferReader &in)
             case types::ScorePacketEntry::TYPE_REMOVE: {
                 // The objective name is optional in this variant; an absent one means the empty string.
                 // @see gophertunnel minecraft/protocol/scoreboard.go:55-60
+                //
+                // 1.26.44 wrapped that optional in a second one without moving the protocol number, so
+                // one 2168 connection carries one shape and the next carries the other, depending on the
+                // version at each end. gophertunnel spells the new shape DoubleOptionalFunc (commit
+                // 4794743); the published dump grew a leading {"type":"bool","value":true} in
+                // types/RemoveScore.json between 1.26.43.1 and 1.26.44.3. An absent OUTER ends the field:
+                // the inner presence byte is not on the wire at all, which is why this cannot be a second
+                // readOptional.
+                if (in.getDialect() >= encoding::ProtocolDialect::V1_26_44) {
+                    if (!serializer::CommonTypes::getBool(in)) {
+                        break;  // objectiveName stays empty, and nothing further was written
+                    }
+                }
                 const auto objectiveName = serializer::CommonTypes::readOptional(in, [](encoding::ByteBufferReader &reader) { return serializer::CommonTypes::getString(reader); });
                 entry.objectiveName = objectiveName.value_or("");
                 break;
@@ -95,6 +116,13 @@ void SetScorePacket::encodePayload(encoding::ByteBufferWriter &out) const
         encoding::VarInt::writeSignedLong(out, entry.scoreboardId);
         switch (entry.type) {
             case types::ScorePacketEntry::TYPE_REMOVE: {
+                // The outer optional 1.26.44 added is always written present, matching both gophertunnel
+                // and the game. An absent name therefore goes out as 01 00 rather than 00, so decoding a
+                // bare 00 and re-encoding it does NOT reproduce the input byte for byte. Both spellings
+                // mean the same empty name and this is the one the game sends; see decodePayload.
+                if (out.getDialect() >= encoding::ProtocolDialect::V1_26_44) {
+                    serializer::CommonTypes::putBool(out, true);
+                }
                 const auto objectiveName = entry.objectiveName.empty() ? std::optional<std::string>() : std::optional<std::string>(entry.objectiveName);
                 serializer::CommonTypes::writeOptional(out, objectiveName, [](encoding::ByteBufferWriter &writer, const std::string &value) { serializer::CommonTypes::putString(writer, value); });
                 break;

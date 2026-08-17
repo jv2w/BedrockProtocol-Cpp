@@ -756,15 +756,16 @@ types::recipe::MultiRecipe makeRecipe(ValueWell &w)
     return {recipeId, recipeNetId};
 }
 
-types::ScorePacketEntry makeScorePacketEntry(ValueWell &w)
+types::ScorePacketEntry makeScorePacketEntry(ValueWell &w, std::uint8_t type)
 {
     types::ScorePacketEntry entry;
     entry.scoreboardId = w.i64();
     entry.objectiveName = w.str("objectiveName");
     entry.score = w.i32();
-    // TYPE_PLAYER selects the actorUniqueId branch. customName is filled anyway so that a decoder
-    // that reads the wrong branch produces a visibly different value rather than an empty one.
-    entry.type = ValueWell::pin(types::ScorePacketEntry::TYPE_PLAYER);
+    // The decoder dispatches on this, so it is a pinned legal variant rather than a drawn value. Every
+    // branch's members are filled whatever the variant is, so a decoder that reads the wrong branch
+    // produces a visibly different value rather than an empty one.
+    entry.type = ValueWell::pin(type);
     entry.actorUniqueId = w.some(w.i64());
     entry.customName = w.some(w.str("customName"));
 

@@ -1,4 +1,4 @@
-"""Compares every packet's decode path against the Endstone protocol documentation for 1.26.40.
+"""Compares every packet's decode path against the Endstone protocol documentation for 1.26.44.
 
 The other gates in this directory ask whether the port agrees with itself (round-trip), whether it
 survives hostile bytes (malformed), and whether a handful of hand-written encodings are exact (wire
@@ -107,7 +107,7 @@ def main():
     with open(out, "w", encoding="utf-8") as f:
         f.write("\n".join(report))
 
-    print(f"Spec census against Endstone r26_u4 (Minecraft 1.26.40, protocol 2168)\n")
+    print(f"Spec census against Endstone r26_u4 (Minecraft 1.26.44, protocol 2168)\n")
     print(f"  packets compared         {total}")
     print(f"  identical token sequence {len(same)}  ({100.0 * len(same) / total:.1f}%)")
     print(f"  differing                {len(diff)}")

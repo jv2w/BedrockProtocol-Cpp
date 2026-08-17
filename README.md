@@ -10,7 +10,7 @@ An injected packet reaches only the player you send it to. The server world is u
 what makes per-player blocks, entities, and UI possible.
 
 The supported runtime is **[Endstone](https://github.com/EndstoneMC/endstone)** (developed against
-0.11.6). The core library itself depends on nothing but the standard library — only the optional
+0.11.8). The core library itself depends on nothing but the standard library — only the optional
 bridge target needs Endstone — so it also works for proxies, packet analysers, and custom servers.
 
 ## Continuing the original
@@ -30,7 +30,8 @@ removed eleven of them, among them `RecipeWithTypeId`, `IntIdMetaItemDescriptor`
 `SubChunkPacketEntry` cache variants. Formats with no PHP counterpart get a new class named in the
 original's style.
 
-- Targets Minecraft **1.26.40** (protocol 2168)
+- Targets Minecraft **1.26.44** (protocol 2168), and still reads and writes the 1.26.40–1.26.43
+  layout of the one packet that changed inside that protocol number — see below
 - LGPL-3.0, as a derivative work of the PocketMine Team's original
 
 ## Getting started
@@ -70,6 +71,51 @@ Inside the callback you have four options:
 `view()` and `mutate()` are separate so that reading does not pay for re-encoding. Use `view()` when
 you are not changing anything.
 
+## Two versions, one protocol number
+
+Protocol 2168 covers Minecraft 1.26.40 through 1.26.44. Normally a protocol number pins one wire
+format, but 1.26.44 changed `SetScorePacket` and left the number alone, so a 1.26.43 client and a
+1.26.44 client both complete the handshake against the same server and then disagree about the bytes.
+
+The difference is one byte, in the `TYPE_REMOVE` entry only: 1.26.44 wraps the optional objective
+name in a second optional, written present. 1.26.40–1.26.43 are identical to each other.
+
+| | 1.26.40 – 1.26.43 | 1.26.44 |
+|---|---|---|
+| name absent | `00` | `01 00` |
+| name present | `01 03 "obj"` | `01 01 03 "obj"` |
+
+Nothing on the wire tells the two apart, so the layout is selected from the version each end reports,
+never inferred. `encoding::ProtocolDialect` is that selection, carried by the reader and the writer:
+
+```cpp
+namespace bp = bedrock_protocol;
+
+const auto dialect = bp::encoding::dialectFromGameVersion(player.getGameVersion())
+                         .value_or(bp::encoding::CURRENT_DIALECT);
+bp::encoding::ByteBufferWriter out(payload.size() + 16, dialect);
+```
+
+`PacketInterceptor` reads and re-encodes in the **server's** layout, resolved once from
+`Server::getMinecraftVersion()` and available as `getServerDialect()`. That is what keeps several
+plugins chaining on the same payload correct — a payload does not say which layout it is already in,
+so translating it twice corrupts it. `sendPacket()` is the exception: an injected packet has one
+recipient and nothing downstream re-reads it, so it goes out in that client's layout.
+
+Rewriting the server's own traffic for a client on the other side of the split is therefore **not**
+done here. It has to happen exactly once per server, in one component that owns the decision:
+
+```cpp
+bp::SetScorePacket packet;
+bp::encoding::ByteBufferReader in(event.getPayload(), 0, serverDialect);
+packet.decodeBody(in);
+if (in.getUnreadLength() == 0) {
+    bp::encoding::ByteBufferWriter out(event.getPayload().size() + 16, clientDialect);
+    packet.encodeBody(out);
+    event.setPayload(out.getData());
+}
+```
+
 ## deliberate fixes
 
 The port follows the original everywhere except two places where the original cannot read back what
@@ -86,10 +132,11 @@ it writes. Both are documented at the point of change, with a reproduction.
 `tools/` holds the gates.
 
 - **Deep round-trip over 812 fields** — all 223 packets in the suite, plus truncation and corruption
-  fuzzing (28,676 truncation prefixes, 14,272 corruption passes)
+  fuzzing (28,673 truncation prefixes, 14,272 corruption passes)
 - **Hostile decodes** — all 229 packets against truncated and corrupted input, no crashes
-- **Byte-level wire assertions for 1.26.40** — expected bytes written out by hand from the
-  gophertunnel reference, covering what a round-trip cannot see
+- **Byte-level wire assertions for 1.26.40 and 1.26.44** — expected bytes written out by hand from
+  the gophertunnel reference, covering what a round-trip cannot see, including both layouts of the
+  packet that differs between them and the translation from each into the other
 - **Spec census** — every packet's decode path reduced to its wire primitives and diffed against
   Mojang's published documentation, which is the only gate that can see a field the port has never
   questioned. 189 of 229 packets reduce to an identical sequence; `tools/SPEC_CENSUS_2168.md`

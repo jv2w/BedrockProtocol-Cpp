@@ -15,6 +15,7 @@
 #include <string_view>
 
 #include "bedrock_protocol/encoding/DataDecodeException.h"
+#include "bedrock_protocol/encoding/ProtocolDialect.h"
 
 namespace bedrock_protocol::encoding {
 
@@ -27,7 +28,11 @@ namespace bedrock_protocol::encoding {
  */
 class ByteBufferReader {
 public:
-    explicit ByteBufferReader(std::string_view data, std::size_t offset = 0) : data_(data), offset_(offset) {}
+    explicit ByteBufferReader(std::string_view data, std::size_t offset = 0,
+                              ProtocolDialect dialect = CURRENT_DIALECT)
+        : data_(data), offset_(offset), dialect_(dialect)
+    {
+    }
 
     /** Returns the whole underlying buffer, regardless of the current offset. */
     [[nodiscard]] std::string_view getData() const noexcept { return data_; }
@@ -52,6 +57,17 @@ public:
     [[nodiscard]] std::size_t getUnreadLength() const noexcept { return data_.size() - offset_; }
 
     /**
+     * Returns the wire layout these bytes are being read as.
+     *
+     * Only the handful of fields whose layout differs inside one protocol number consult this; every
+     * other field reads the same bytes either way. See ProtocolDialect.h.
+     */
+    [[nodiscard]] ProtocolDialect getDialect() const noexcept { return dialect_; }
+
+    /** Selects the wire layout these bytes are read as. */
+    void setDialect(ProtocolDialect dialect) noexcept { dialect_ = dialect; }
+
+    /**
      * Reads the given number of bytes and advances the read pointer past them.
      *
      * The returned view points into the underlying buffer and is only valid for as long as it is.
@@ -72,6 +88,7 @@ public:
 private:
     std::string_view data_;
     std::size_t offset_ = 0;
+    ProtocolDialect dialect_ = CURRENT_DIALECT;
 };
 
 }  // namespace bedrock_protocol::encoding

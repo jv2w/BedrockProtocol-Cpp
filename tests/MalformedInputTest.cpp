@@ -29,7 +29,9 @@
 #include <vector>
 
 #include "bedrock_protocol/encoding/ByteBufferReader.h"
+#include "bedrock_protocol/encoding/ProtocolDialect.h"
 #include "bedrock_protocol/protocol/PacketPool.h"
+#include "bedrock_protocol/protocol/ProtocolInfo.h"
 
 #if defined(_MSC_VER) && !defined(__clang__)
 #define BP_HAS_SE_TRANSLATOR 1
@@ -96,7 +98,9 @@ void operator delete[](void *p, std::size_t, std::align_val_t) noexcept { std::f
 namespace {
 
 using bedrock_protocol::PacketPool;
+using bedrock_protocol::ProtocolInfo;
 using bedrock_protocol::encoding::ByteBufferReader;
+using bedrock_protocol::encoding::ProtocolDialect;
 using Clock = std::chrono::steady_clock;
 
 constexpr double kTimeBudgetMs = 50.0;
@@ -151,6 +155,13 @@ private:
 struct Case {
     std::string name;
     std::string data;
+    /**
+     * The wire layout the bytes are read as.
+     *
+     * Almost every packet has only one, so this defaults to it. SetScorePacket has two inside the one
+     * protocol number, and each has a decode branch of its own that hostile input has to survive.
+     */
+    ProtocolDialect dialect = bedrock_protocol::encoding::CURRENT_DIALECT;
 };
 
 std::string repeated(std::uint8_t b, std::size_t n)
@@ -280,6 +291,29 @@ std::string hugeArrayInCompound(char tagType)
  * fields land at, so every hostile shape is offered to every decoder, including at a range of
  * leading offsets so an NBT field that sits behind a few scalar fields still gets reached.
  */
+/**
+ * A SetScorePacket remove entry in the 1.26.44 layout, cut off after `keep` of its last three bytes.
+ *
+ * The generic byte patterns cannot reach this branch: the entry needs a valid variant ID, that
+ * variant's name spelled out in full and a scoreboard ID before the objective name is read at all.
+ * 1.26.44 put a second presence byte in front of that optional (see encoding/ProtocolDialect.h), so
+ * the bytes truncated between here are exactly the ones the version difference is made of - and the
+ * byte after them is a length prefix, which is the classic place for a truncation to run away.
+ */
+std::string truncatedRemoveScore(std::size_t keep)
+{
+    std::string s;
+    s += '\x01';  // entry count: unsigned varint 1
+    s += '\x00';  // variant: unsigned varint TYPE_REMOVE
+    s += '\x06';  // the variant name, length-prefixed
+    s += "remove";
+    s += '\x02';  // scoreboard id: zigzag varint for 1
+    // Outer presence, inner presence, then the length of a 127-byte name that is not there.
+    const std::string tail("\x01\x01\x7f", 3);
+
+    return s + tail.substr(0, std::min(keep, tail.size()));
+}
+
 std::vector<Case> buildCorpus()
 {
     std::vector<Case> cases;
@@ -343,6 +377,10 @@ std::vector<Case> buildCorpus()
         for (std::size_t pad : {std::size_t{0}, std::size_t{1}, std::size_t{2}, std::size_t{4}, std::size_t{8}}) {
             cases.push_back({name + "+pad" + std::to_string(pad), repeated(0x00, pad) + body});
         }
+    }
+
+    for (std::size_t keep : {std::size_t{0}, std::size_t{1}, std::size_t{2}, std::size_t{3}}) {
+        cases.push_back({"setscore_remove_trunc" + std::to_string(keep), truncatedRemoveScore(keep)});
     }
 
     return cases;
@@ -425,6 +463,14 @@ int main(int argc, char **argv)
     std::printf("  time budget per decode  : %.1f ms\n", kTimeBudgetMs);
     std::printf("  allocation hard cap     : %zu bytes (harness guard)\n\n", kAllocHardCap);
 
+    // Protocol 2168 covers two wire layouts, and SetScorePacket is the only packet that reads them
+    // differently. Running the whole corpus twice for the other 228 would double the suite to exercise
+    // nothing, so the second layout is offered to that one packet only.
+    std::vector<Case> bothDialects = corpus;
+    for (const auto &c : corpus) {
+        bothDialects.push_back({c.name + "@1.26.40", c.data, ProtocolDialect::V1_26_40});
+    }
+
     for (std::uint32_t pid = 0; pid < 512; ++pid) {
         auto probe = pool.getPacketById(pid);
         if (!probe) {
@@ -433,10 +479,11 @@ int main(int argc, char **argv)
         ++packetCount;
         const std::string name(probe->getName());
 
-        for (const auto &c : corpus) {
+        const auto &cases = pid == ProtocolInfo::SET_SCORE_PACKET ? bothDialects : corpus;
+        for (const auto &c : cases) {
             // A fresh instance per case: a half-populated packet must never influence the next case.
             auto packet = pool.getPacketById(pid);
-            ByteBufferReader in(c.data);
+            ByteBufferReader in(c.data, 0, c.dialect);
 
             Outcome outcome = Outcome::Clean;
             std::string detail;
