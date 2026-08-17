@@ -44,10 +44,12 @@ inline constexpr ProtocolDialect CURRENT_DIALECT = ProtocolDialect::V1_26_44;
 /**
  * Maps a Minecraft version string onto the layout that version speaks.
  *
- * Takes what the two runtime sources actually produce: Endstone's Server::getMinecraftVersion()
- * gives three components ("1.26.44"), Player::getGameVersion() usually four ("1.26.44.3"), and
- * either may carry a leading 'v'. The fourth component is a hotfix number and never changes the wire,
- * so it is deliberately not read.
+ * Takes what the two runtime sources actually produce, and they do not agree about the leading 1.
+ * Endstone's Server::getMinecraftVersion() gives the marketing form the game itself shows, two
+ * components with the release number first ("26.40"). Player::getGameVersion() carries the version
+ * out of the login, which is the full form and usually four components ("1.26.44.3"). Either may
+ * carry a leading 'v'. The fourth component is a hotfix number and never changes the wire, so it is
+ * deliberately not read.
  *
  * Anything else - an empty string from a client that reported no version, a version older or newer
  * than the range this library covers, a shape this cannot parse - is nullopt, which callers must
@@ -82,17 +84,26 @@ inline constexpr ProtocolDialect CURRENT_DIALECT = ProtocolDialect::V1_26_44;
         }
         digitSeen = false;
     }
-    if (!digitSeen || index < 2) {
-        return std::nullopt;  // fewer than three components
+    if (!digitSeen || index == 0) {
+        return std::nullopt;  // a bare number is not a version
     }
 
-    if (component[0] != 1 || component[1] != 26) {
+    // `index` is how many dots were consumed, which is what tells the two spellings apart: one dot is
+    // the marketing form ("26.40"), two or more is the full form ("1.26.44.3") and its leading
+    // component has to be the 1 that form always carries.
+    if (index >= 2 && component[0] != 1) {
         return std::nullopt;
     }
-    if (component[2] >= 44) {
+    const unsigned int release = index >= 2 ? component[1] : component[0];
+    const unsigned int update = index >= 2 ? component[2] : component[1];
+
+    if (release != 26) {
+        return std::nullopt;
+    }
+    if (update >= 44) {
         return ProtocolDialect::V1_26_44;
     }
-    if (component[2] >= 40) {
+    if (update >= 40) {
         return ProtocolDialect::V1_26_40;
     }
     return std::nullopt;

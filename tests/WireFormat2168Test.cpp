@@ -364,19 +364,33 @@ void testSetScoreDialectTranslation()
 void testDialectFromGameVersion()
 {
     using encoding::ProtocolDialect;
+    // The full form, which is what a login carries and Player::getGameVersion() reports. The fourth
+    // component is a hotfix number and does not change the wire.
     CHECK_TRUE(encoding::dialectFromGameVersion("1.26.40") == ProtocolDialect::V1_26_40);
     CHECK_TRUE(encoding::dialectFromGameVersion("1.26.43") == ProtocolDialect::V1_26_40);
-    // Endstone's Player::getGameVersion() reports four components; the fourth is a hotfix number.
     CHECK_TRUE(encoding::dialectFromGameVersion("1.26.43.2") == ProtocolDialect::V1_26_40);
     CHECK_TRUE(encoding::dialectFromGameVersion("1.26.44") == ProtocolDialect::V1_26_44);
     CHECK_TRUE(encoding::dialectFromGameVersion("1.26.44.3") == ProtocolDialect::V1_26_44);
     CHECK_TRUE(encoding::dialectFromGameVersion("v1.26.44") == ProtocolDialect::V1_26_44);
+    // The marketing form the game shows, which is what Endstone's Server::getMinecraftVersion()
+    // returns - it really does drop the leading 1, and a parser that demands three components reads
+    // the server's own version as unknown and quietly disables everything that depends on it.
+    CHECK_TRUE(encoding::dialectFromGameVersion("26.40") == ProtocolDialect::V1_26_40);
+    CHECK_TRUE(encoding::dialectFromGameVersion("26.43") == ProtocolDialect::V1_26_40);
+    CHECK_TRUE(encoding::dialectFromGameVersion("26.44") == ProtocolDialect::V1_26_44);
+    CHECK_TRUE(encoding::dialectFromGameVersion("v26.44") == ProtocolDialect::V1_26_44);
     // Everything unrecognised is nullopt and never a guess: a wrong guess rewrites live traffic.
     CHECK_TRUE(!encoding::dialectFromGameVersion("").has_value());
+    // Two components whose first is not a release number: this is 1.26, not release 1 update 26.
     CHECK_TRUE(!encoding::dialectFromGameVersion("1.26").has_value());
+    CHECK_TRUE(!encoding::dialectFromGameVersion("26").has_value());
     CHECK_TRUE(!encoding::dialectFromGameVersion("1.26.").has_value());
+    CHECK_TRUE(!encoding::dialectFromGameVersion("26.").has_value());
     CHECK_TRUE(!encoding::dialectFromGameVersion("1.26.39").has_value());
+    CHECK_TRUE(!encoding::dialectFromGameVersion("26.39").has_value());
     CHECK_TRUE(!encoding::dialectFromGameVersion("1.25.44").has_value());
+    CHECK_TRUE(!encoding::dialectFromGameVersion("25.44").has_value());
+    CHECK_TRUE(!encoding::dialectFromGameVersion("2.26.44").has_value());
     CHECK_TRUE(!encoding::dialectFromGameVersion("1..26.44").has_value());
     CHECK_TRUE(!encoding::dialectFromGameVersion("1.26.44-beta").has_value());
     CHECK_TRUE(!encoding::dialectFromGameVersion("abc").has_value());
